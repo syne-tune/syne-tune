@@ -11,17 +11,18 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import copy
+import logging
+
 import numpy as np
 from typing import Optional, List, Dict, Any
 
-from syne_tune.try_import import try_import_botorch_message
 
 try:
     from torch import Tensor
     import torch
     from botorch.utils.transforms import normalize
-except ImportError:
-    print(try_import_botorch_message())
+except ImportError as e:
+    logging.debug(e)
 
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch

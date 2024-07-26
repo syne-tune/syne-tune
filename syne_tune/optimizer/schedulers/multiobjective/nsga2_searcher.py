@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
 import numpy as np
 
 from typing import Optional, List, Union, Dict, Any
@@ -17,7 +18,6 @@ from typing import Optional, List, Union, Dict, Any
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain, Float, Integer, Categorical, FiniteRange
 from syne_tune.optimizer.schedulers.random_seeds import generate_random_seed
-from syne_tune.try_import import try_import_moo_message
 
 try:
     from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -32,8 +32,8 @@ try:
     from pymoo.core.variable import Real as PyMOOReal
     from pymoo.core.variable import Choice as PyMOOChoice
     from pymoo.core.variable import Integer as PyMOOInteger
-except ImportError:
-    print(try_import_moo_message())
+except ImportError as e:
+    logging.debug(e)
 
 
 def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **kwargs):

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_gpsearchers_message
+import logging
 
 __all__ = []
 
@@ -20,5 +20,5 @@ try:
     )
 
     __all__.append("HyperTuneSearcher")
-except ImportError:
-    print(try_import_gpsearchers_message())
+except ImportError as e:
+    logging.debug(e)

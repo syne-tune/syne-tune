@@ -31,14 +31,13 @@ from syne_tune.constants import (
     SYNE_TUNE_ENV_FOLDER,
     ST_DATETIME_FORMAT,
 )
-from syne_tune.try_import import try_import_aws_message
 
 logger = logging.getLogger(__name__)
 
 try:
     import sagemaker
-except ImportError:
-    print(try_import_aws_message())
+except ImportError as e:
+    logging.debug(e)
 
 
 class RegularCallback:

@@ -26,7 +26,6 @@ from examples.training_scripts.height_example.train_height import (
     METRIC_MODE,
     MAX_RESOURCE_ATTR,
 )
-from syne_tune.try_import import try_import_gpsearchers_message
 
 
 if __name__ == "__main__":
@@ -71,8 +70,8 @@ if __name__ == "__main__":
         from syne_tune.optimizer.baselines import MOBSTER
 
         schedulers.append(MOBSTER(*scheduler_kwargs, resource_attr=RESOURCE_ATTR))
-    except Exception:
-        logging.info(try_import_gpsearchers_message())
+    except ImportError as e:
+        logging.debug(e)
 
     for scheduler in schedulers:
         logging.info(f"\n*** running scheduler {scheduler} ***\n")

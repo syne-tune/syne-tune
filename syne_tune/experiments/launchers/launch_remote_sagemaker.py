@@ -10,16 +10,15 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
 import os
 from pathlib import Path
 from typing import Optional, List
 
-from syne_tune.try_import import try_import_aws_message
-
 try:
     import boto3
-except ImportError:
-    print(try_import_aws_message())
+except ImportError as e:
+    logging.debug(e)
 
 from syne_tune.experiments.launchers.hpo_main_common import (
     ExtraArgsType,

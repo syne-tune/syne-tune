@@ -31,12 +31,11 @@ from syne_tune.experiments.visualization.results_utils import (
     download_result_files_from_s3,
     _insert_into_nested_dict,
 )
-from syne_tune.try_import import try_import_visual_message
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
-    print(try_import_visual_message())
+except ImportError as e:
+    logging.debug(e)
 
 logger = logging.getLogger(__name__)
 

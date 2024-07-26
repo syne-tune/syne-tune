@@ -21,7 +21,7 @@ from syne_tune.experiments.benchmark_definitions.common import BenchmarkDefiniti
 try:
     from coolname import generate_slug
 except ImportError:
-    print("coolname is not installed, will not be used")
+    logging.debug("coolname is not installed, will not be used")
 
 
 DictStrKey = Dict[str, Any]

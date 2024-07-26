@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import matplotlib.pyplot as plt
+
 from syne_tune.experiments.benchmark_definitions.nas201 import nas201_benchmark
 from syne_tune.stopping_criterions.automatic_termination_criterion import (
     AutomaticTerminationCriterion,
@@ -19,12 +21,6 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from syne_tune.optimizer.baselines import BORE
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.experiments import load_experiment
-from syne_tune.try_import import try_import_visual_message
-
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    print(try_import_visual_message())
 
 
 n_workers = 4

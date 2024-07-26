@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_kde_message
+import logging
 
 __all__ = []
 
@@ -28,5 +28,5 @@ try:
             "MultiFidelityKernelDensityEstimator",
         ]
     )
-except ImportError:
-    print(try_import_kde_message())
+except ImportError as e:
+    logging.debug(e)

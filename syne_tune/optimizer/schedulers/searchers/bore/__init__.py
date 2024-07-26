@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_bore_message
 
 __all__ = []
+
+import logging
 
 try:
     from syne_tune.optimizer.schedulers.searchers.bore.bore import Bore  # noqa: F401
@@ -26,5 +27,5 @@ try:
             "MultiFidelityBore",
         ]
     )
-except ImportError:
-    print(try_import_bore_message())
+except ImportError as e:
+    logging.debug(e)

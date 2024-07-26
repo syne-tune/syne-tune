@@ -12,8 +12,6 @@
 # permissions and limitations under the License.
 from typing import List, Tuple, Callable, Optional, Dict, Any
 import numpy as np
-import logging
-from syne_tune.try_import import try_import_blackbox_repository_message
 
 try:
     from sklearn.ensemble import (
@@ -21,8 +19,8 @@ try:
         GradientBoostingRegressor,
     )
 except ImportError:
-    logging.info(try_import_blackbox_repository_message())
     raise
+
 from scipy.optimize import brentq
 from scipy.interpolate import UnivariateSpline
 

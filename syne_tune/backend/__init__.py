@@ -15,8 +15,6 @@ __all__ = []
 
 import logging
 
-from syne_tune.try_import import try_import_aws_message, try_import_backends_message
-
 try:
     from syne_tune.backend.local_backend import LocalBackend  # noqa: F401
     from syne_tune.backend.python_backend.python_backend import (
@@ -24,8 +22,8 @@ try:
     )  # noqa: F401
 
     __all__ = ["LocalBackend", "PythonBackend"]
-except ImportError:
-    logging.info(try_import_backends_message())
+except ImportError as e:
+    logging.debug(e)
 
 try:
     from syne_tune.backend.sagemaker_backend.sagemaker_backend import (  # noqa: F401
@@ -33,5 +31,5 @@ try:
     )
 
     __all__.append("SageMakerBackend")
-except ImportError:
-    logging.info(try_import_aws_message())
+except ImportError as e:
+    logging.debug(e)

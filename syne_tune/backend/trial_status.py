@@ -11,13 +11,15 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 # requires python 3.7
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional, List
 
 try:
     from typing_extensions import Literal
-except ImportError:
+except ImportError as e:
+    logging.debug(e)
     from typing import Literal
 
 

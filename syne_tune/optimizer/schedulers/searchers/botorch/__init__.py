@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_botorch_message
 
 __all__ = []
+
+import logging
 
 try:
     from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (  # noqa: F401
@@ -22,5 +23,5 @@ try:
 
     __all__.append("BoTorchSearcher")
     __all__.append("BotorchSearcher")  # deprecated
-except ImportError:
-    print(try_import_botorch_message())
+except ImportError as e:
+    logging.debug(e)

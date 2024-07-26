@@ -14,7 +14,6 @@ from typing import Optional, List, Dict, Any
 import logging
 
 import numpy as np
-from syne_tune.try_import import try_import_botorch_message
 
 try:
     from torch import Tensor, randn_like, random
@@ -28,8 +27,8 @@ try:
     from botorch.exceptions.errors import ModelFittingError
     from gpytorch.mlls import ExactMarginalLogLikelihood
     from linear_operator.utils.errors import NotPSDError
-except ImportError:
-    print(try_import_botorch_message())
+except ImportError as e:
+    logging.debug(e)
 
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticAndFilterDuplicatesSearcher,

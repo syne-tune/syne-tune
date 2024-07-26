@@ -38,13 +38,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
-from syne_tune.try_import import (
-    try_import_blackbox_repository_message,
-    try_import_bore_message,
-    try_import_botorch_message,
-    try_import_moo_message,
-    _try_import_message,
-)
+
 from syne_tune.util import dict_get
 
 logger = logging.getLogger(__name__)
@@ -622,7 +616,6 @@ class BORE(FIFOScheduler):
         try:
             from syne_tune.optimizer.schedulers.searchers.bore import Bore
         except ImportError:
-            logging.info(try_import_bore_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -662,7 +655,6 @@ class ASHABORE(HyperbandScheduler):
         try:
             from syne_tune.optimizer.schedulers.searchers.bore import MultiFidelityBore
         except ImportError:
-            logging.info(try_import_bore_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -703,7 +695,6 @@ class BoTorch(FIFOScheduler):
         try:
             from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
         except ImportError:
-            logging.info(try_import_botorch_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -820,7 +811,6 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
                 MultiObjectiveLCBRandomLinearScalarization,
             )
         except ImportError:
-            logging.info(try_import_moo_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -1051,7 +1041,6 @@ class ZeroShotTransfer(FIFOScheduler):
         try:
             from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
         except ImportError:
-            logging.info(try_import_blackbox_repository_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -1115,7 +1104,6 @@ class ASHACTS(HyperbandScheduler):
                 QuantileBasedSurrogateSearcher,
             )
         except ImportError:
-            logging.info(try_import_blackbox_repository_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -1187,7 +1175,6 @@ class CQR(FIFOScheduler):
                 SurrogateSearcher,
             )
         except ImportError:
-            logging.info(try_import_blackbox_repository_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -1228,7 +1215,6 @@ class ASHACQR(HyperbandScheduler):
                 SurrogateSearcher,
             )
         except ImportError:
-            logging.info(try_import_blackbox_repository_message())
             raise
 
         searcher_kwargs = _create_searcher_kwargs(
@@ -1279,13 +1265,8 @@ try:
                 **kwargs,
             )
 
-except ImportError:
-    logging.info(
-        _try_import_message(
-            message_text="SMAC is not imported (not contained in extra)",
-            tag="smac",
-        )
-    )
+except ImportError as e:
+    logging.debug(e)
 
 try:
     from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
@@ -1335,13 +1316,8 @@ try:
                 **kwargs,
             )
 
-except ImportError:
-    logging.info(
-        _try_import_message(
-            message_text="EHVI is not imported (not contained in extra)",
-            tag="ehvi",
-        )
-    )
+except ImportError as e:
+    logging.debug(e)
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
 baselines_dict = {

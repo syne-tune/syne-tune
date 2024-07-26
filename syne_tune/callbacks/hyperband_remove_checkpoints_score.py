@@ -13,12 +13,11 @@
 import numpy as np
 import logging
 
-from syne_tune.try_import import try_import_gpsearchers_message
 
 try:
     from scipy.special import betainc
-except ImportError:
-    logging.info(try_import_gpsearchers_message())
+except ImportError as e:
+    logging.debug(e)
 
 
 def _binomial_cdf(
