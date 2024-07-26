@@ -23,40 +23,39 @@ from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import Domain
 
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    pass
-
 
 def plot_yahpo_learning_curves(
     trial_backend, benchmark: str, time_col: str, metric_col: str
 ):
-    bb = trial_backend.blackbox
-    plt.figure()
-    plt.title(
-        f"Learning curves from Yahpo {benchmark} for 10 different hyperparameters."
-    )
-    for i in range(10):
-        config = {
-            k: v.sample() if isinstance(v, Domain) else v
-            for k, v in bb.configuration_space.items()
-        }
-        evals = bb(config)
-        time_index = next(
-            i for i, name in enumerate(bb.objectives_names) if name == time_col
+    try:
+        import matplotlib.pyplot as plt
+        bb = trial_backend.blackbox
+        plt.figure()
+        plt.title(
+            f"Learning curves from Yahpo {benchmark} for 10 different hyperparameters."
         )
-        accuracy_index = next(
-            i for i, name in enumerate(bb.objectives_names) if name == metric_col
-        )
-        import numpy as np
+        for i in range(10):
+            config = {
+                k: v.sample() if isinstance(v, Domain) else v
+                for k, v in bb.configuration_space.items()
+            }
+            evals = bb(config)
+            time_index = next(
+                i for i, name in enumerate(bb.objectives_names) if name == time_col
+            )
+            accuracy_index = next(
+                i for i, name in enumerate(bb.objectives_names) if name == metric_col
+            )
+            import numpy as np
 
-        if np.diff(evals[:, time_index]).min() < 0:
-            print("negative time between two different steps...")
-        plt.plot(evals[:, time_index], evals[:, accuracy_index])
-    plt.xlabel(time_col)
-    plt.ylabel(metric_col)
-    plt.show()
+            if np.diff(evals[:, time_index]).min() < 0:
+                print("negative time between two different steps...")
+            plt.plot(evals[:, time_index], evals[:, accuracy_index])
+        plt.xlabel(time_col)
+        plt.ylabel(metric_col)
+        plt.show()
+    except ImportError as e:
+        logging.debug(e)
 
 
 @dataclass

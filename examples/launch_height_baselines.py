@@ -70,8 +70,8 @@ if __name__ == "__main__":
         from syne_tune.optimizer.baselines import MOBSTER
 
         schedulers.append(MOBSTER(*scheduler_kwargs, resource_attr=RESOURCE_ATTR))
-    except Exception:
-        pass
+    except ImportError as e:
+        logging.debug(e)
 
     for scheduler in schedulers:
         logging.info(f"\n*** running scheduler {scheduler} ***\n")

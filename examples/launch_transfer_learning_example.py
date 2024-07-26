@@ -14,6 +14,8 @@
 Example collecting evaluations and using them for transfer learning on a
 related task.
 """
+import logging
+
 from examples.training_scripts.height_example.train_height import (
     height_config_space,
     METRIC_ATTR,
@@ -214,8 +216,8 @@ if __name__ == "__main__":
 
         try:
             import matplotlib.pyplot as plt
-        except ImportError:
-            pass
+        except ImportError as e:
+            logging.debug(e)
 
         print("Generating optimisation plots.")
         """ Plot the results on the transfer task """

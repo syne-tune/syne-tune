@@ -23,7 +23,8 @@ from syne_tune.experiments import load_experiment
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    pass
+    print('This example require matplotlib. You can install it by pip install matplotlib')
+    raise
 
 
 n_workers = 4

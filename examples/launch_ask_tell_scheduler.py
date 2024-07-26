@@ -116,21 +116,22 @@ def plot_objective():
 
     try:
         import matplotlib.pyplot as plt
-    except ImportError:
-        pass
 
-    metric, mode, config_space, max_iterations = get_objective()
+        metric, mode, config_space, max_iterations = get_objective()
 
-    plt.set_cmap("viridis")
-    x = np.linspace(config_space["x"].lower, config_space["x"].upper, 400)
-    fx = target_function(x, noise=False)
-    noise = 0.1 * np.cos(x) ** 2 + 0.01
+        plt.set_cmap("viridis")
+        x = np.linspace(config_space["x"].lower, config_space["x"].upper, 400)
+        fx = target_function(x, noise=False)
+        noise = 0.1 * np.cos(x) ** 2 + 0.01
 
-    plt.plot(x, fx, "r--", label="True value")
-    plt.fill_between(x, fx + noise, fx - noise, alpha=0.2, fc="r")
-    plt.legend()
-    plt.grid()
-    plt.show()
+        plt.plot(x, fx, "r--", label="True value")
+        plt.fill_between(x, fx + noise, fx - noise, alpha=0.2, fc="r")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+    except ImportError as e:
+        logging.debug(e)
 
 
 def tune_with_random_search() -> TrialResult:
