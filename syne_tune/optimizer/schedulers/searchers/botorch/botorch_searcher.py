@@ -27,8 +27,8 @@ try:
     from botorch.exceptions.errors import ModelFittingError
     from gpytorch.mlls import ExactMarginalLogLikelihood
     from linear_operator.utils.errors import NotPSDError
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticAndFilterDuplicatesSearcher,

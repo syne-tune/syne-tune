@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 try:
     import sagemaker
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 
 class RegularCallback:

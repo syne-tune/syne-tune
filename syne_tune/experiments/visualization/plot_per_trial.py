@@ -34,8 +34,8 @@ from syne_tune.util import is_increasing, is_positive_integer
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 logger = logging.getLogger(__name__)
 

@@ -16,6 +16,7 @@ Convert tabular data from
  Aaron Klein Frank Hutter
  https://arxiv.org/pdf/1905.04970.pdf.
 """
+import logging
 import os
 import urllib
 import tarfile
@@ -27,8 +28,8 @@ import ast
 
 try:
     import h5py
-except ImportError:
-    print("Cannot import h5py. Use 'pip install h5py'")
+except ImportError as e:
+    logging.debug(e)
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (

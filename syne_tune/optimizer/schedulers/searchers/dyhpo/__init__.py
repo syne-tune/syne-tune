@@ -13,11 +13,13 @@
 
 __all__ = []
 
+import logging
+
 try:
     from syne_tune.optimizer.schedulers.searchers.dyhpo.dyhpo_searcher import (  # noqa: F401
         DynamicHPOSearcher,
     )
 
     __all__.append("DynamicHPOSearcher")
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)

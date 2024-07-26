@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
 
 __all__ = []
 
@@ -20,8 +21,8 @@ try:
     )  # noqa: F401
 
     __all__ = ["LocalBackend", "PythonBackend"]
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 try:
     from syne_tune.backend.sagemaker_backend.sagemaker_backend import (  # noqa: F401
@@ -29,5 +30,5 @@ try:
     )
 
     __all__.append("SageMakerBackend")
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)

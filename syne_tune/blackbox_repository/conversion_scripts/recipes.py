@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
+
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
     XGBoostRecipe,
@@ -47,8 +49,8 @@ try:
 
     for scenario in yahpo_scenarios:
         recipes.append(YAHPORecipe("yahpo-" + scenario))
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

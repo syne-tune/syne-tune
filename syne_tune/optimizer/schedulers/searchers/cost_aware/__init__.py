@@ -13,6 +13,8 @@
 
 __all__ = []
 
+import logging
+
 try:
     from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (  # noqa: F401
         CostAwareGPFIFOSearcher,
@@ -27,5 +29,5 @@ try:
             "CostAwareGPMultiFidelitySearcher",
         ]
     )
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)

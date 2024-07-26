@@ -34,13 +34,13 @@ from syne_tune.util import experiment_path, s3_experiment_path, metric_name_mode
 try:
     import boto3
     from botocore.exceptions import ClientError
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 logger = logging.getLogger(__name__)
 

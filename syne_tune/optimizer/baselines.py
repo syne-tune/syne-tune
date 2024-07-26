@@ -1265,8 +1265,8 @@ try:
                 **kwargs,
             )
 
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 try:
     from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
@@ -1316,13 +1316,8 @@ try:
                 **kwargs,
             )
 
-except ImportError:
-    logging.info(
-        _try_import_message(
-            message_text="EHVI is not imported (not contained in extra)",
-            tag="ehvi",
-        )
-    )
+except ImportError as e:
+    logging.debug(e)
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
 baselines_dict = {

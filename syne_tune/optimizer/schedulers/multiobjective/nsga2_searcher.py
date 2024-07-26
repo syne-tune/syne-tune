@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
+
 import numpy as np
 
 from typing import Optional, List, Union, Dict, Any
@@ -31,8 +33,8 @@ try:
     from pymoo.core.variable import Real as PyMOOReal
     from pymoo.core.variable import Choice as PyMOOChoice
     from pymoo.core.variable import Integer as PyMOOInteger
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 
 def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **kwargs):

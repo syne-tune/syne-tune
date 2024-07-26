@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
+
 from syne_tune.remote.constants import (
     DEFAULT_CPU_INSTANCE,
     PYTORCH_LATEST_FRAMEWORK,
@@ -30,8 +32,8 @@ try:
     from sagemaker.sklearn import SKLearn
     from sagemaker.chainer import Chainer
     from sagemaker.xgboost import XGBoost
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(e)
 
 
 def instance_sagemaker_estimator(**kwargs):
