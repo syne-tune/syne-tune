@@ -13,15 +13,7 @@
 import logging
 from typing import List, Union, Dict, Optional
 
-<<<<<<< HEAD
-try:
-    import s3fs as s3fs
-    from botocore.exceptions import NoCredentialsError
-except ImportError:
-    pass
-=======
 from huggingface_hub import snapshot_download
->>>>>>> main
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
