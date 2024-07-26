@@ -37,11 +37,13 @@ required_yahpo = load_requirements(
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
 required_smac = load_requirements("requirements-smac.txt")
+required_extra = load_requirements("requirements-extra.txt")
 
 # Do not add SMAC for now in "extra" as it can easily conflict with Yahpo config-space version
 # Do not add benchmarks either as it contains lots of dependencies can cause conflicts
-required_extra = (
+required_all = (
     required_core
+    + required_extra
     + required_dev
     + required_blackbox_repository
     + required_yahpo
@@ -50,7 +52,7 @@ required_extra = (
 
 # Botorch only supports python version >= 3.8
 if sys.version_info >= (3, 8):
-    required_extra += required_botorch
+    required_all += required_botorch
 
 
 setup(
@@ -73,7 +75,7 @@ setup(
         "yahpo": required_yahpo,
         "raytune": required_ray,
         "botorch": required_botorch,
-        "extra": required_extra,
+        "extra": required_all,
         "smac": required_smac,
     },
     install_requires=required_core,

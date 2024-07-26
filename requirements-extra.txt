@@ -1,0 +1,9 @@
+# TPE
+statsmodels
+# BORE
+xgboost
+scikit-learn
+# MOO
+pymoo==0.6.0
+# Examples
+matplotlib
