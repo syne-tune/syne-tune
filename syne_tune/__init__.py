@@ -12,16 +12,13 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-try:
-    # The reason for conditional imports is that ``read_version`` is called
-    # by ``setup.py`` before any dependencies are installed
-    from syne_tune.stopping_criterion import StoppingCriterion  # noqa: F401
-    from syne_tune.report import Reporter  # noqa: F401
-    from syne_tune.tuner import Tuner  # noqa: F401
+# The reason for conditional imports is that ``read_version`` is called
+# by ``setup.py`` before any dependencies are installed
+from syne_tune.stopping_criterion import StoppingCriterion  # noqa: F401
+from syne_tune.report import Reporter  # noqa: F401
+from syne_tune.tuner import Tuner  # noqa: F401
 
-    __all__ = ["StoppingCriterion", "Tuner", "Reporter"]
-except ImportError:
-    __all__ = []
+__all__ = ["StoppingCriterion", "Tuner", "Reporter"]
 
 
 def read_version():

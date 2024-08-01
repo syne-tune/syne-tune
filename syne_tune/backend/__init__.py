@@ -10,26 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from syne_tune.backend.local_backend import LocalBackend  # noqa: F401
+from syne_tune.backend.python_backend.python_backend import (
+    PythonBackend,
+)  # noqa: F401
 
-__all__ = []
-
-import logging
-
-try:
-    from syne_tune.backend.local_backend import LocalBackend  # noqa: F401
-    from syne_tune.backend.python_backend.python_backend import (
-        PythonBackend,
-    )  # noqa: F401
-
-    __all__ = ["LocalBackend", "PythonBackend"]
-except ImportError as e:
-    logging.debug(e)
-
-try:
-    from syne_tune.backend.sagemaker_backend.sagemaker_backend import (  # noqa: F401
-        SageMakerBackend,
-    )
-
-    __all__.append("SageMakerBackend")
-except ImportError as e:
-    logging.debug(e)
+__all__ = ["LocalBackend", "PythonBackend"]

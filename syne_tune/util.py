@@ -34,11 +34,6 @@ from syne_tune.constants import (
 
 logger = logging.getLogger(__name__)
 
-try:
-    import sagemaker
-except ImportError as e:
-    logging.debug(e)
-
 
 class RegularCallback:
     """
@@ -68,66 +63,23 @@ def experiment_path(
     and to collect results of experiments.
 
     :param tuner_name: Name of a tuning experiment
-    :param local_path: Local path where results should be saved when running
-        locally outside of SageMaker. If not specified, then the environment
-        variable ``"SYNETUNE_FOLDER"`` is used if defined otherwise ``~/syne-tune/``
-        is used. Defining the environment variable ``"SYNETUNE_FOLDER"`` allows to
+    :param local_path: Local path where results should be saved.
+        If not specified, then the environment variable ``"SYNETUNE_FOLDER"`` is used if defined otherwise
+         ``~/syne-tune/`` is used. Defining the environment variable ``"SYNETUNE_FOLDER"`` allows to
         override the default path.
-    :return: Path where to write logs and results for Syne Tune tuner. On
-        SageMaker, results are written to ``"/opt/ml/checkpoints/"`` so that files
-        are persisted continuously to S3 by SageMaker.
+    :return: Path where to write logs and results for Syne Tune tuner.
     """
-    is_sagemaker = "SM_MODEL_DIR" in os.environ
-    if is_sagemaker:
-        # if SM_MODEL_DIR is present in the environment variable, this means that we are running on Sagemaker
-        # we use this path to store results as it is persisted by Sagemaker.
-        result_path = Path("/opt/ml/checkpoints")
-    else:
-        # means we are running on a local machine, we store results in a local path
-        if local_path is None:
-            if SYNE_TUNE_ENV_FOLDER in os.environ:
-                result_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
-            else:
-                result_path = Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser()
+    # means we are running on a local machine, we store results in a local path
+    if local_path is None:
+        if SYNE_TUNE_ENV_FOLDER in os.environ:
+            result_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
         else:
-            result_path = Path(local_path)
+            result_path = Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser()
+    else:
+        result_path = Path(local_path)
     if tuner_name is not None:
         result_path = result_path / tuner_name
     return result_path
-
-
-def s3_experiment_path(
-    s3_bucket: Optional[str] = None,
-    experiment_name: Optional[str] = None,
-    tuner_name: Optional[str] = None,
-) -> str:
-    """Returns S3 path for storing results and checkpoints.
-
-    :param s3_bucket: If not given, the default bucket for the SageMaker
-        session is used
-    :param experiment_name: If given, this is used as first directory
-    :param tuner_name: If given, this is used as second directory
-    :return: S3 path, ending on "/"
-    """
-    if s3_bucket is None:
-        s3_bucket = sagemaker.Session().default_bucket()
-    s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_DEFAULT_FOLDER}/"
-    for part in (experiment_name, tuner_name):
-        if part is not None:
-            s3_path += part + "/"
-    return s3_path
-
-
-def check_valid_sagemaker_name(name: str):
-    assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(
-        name
-    ), f"{name} should consists in alpha-digits possibly separated by character -"
-
-
-def sanitize_sagemaker_name(name: str) -> str:
-    new_name = name.replace("_", "-")
-    check_valid_sagemaker_name(new_name)
-    return new_name
 
 
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
@@ -143,10 +95,7 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
     :return: Input parameter with appended timestamp
     """
     if base is None:
-        check_valid_sagemaker_name(default)
         base = default
-    else:
-        check_valid_sagemaker_name(base)
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]

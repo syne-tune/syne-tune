@@ -29,7 +29,7 @@ from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_TIME,
 )
-from syne_tune.util import experiment_path, s3_experiment_path, metric_name_mode
+from syne_tune.util import experiment_path, metric_name_mode
 
 try:
     import boto3
@@ -236,43 +236,8 @@ class ExperimentResult:
         )
 
 
-def download_single_experiment(
-    tuner_name: str,
-    s3_bucket: Optional[str] = None,
-    experiment_name: Optional[str] = None,
-):
-    """Downloads results from S3 of a tuning experiment
-
-    :param tuner_name: Name of tuner to be retrieved.
-    :param s3_bucket: If not given, the default bucket for the SageMaker session
-        is used
-    :param experiment_name: If given, this is used as first directory.
-    """
-    s3_path = s3_experiment_path(
-        s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name
-    ).rstrip("/")
-    tgt_dir = experiment_path(tuner_name=tuner_name)
-    tgt_dir.mkdir(exist_ok=True, parents=True)
-    s3 = boto3.client("s3")
-    parts_path = s3_path.replace("s3://", "").split("/")
-    s3_bucket = parts_path[0]
-    s3_key = "/".join(parts_path[1:])
-    result_files = [
-        ST_METADATA_FILENAME,
-        ST_RESULTS_DATAFRAME_FILENAME,
-        ST_TUNER_DILL_FILENAME,
-    ]
-    for file in result_files:
-        try:
-            logger.info(f"downloading {file} on {s3_path}")
-            s3.download_file(s3_bucket, f"{s3_key}/{file}", str(tgt_dir / file))
-        except ClientError as e:
-            logger.info(f"could not find {file} on {s3_path}")
-
-
 def load_experiment(
     tuner_name: str,
-    download_if_not_found: bool = True,
     load_tuner: bool = False,
     local_path: Optional[str] = None,
     experiment_name: Optional[str] = None,
@@ -280,7 +245,6 @@ def load_experiment(
     """Load results from an experiment
 
     :param tuner_name: Name of a tuning experiment previously run
-    :param download_if_not_found: If True, fetch results from S3 if not found locally
     :param load_tuner: Whether to load the tuner in addition to metadata and results
     :param local_path: Path containing the experiment to load. If not specified,
         ``~/{SYNE_TUNE_FOLDER}/`` is used.
@@ -289,13 +253,6 @@ def load_experiment(
     """
     path = experiment_path(tuner_name, local_path)
     metadata_path = path / ST_METADATA_FILENAME
-    if not (metadata_path.exists()) and download_if_not_found:
-        logger.info(
-            f"experiment {tuner_name} not found locally, trying to get it from s3."
-        )
-        download_single_experiment(
-            tuner_name=tuner_name, experiment_name=experiment_name
-        )
     try:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)

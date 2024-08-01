@@ -15,7 +15,7 @@ import pandas as pd
 from numpy.random import RandomState
 
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.experiments.visualization.plotting import filter_final_row_per_trial
+from syne_tune.experiments.util import filter_final_row_per_trial
 
 
 def test_filter_final_row_per_trial():
