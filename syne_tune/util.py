@@ -11,18 +11,17 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import json
+import logging
 import os
-import re
-import string
 import random
+import string
 import time
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union, Dict, Any, Iterable
 from time import perf_counter
-from contextlib import contextmanager
+from typing import Optional, Dict, Any, Iterable
 from typing import Tuple, Union, List
-import logging
 
 import numpy as np
 

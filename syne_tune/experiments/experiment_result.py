@@ -25,22 +25,10 @@ from syne_tune import Tuner
 from syne_tune.constants import (
     ST_METADATA_FILENAME,
     ST_RESULTS_DATAFRAME_FILENAME,
-    ST_TUNER_DILL_FILENAME,
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_TIME,
 )
 from syne_tune.util import experiment_path, metric_name_mode
-
-try:
-    import boto3
-    from botocore.exceptions import ClientError
-except ImportError as e:
-    logging.debug(e)
-
-try:
-    import matplotlib.pyplot as plt
-except ImportError as e:
-    logging.debug(e)
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +93,7 @@ class ExperimentResult:
         ), f"All metrics must be maximized but the following modes were selected: {metric_modes}"
 
         if self.results is not None and len(self.results) > 0:
+            import matplotlib.pyplot as plt
             from syne_tune.optimizer.schedulers.multiobjective.utils import (
                 hypervolume_cumulative,
             )
@@ -116,7 +105,6 @@ class ExperimentResult:
             hypervolume_indicator = hypervolume_cumulative(
                 results_array, reference_point
             )
-
             fig, ax = plt.subplots()
             ax.plot(x, hypervolume_indicator, **plt_kwargs)
             ax.set_xlabel("wallclock time (secs)")
@@ -138,6 +126,8 @@ class ExperimentResult:
             If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
+        import matplotlib.pyplot as plt
+
         metric_name, metric_mode = self._metric_name_mode(metric_to_plot)
 
         df = self.results
@@ -170,6 +160,8 @@ class ExperimentResult:
             If None, the figure is shown
         :param figsize: width and height of figure
         """
+        import matplotlib.pyplot as plt
+
         metric_name, metric_mode = self._metric_name_mode(metric_to_plot)
         df = self.results
 
