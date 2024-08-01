@@ -71,7 +71,7 @@ required_basic = (
 setup(
     name="syne_tune",
     version=read_version(),
-    description="Distributed Hyperparameter Optimization on SageMaker",
+    description="Distributed Hyperparameter Optimization",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="AWS",
