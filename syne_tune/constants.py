@@ -40,16 +40,6 @@ ST_WORKER_TIME = "st_worker_time"
 ST_WORKER_COST = "st_worker_cost"
 """Estimate of dollar cost spent so far"""  # pylint: disable=W0105
 
-ST_INSTANCE_TYPE = "st_instance_type"
-"""Instance type to be used for job execution (SageMaker backend)"""  # pylint: disable=W0105
-
-ST_INSTANCE_COUNT = "st_instance_count"
-"""Number of instances o be used for job execution (SageMaker backend)"""  # pylint: disable=W0105
-
-ST_SAGEMAKER_METRIC_TAG = "tune-metric"
-"""Tag for log lines used in :class:`~syne_tune.Reporter`"""  # pylint: disable=W0105
-
-
 # Constants for tuner results
 
 ST_TRIAL_ID = "trial_id"
@@ -86,11 +76,8 @@ ST_TUNER_DILL_FILENAME = "tuner.dill"
 ST_DATETIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
 """Datetime format used in result path names"""  # pylint: disable=W0105
 
-
-# Limits
-
-MAX_METRICS_SUPPORTED_BY_SAGEMAKER = 40
-"""Max number of metrics allowed for estimator"""  # pylint: disable=W0105
-
 TUNER_DEFAULT_SLEEP_TIME = 5.0
 """Default value for ``sleep_time``"""  # pylint: disable=W0105
+
+ST_METRIC_TAG = "tune-metric"
+"""Tag for log lines used in :class:`~syne_tune.Reporter`"""  # pylint: disable=W0105

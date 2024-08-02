@@ -40,7 +40,6 @@ from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import (
     RegularCallback,
-    check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
     dump_json_with_numpy,
@@ -167,8 +166,6 @@ class Tuner:
         self.print_update_interval = print_update_interval
 
         if tuner_name is not None:
-            check_valid_sagemaker_name(tuner_name)
-        else:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
                 "_", "-"
             )

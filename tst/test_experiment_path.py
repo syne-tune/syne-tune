@@ -23,13 +23,6 @@ from syne_tune.util import experiment_path
 @pytest.mark.parametrize(
     "tuner_name, local_path, env, expected_path",
     [
-        (
-            "my-tuner",
-            "/tmp/",
-            {"SM_MODEL_DIR": "dummy"},
-            "/opt/ml/checkpoints/my-tuner",
-        ),
-        (None, "/tmp/", {"SM_MODEL_DIR": "dummy"}, "/opt/ml/checkpoints/"),
         ("my-tuner", "/tmp/", {}, "/tmp/my-tuner"),
         (None, "/tmp/", {}, "/tmp/"),
         (

@@ -67,9 +67,10 @@ if __name__ == "__main__":
                 search_options={"num_init_random": n_workers + 2},
             )
         )
-        from syne_tune.optimizer.baselines import MOBSTER
-
-        schedulers.append(MOBSTER(*scheduler_kwargs, resource_attr=RESOURCE_ATTR))
+        # TODO fails
+        # from syne_tune.optimizer.baselines import MOBSTER
+        #
+        # schedulers.append(MOBSTER(*scheduler_kwargs, resource_attr=RESOURCE_ATTR))
     except ImportError as e:
         logging.debug(e)
 
