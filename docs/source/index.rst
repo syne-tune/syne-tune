@@ -25,43 +25,8 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
   * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
   * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
 
-* HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
+* HPO can be run in different environments (locally, simulation) by changing just one line of code.
 * Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
-
-What's New?
------------
-
-* Andreas Mueller, co-creator and core contributor to `scikit-learn <https://scikit-learn.org/stable/>`__,
-  used Syne Tune extensively to optimize parameters of a hypernetwork which solves
-  tabular classification tasks faster than state of the art boosted decision tree
-  algorithms. Check out the `video <https://www.youtube.com/watch?v=-pAuQSAW5w0>`__.
-* The experimentation framework of Syne Tune, providing an easy access to all the
-  different methods, execution backends, and ways to run many experiments in parallel,
-  is now available in :mod:`syne_tune.experiments`, there is no need to install from
-  source anymore. This framework is the best place to start serious
-  `experimentation work with Syne Tune <tutorials/experimentation/README.html>`__.
-* New tutorial:
-  `Distributed Hyperparameter Tuning: Finding the Right Model can be Fast and Fun <tutorials/odsc_tutorial/README.html>`__.
-  Provides an overview of Syne Tune and its experimentation framework.
-* You can now create comparative plots, combining the results of many experiments,
-  as shown `here <tutorials/visualization/README.html>`__.
-* Local Backend supports
-  `training with more than one GPU per trial <faq.html#how-can-i-utilize-multiple-gpus>`__.
-* Speculative early checkpoint removal for asynchronous multi-fidelity optimization.
-  Retaining all checkpoints often exhausts all available disk space when training
-  large models. With this feature, Syne Tune automatically removes checkpoints
-  that are unlikely to be needed.
-  `Details <faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__.
-* New Multi-Objective Scheduler:
-  :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`.
-  The method works by taking a multi-objective problem and turning it into a
-  single-objective task by optimizing for a linear combination of all objectives.
-  This wrapper works with all single-objective schedulers. 
-* Support for automatic termination criterion proposed by Makarova et al.
-  Instead of defining a fixed number of iterations or wall-clock time limit, we
-  can set a threshold on how much worse we allow the final solution to be
-  compared to the global optimum, such that we automatically stop the optimization
-  process once we find a solution that meets this criteria.
 
 .. toctree::
    :name: Getting Started
@@ -77,24 +42,6 @@ What's New?
 
    faq_toc
    examples_toc
-
-.. toctree::
-   :name: Tutorials
-   :caption: Tutorials
-   :maxdepth: 1
-
-   tutorials/basics/README
-   search_space
-   schedulers
-   tutorials/multifidelity/README
-   tutorials/benchmarking/README
-   tutorials/visualization/README
-   tutorials/experimentation/README
-   tutorials/developer/README
-   tutorials/dev_bayesopt/README
-   tutorials/pasha/pasha
-   tutorials/transfer_learning/transfer_learning
-   tutorials/odsc_tutorial/README
 
 Videos featuring Syne Tune
 --------------------------

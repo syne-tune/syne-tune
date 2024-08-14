@@ -23,10 +23,6 @@ why you may prefer Syne Tune over these alternatives:
   for `Gaussian process based Bayesian optimization <tutorials/basics/basics_bayesopt.html>`__.
   The same code powers modalities like multi-fidelity HPO, constrained HPO, or
   cost-aware HPO, having been tried and tested for several years.
-* **Support for distributed parallelized experimentation**: We built Syne Tune
-  to be able to move fast, using the parallel resources AWS SageMaker offers.
-  Syne Tune allows ML/AI practitioners to easily set up and run studies with many
-  `experiments running in parallel <tutorials/experimentation/README.html>`__.
 * **Special support for researchers**: Syne Tune allows for rapid development
   and comparison between different tuning algorithms. Its
   `blackbox repository and simulator backend <tutorials/multifidelity/mf_setup.html>`__
@@ -35,15 +31,6 @@ why you may prefer Syne Tune over these alternatives:
   allows to compare different methods as apples to apples (same execution
   backend, implementation from the same parts).
 
-If you are an AWS customer, there are additional good reasons to use Syne Tune
-over the alternatives:
-
-* If you use AWS services or SageMaker frameworks day to day, Syne Tune works
-  out of the box and fits into your normal workflow. It unlocks the power of
-  distributed experimentation that SageMaker offers.
-* Syne Tune is developed in collaboration with the team behind the
-  `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`__
-  service.
 
 What are the different installation options supported?
 ======================================================
@@ -62,9 +49,6 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
   :class:`~syne_tune.optimizer.baselines.BayesianOptimization`,
   :class:`~syne_tune.optimizer.baselines.MOBSTER`, or
   :class:`~syne_tune.optimizer.baselines.HyperTune`)
-* ``aws``: AWS SageMaker dependencies. These are required for
-  `remote launching <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
-  or for the :class:`~syne_tune.backend.SageMakerBackend`
 * ``raytune``: For Ray Tune optimizers (see
   :class:`~syne_tune.optimizer.schedulers.RayTuneScheduler`), installs all Ray
   Tune dependencies
@@ -110,14 +94,14 @@ To install the latest version from git, run the following:
 
 .. code:: bash
 
-   pip install git+https://github.com/awslabs/syne-tune.git
+   pip install git+https://github.com/syne-tune/syne-tune.git
 
 For local development, we recommend using the following setup which will
 enable you to easily test your changes:
 
 .. code:: bash
 
-   git clone https://github.com/awslabs/syne-tune.git
+   git clone https://github.com/syne-tune/syne-tune.git
    cd syne-tune
    python3 -m venv st_venv
    . st_venv/bin/activate
@@ -128,35 +112,6 @@ This installs everything in a virtual environment ``st_venv``. Remember to
 activate this environment before working with Syne Tune. We also recommend
 building the virtual environment from scratch now and then, in particular when
 you pull a new release, as dependencies may have changed.
-
-How can I run on AWS and SageMaker?
-===================================
-
-If you want to launch experiments or training jobs on SageMaker rather than on
-your local machine, you will need access to AWS and SageMaker on your machine.
-Make sure that:
-
-* ``awscli`` is installed (see
-  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`__)
-* AWS credentials have been set properly (see
-  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html>`__).
-* The necessary SageMaker role has been created (see
-  `this page <https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html>`__
-  for instructions. If you’ve created a SageMaker notebook in the past, this
-  role should already have been created for you).
-
-The following command should run without error if your credentials are available:
-
-.. code:: bash
-
-   python -c "import boto3; print(boto3.client('sagemaker').list_training_jobs(MaxResults=1))"
-
-You can also run the following example that evaluates trials on SageMaker to
-test your setup.
-
-.. code:: bash
-
-   python examples/launch_height_sagemaker.py
 
 What are the metrics reported by default when calling the ``Reporter``?
 =======================================================================
@@ -189,11 +144,7 @@ How can I utilize multiple GPUs?
 
 To utilize multiple GPUs you can use the local backend
 :class:`~syne_tune.backend.LocalBackend`, which will run on the GPUs available
-in a local machine. You can also run on a remote AWS instance with multiple GPUs
-using the local backend and the remote launcher, see
-`here <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__,
-or run with the :class:`~syne_tune.backend.SageMakerBackend` which spins-up one
-training job per trial.
+in a local machine.
 
 When evaluating trials on a local machine with
 :class:`~syne_tune.backend.LocalBackend`, by default each trial is allocated to
@@ -298,29 +249,6 @@ checkpointing enabled:
    :name: checkpoint_example_script
    :caption: examples/training_scripts/checkpoint_example/checkpoint_example.py
    :start-after: # permissions and limitations under the License.
-
-When using the SageMaker backend, we use the
-`SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`__
-under the hood to sync local checkpoints to S3. Checkpoints are synced to
-``s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/``,
-where ``sagemaker-default-bucket`` is the default bucket for SageMaker. A complete
-example is given by
-`examples/launch_height_sagemaker_checkpoints.py <examples.html#sageMaker-backend-and-checkpointing>`__.
-
-The same mechanism is used to regularly write the
-`tuning results to S3 during remote tuning <#where-can-i-find-the-output-of-the-tuning>`__.
-However, during remote tuning with the *local backend*, we do not want
-checkpoints to be synced to S3, since they are only required temporarily on the
-same instance. Syncing them to S3 would be costly and error-prone, because the
-SageMaker mechanism is not intended to work with different processes writing to
-and reading from the sync directory concurrently. In this case, we can switch
-off syncing checkpoints to S3 (but not tuning results!) by setting
-``trial_backend_path=backend_path_not_synced_to_s3()`` when creating the
-:class:`~syne_tune.Tuner` object. An example is
-`fine_tuning_transformer_glue/hpo_main.py <benchmarking/fine_tuning_transformer_glue.html>`__.
-It is also supported by default in the
-`experimentation framework <tutorials/experimentation/README.html>`__ and in
-:class:`~syne_tune.remote.RemoteLauncher`.
 
 There are some convenience functions which help you to implement checkpointing
 for your training script. Have a look at
@@ -579,29 +507,6 @@ results are stored by
 instead, and you need to inherit from this class. An example is given in
 :class:`~syne_tune.optimizer.schedulers.searchers.searcher_callback.SimulatorAndModelParamsCallback`.
 
-I don’t want to wait, how can I launch the tuning on a remote machine?
-======================================================================
-
-Remote launching of experiments has a number of advantages:
-
-* The machine you are working on is not blocked
-* You can launch many experiments in parallel
-* You can launch experiments with any instance type you like, without having to
-  provision them yourselves. For GPU instances, you do not have to worry about
-  setting up CUDA, etc.
-
-You can use the remote launcher to launch an experiment on a remote machine.
-The remote launcher supports both :class:`~syne_tune.backend.LocalBackend` and
-:class:`~syne_tune.backend.SageMakerBackend`. In the former case, multiple
-trials will be evaluated on the remote machine (one use-case being to use a
-beefy machine), in the latter case trials will be evaluated as separate
-SageMaker training jobs. An example for running the remote launcher is
-given in
-`launch_height_sagemaker_remotely.py <examples.html#launch-experiments-remotely-on-sagemaker>`__.
-
-Remote launching for experimentation is detailed in
-`this tutorial <tutorials/benchmarking/README.html>`__ or
-`this tutorial <tutorials/experimentation/README.html>`__.
 
 How can I run many experiments in parallel?
 ===========================================
@@ -614,43 +519,12 @@ in parallel, as detailed in
   `benchmarking/examples/launch_local/ <benchmarking/launch_local.html>`__
 * Simulator backend:
   `benchmarking/examples/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
-* SageMaker backend:
-  `benchmarking/examples/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
+
 
 .. note::
    In order to run these examples, you need to have
    `installed Syne Tune from source <getting_started.html#installation>`__.
 
-How can I access results after tuning remotely?
-===============================================
-
-You can either call :func:`~syne_tune.experiments.load_experiment`, which will
-download files from S3 if the experiment is not found locally. You can also
-sync directly files from S3 under ``~/syne-tune/`` folder in batch for instance
-by running:
-
-.. code:: bash
-
-   aws s3 sync s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/ ~/syne-tune/  --include "*"  --exclude "*tuner.dill"
-
-To get all results without the tuner state (you can omit the ``include``
-and ``exclude`` if you also want to include the tuner state).
-
-How can I specify dependencies to remote launcher or when using the SageMaker backend?
-======================================================================================
-
-When you run remote code, you often need to install packages
-(e.g., ``scipy``) or have custom code available.
-
-* To install packages, you can add a file ``requirements.txt`` in the
-  same folder as your endpoint script. All those packages will be
-  installed by SageMaker when docker container starts.
-* To include custom code (for instance a library that you are working
-  on), you can set the parameter ``dependencies`` on the remote
-  launcher or on a SageMaker framework to a list of folders. The
-  folders indicated will be compressed, sent to S3 and added to the
-  python path when the container starts. More details are given in
-  `this tutorial <tutorials/benchmarking/bm_sagemaker.html>`__.
 
 How can I benchmark different methods?
 ======================================
@@ -662,8 +536,6 @@ in `this tutorial <tutorials/benchmarking/README.html>`__, see also these exampl
   `benchmarking/examples/launch_local/ <benchmarking/launch_local.html>`__
 * Simulator backend:
   `benchmarking/examples/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
-* SageMaker backend:
-  `benchmarking/examples/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
 * Fine-tuning transformers:
   `benchmarking/examples/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`__
 * Hyper-Tune:
