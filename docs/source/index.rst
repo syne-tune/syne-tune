@@ -43,6 +43,24 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
    faq_toc
    examples_toc
 
+.. toctree::
+   :name: Tutorials
+   :caption: Tutorials
+   :maxdepth: 1
+
+   tutorials/basics/README
+   search_space
+   schedulers
+   tutorials/multifidelity/README
+   tutorials/benchmarking/README
+   tutorials/visualization/README
+   tutorials/experimentation/README
+   tutorials/developer/README
+   tutorials/dev_bayesopt/README
+   tutorials/pasha/pasha
+   tutorials/transfer_learning/transfer_learning
+   tutorials/odsc_tutorial/README
+
 Videos featuring Syne Tune
 --------------------------
 
