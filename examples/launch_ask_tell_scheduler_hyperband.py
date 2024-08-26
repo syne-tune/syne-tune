@@ -19,7 +19,7 @@ Once done, user feeds the result into the Scheduler which uses the data to sugge
 
 
 In some cases, experiments needed for function evaluations can be very complex and require extra orchestration
-(example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
+(example vary from setting up jobs on non-aws clusters to running physical lab experiments) in which case this
 interface provides all the necessary flexibility
 
 This is an extension of launch_ask_tell_scheduler.py to run multi-fidelity methods such as Hyperband
@@ -30,7 +30,7 @@ from typing import Tuple
 
 import numpy as np
 
-from examples.launch_ask_tell_scheduler import AskTellScheduler
+from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
 from syne_tune.backend.trial_status import Trial, TrialResult
 from syne_tune.config_space import uniform
 from syne_tune.optimizer.baselines import ASHA
