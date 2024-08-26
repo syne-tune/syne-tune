@@ -14,31 +14,6 @@ following :ref:`train_height.py <train_height_script>` training script:
    :start-after: # permissions and limitations under the License.
 
 
-Fine-Tuning Hugging Face Model for Sentiment Classification
-===========================================================
-
-.. literalinclude:: ../../examples/launch_huggingface_classification.py
-   :caption: examples/launch_huggingface_classification.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* Running this script requires Syne Tune to be installed
-  `from source <getting_started.html#installation>`__.
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
-* Runs on four ``ml.g4dn.xlarge`` instances
-
-In this example, we use the SageMaker backend together with the
-SageMaker Hugging Face framework in order to fine-tune a DistilBERT
-model on the IMDB sentiment classification task. This task is one of
-our built-in benchmarks. For other ways to run this benchmark on
-different backends or remotely, consult
-`this tutorial <tutorials/benchmarking/README.html>`__.
-
-A more advanced example for fine-tuning Hugging Face transformers is given
-`here <benchmarking/fine_tuning_transformer_glue.html>`__.
-
-
 Launch HPO Experiment with Python Backend
 =========================================
 
@@ -129,37 +104,6 @@ blackbox. Since time is simulated, we can use
 ``max_wallclock_time=3600`` (one hour), but the experiment finishes
 in mere seconds. More details about the simulator backend is found in
 `this tutorial <tutorials/benchmarking/bm_simulator.html>`__.
-
-
-Joint Tuning of Instance Type and Hyperparameters using MOASHA
-==============================================================
-
-.. literalinclude:: ../../examples/launch_moasha_instance_tuning.py
-   :caption: examples/launch_moasha_instance_tuning.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* Needs code from :mod:`benchmarking.training_scripts.distilbert_on_imdb`,
-* which requires Syne Tune to be installed
-  `from source <getting_started.html#installation>`__.
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
-* Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
-  ``ml.g4dn.2xlarge``, ``ml.p2.xlarge``, ``ml.g5.2xlarge``, ``ml.g5.4xlarge``,
-  ``ml.g4dn.4xlarge``, ``ml.g5.8xlarge``, ``ml.g4dn.8xlarge``,
-  ``ml.p3.2xlarge``, ``ml.g5.16xlarge``. This list of instances types to be
-  searched over can be modified by the user
-
-In this example, we use the SageMaker backend together with the
-SageMaker Hugging Face framework in order to fine-tune a DistilBERT
-model on the IMDB sentiment classification task:
-
-* Instead of optimizing a single objective, we use
-  :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA` in order
-  to sample the Pareto frontier w.r.t. three objectives
-* We not only tune hyperparameters such as learning rate and weight
-  decay, but also the AWS instance type to be used for training. Here,
-  one of the objectives to minimize is the training cost (in dollars).
 
 
 Multi-objective Asynchronous Successive Halving (MOASHA)
@@ -266,56 +210,6 @@ installed:
    :caption: examples/training_scripts/rl_cartpole/requirements.txt
 
 
-Launch HPO Experiment with SageMaker Backend
-============================================
-
-.. literalinclude:: ../../examples/launch_height_sagemaker.py
-   :caption: examples/launch_height_sagemaker.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
-  More details are provided in
-  `this tutorial <tutorials/basics/basics_backend.html>`__.
-* This example can be sped up by using SageMaker managed warm pools, as in
-  `this example <#sagemaker-backend-and-checkpointing>`__.
-
-Makes use of :ref:`train_height.py <train_height_script>`.
-
-
-SageMaker Backend and Checkpointing
-===================================
-
-.. literalinclude:: ../../examples/launch_height_sagemaker_checkpoints.py
-   :caption: examples/launch_height_sagemaker_checkpoints.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
-
-This launcher script is using the following
-:ref:`train_height_checkpoint.py <train_height_checkpoint_script>` training script:
-
-.. literalinclude:: ../../examples/training_scripts/checkpoint_example/train_height_checkpoint.py
-   :name: train_height_checkpoint_script
-   :caption: examples/training_scripts/checkpoint_example/train_height_checkpoint.py
-   :start-after: # permissions and limitations under the License.
-
-Note that :class:`~syne_tune.backend.SageMakerBackend` is configured to use
-SageMaker managed warm pools:
-
-* ``keep_alive_period_in_seconds=300`` in the definition of the SageMaker
-  estimator
-* ``start_jobs_without_delay=False`` when creating :class:`~syne_tune.Tuner`
-
-Managed warm pools reduce both start-up and stop delays substantially, they
-are strongly recommended for multi-fidelity HPO with the SageMaker backend.
-More details are found in
-`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
-
-
 Retrieving the Best Checkpoint
 ==============================
 
@@ -331,43 +225,6 @@ This launcher script is using the following
    :caption: examples/training_scripts/xgboost/xgboost_checkpoint.py
    :start-after: # permissions and limitations under the License.
 
-
-Launch with SageMaker Backend and Custom Docker Image
-=====================================================
-
-.. literalinclude:: ../../examples/launch_height_sagemaker_custom_image.py
-   :caption: examples/launch_height_sagemaker_custom_image.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
-* This example is incomplete. If your training script has dependencies which
-  you would to provide as a Docker image, you need to upload it to ECR,
-  after which you can refer to it with ``image_uri``.
-
-Makes use of :ref:`train_height.py <train_height_script>`.
-
-
-Launch Experiments Remotely on SageMaker
-========================================
-
-.. literalinclude:: ../../examples/launch_height_sagemaker_remotely.py
-   :caption: examples/launch_height_sagemaker_remotely.py
-   :start-after: # permissions and limitations under the License.
-
-**Requirements**:
-
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
-
-Makes use of :ref:`train_height.py <train_height_script>`.
-
-This launcher script starts the HPO experiment as SageMaker training job,
-which allows you to select any instance type you like, while not having
-your local machine being blocked.
-`This tutorial <tutorials/benchmarking/README.html>`__ explains how to
-run many such remote experiments in parallel, so to speed up comparisons
-between alternatives.
 
 
 Launch HPO Experiment with Home-Made Scheduler
