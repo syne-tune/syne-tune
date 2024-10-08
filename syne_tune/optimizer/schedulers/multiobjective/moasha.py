@@ -80,7 +80,7 @@ class MOASHA(TrialScheduler):
         reduction_factor: float = 3,
         brackets: int = 1,
     ):
-        super(MOASHA, self).__init__(config_space=config_space)
+        super(MOASHA, self).__init__(config_space=config_space, metric=metrics)
         assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
         assert grace_period > 0, "grace_period must be positive!"

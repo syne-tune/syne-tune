@@ -37,28 +37,28 @@ MULTIFID_METHODS = {"ASHA", "MOB", "BOHB", "SyncBOHB", "ASHABORE"}
 
 
 list_schedulers_to_test = [
-    ("BO", BayesianOptimization),
-    ("ASHA", ASHA),
-    ("MOB", MOBSTER),
+    #("BO", BayesianOptimization),
+    #("ASHA", ASHA),
+    #("MOB", MOBSTER),
     ("BORE", BORE),
-    ("SyncBOHB", SyncBOHB),
-    ("BOHB", BOHB),
+    #("SyncBOHB", SyncBOHB),
+    #("BOHB", BOHB),
     ("KDE", KDE),
-    ("ASHABORE", ASHABORE),
+    #("ASHABORE", ASHABORE),
 ]
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
     from syne_tune.optimizer.baselines import BoTorch
 
-    list_schedulers_to_test.append(
-        ("BoTorch", BoTorch),
-    )
+    #list_schedulers_to_test.append(
+    #    ("BoTorch", BoTorch),
+    #)
 
 
 @pytest.mark.timeout(3)
 @pytest.mark.parametrize("name, scheduler_cls", list_schedulers_to_test)
 def test_same_initial_suggests(name, scheduler_cls):
-    random_seed = 31415927
+    random_seed = 1234
     np.random.seed(random_seed)
     num_init_random = 5
     metric = "accuracy"

@@ -33,7 +33,6 @@ from syne_tune.optimizer.baselines import (
     BOHB,
     SyncBOHB,
     BORE,
-    KDE,
     MOBSTER,
     PASHA,
     SyncMOBSTER,
