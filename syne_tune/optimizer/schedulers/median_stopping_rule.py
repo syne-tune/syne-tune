@@ -70,7 +70,7 @@ class MedianStoppingRule(TrialScheduler):
         grace_population: int = 5,
         rank_cutoff: float = 0.5,
     ):
-        super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space)
+        super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space, metric=metric)
         if metric is None and hasattr(scheduler, "metric"):
             metric = getattr(scheduler, "metric")
         self.metric = metric

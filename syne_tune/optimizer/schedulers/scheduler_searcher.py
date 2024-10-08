@@ -13,6 +13,7 @@
 from typing import Optional, Dict, Any
 import logging
 
+from syne_tune.optimizer.old_scheduler import OldTrialScheduler
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.scheduler import TrialSuggestion, TrialScheduler
 from syne_tune.optimizer.schedulers.random_seeds import (
@@ -24,7 +25,7 @@ from syne_tune.backend.trial_status import Trial
 logger = logging.getLogger(__name__)
 
 
-class TrialSchedulerWithSearcher(TrialScheduler):
+class TrialSchedulerWithSearcher(OldTrialScheduler):
     """
     Base class for trial schedulers which have a
     :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` member

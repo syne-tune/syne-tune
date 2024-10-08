@@ -15,11 +15,11 @@ from typing import Dict, List, Optional, Any
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
-    TransferLearningMixin,
+    TransferLearningMixin, TransferLearningMixinOld,
 )
 
 
-class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
+class RUSHScheduler(TransferLearningMixinOld, HyperbandScheduler):
     """
     A transfer learning variation of Hyperband which uses previously
     well-performing hyperparameter configurations as an initialization. The best

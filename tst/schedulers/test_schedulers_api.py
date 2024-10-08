@@ -50,6 +50,7 @@ from syne_tune.optimizer.baselines import (
 from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (
     MultiObjectiveMultiSurrogateSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers import RandomSearcher, GridSearcher
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
     SKLearnEstimatorWrapper,
 )
@@ -58,7 +59,6 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher impor
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
-    FIFOScheduler,
     MedianStoppingRule,
     HyperbandScheduler,
     PopulationBasedTraining,
@@ -71,6 +71,8 @@ from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     LCBAcquisitionFunction,
 )
+from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
+from syne_tune.optimizer.schedulers.searchers.bore import Bore
 from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
     SKLearnSurrogateSearcher,
 )
@@ -79,6 +81,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     BoundingBox,
     RUSHScheduler,
 )
+from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
     QuantileBasedSurrogateSearcher,
 )
@@ -161,11 +164,10 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
 
 
 list_schedulers_to_test = [
-    FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
-    FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
+    TrialScheduler(config_space, searcher=RandomSearcher(config_space, metric=metric1), metric=metric1, mode=mode),
+    TrialScheduler(config_space, searcher=KernelDensityEstimator(config_space=config_space, metric=metric1), metric=metric1, mode=mode),
+    TrialScheduler(config_space, searcher=Bore(config_space=config_space, metric=metric1), metric=metric1, mode=mode),
+    TrialScheduler(categorical_config_space, searcher=GridSearcher(categorical_config_space, metric=metric1), metric=metric1, mode=mode),
     HyperbandScheduler(
         config_space,
         searcher="random",
@@ -232,18 +234,12 @@ list_schedulers_to_test = [
     RandomSearch(config_space=config_space, metric=metric1, mode=mode),
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
-    FIFOScheduler(
+    TrialScheduler(
         searcher=SurrogateSearcher(
             mode=mode,
             config_space=config_space,
             metric=metric1,
         ),
-        mode=mode,
-        config_space=config_space,
-        metric=metric1,
-    ),
-    FIFOScheduler(
-        searcher="cqr",
         mode=mode,
         config_space=config_space,
         metric=metric1,
@@ -318,8 +314,9 @@ list_schedulers_to_test = [
         mode=mode,
     ),
     MedianStoppingRule(
-        scheduler=FIFOScheduler(
-            config_space, searcher="random", metric=metric1, mode=mode
+        scheduler=TrialScheduler(
+            config_space, searcher=RandomSearcher(config_space=config_space, metric=metric1),
+            metric=metric1, mode=mode
         ),
         resource_attr=resource_attr,
         metric=metric1,
@@ -336,7 +333,7 @@ list_schedulers_to_test = [
         metric=metric1,
         transfer_learning_evaluations=transfer_learning_evaluations,
     ),
-    FIFOScheduler(
+    TrialScheduler(
         searcher=QuantileBasedSurrogateSearcher(
             mode=mode,
             config_space=config_space,
@@ -422,31 +419,31 @@ list_schedulers_to_test = [
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
-        base_scheduler_factory=FIFOScheduler,
-        searcher="random",
+        base_scheduler_factory=TrialScheduler,
+        searcher=RandomSearcher(config_space, metric=metric1),
     ),
-    FIFOScheduler(
+    TrialScheduler(
         config_space,
         searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
-            metric="mean_loss",
+            metric=metric1,
             estimator=TestEstimator(),
             scoring_class=LCBAcquisitionFunction,
         ),
         metric=metric1,
         mode=mode,
     ),
-    FIFOScheduler(
+    TrialScheduler(
         config_space,
         searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
-            metric="mean_loss",
+            metric=metric1,
             estimator=TestEstimator(),
         ),
         metric=metric1,
         mode=mode,
     ),
-    FIFOScheduler(
+    TrialScheduler(
         config_space,
         searcher=MultiObjectiveMultiSurrogateSearcher(
             config_space=config_space,

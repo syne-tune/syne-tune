@@ -23,6 +23,8 @@ __all__ = [
     "RUSHScheduler",
 ]
 
+from tst.experiments.test_metric_name_mode import metric_names
+
 
 @dataclass
 class TransferLearningTaskEvaluations:
@@ -92,7 +94,7 @@ class TransferLearningTaskEvaluations:
         return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict("records")
 
 
-class TransferLearningMixin:
+class TransferLearningMixinOld:
     def __init__(
         self,
         config_space: Dict,
@@ -133,6 +135,75 @@ class TransferLearningMixin:
 
     def metric_names(self) -> List[str]:
         return self._metric_names
+
+    def top_k_hyperparameter_configurations_per_task(
+        self,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        num_hyperparameters_per_task: int,
+        mode: str,
+        metric: str,
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Returns the best hyperparameter configurations for each task.
+        :param transfer_learning_evaluations: Set of candidates to choose from.
+        :param num_hyperparameters_per_task: The number of top hyperparameters per task to return.
+        :param mode: 'min' or 'max', indicating the type of optimization problem.
+        :param metric: The metric to consider for ranking hyperparameters.
+        :returns: Dict which maps from task name to list of hyperparameters in order.
+        """
+        assert num_hyperparameters_per_task > 0 and isinstance(
+            num_hyperparameters_per_task, int
+        ), f"{num_hyperparameters_per_task} is no positive integer."
+        assert mode in ["min", "max"], f"Unknown mode {mode}, must be 'min' or 'max'."
+        assert metric in self.metric_names(), f"Unknown metric {metric}."
+        best_hps = dict()
+        for task, evaluation in transfer_learning_evaluations.items():
+            best_hps[task] = evaluation.top_k_hyperparameter_configurations(
+                num_hyperparameters_per_task, mode, metric
+            )
+        return best_hps
+
+class TransferLearningMixin:
+    def __init__(
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric: List[str],
+        **kwargs,
+    ):
+        """
+        A mixin that adds basic functionality for using offline evaluations.
+        :param config_space: configuration space to be sampled from
+        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
+        :param metric_names: name of the metric to be optimized.
+        """
+        super().__init__(config_space=config_space, metric=metric, **kwargs)
+        self._metric = metric
+        self._check_consistency(
+            config_space=config_space,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            metric_names=metric if isinstance(metric, list) else [metric],
+        )
+
+    def _check_consistency(
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric_names: List[str],
+    ):
+        for task, evals in transfer_learning_evaluations.items():
+            for key in config_space.keys():
+                assert key in evals.hyperparameters.columns, (
+                    f"the key {key} of the config space should appear in transfer learning evaluations "
+                    f"hyperparameters {evals.hyperparameters.columns}"
+                )
+            assert all([m in evals.objectives_names for m in metric_names]), (
+                f"all objectives used in the scheduler {self.metric_names()} should appear in transfer learning "
+                f"evaluations objectives {evals.objectives_names}"
+            )
+
+    def metric_names(self) -> List[str]:
+        return self._metric if isinstance(self._metric, list) else [self._metric]
 
     def top_k_hyperparameter_configurations_per_task(
         self,

@@ -69,7 +69,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         base_scheduler_factory: Callable[[Any], TrialScheduler] = None,
         **base_scheduler_kwargs,
     ):
-        super(LinearScalarizedScheduler, self).__init__(config_space)
+        super(LinearScalarizedScheduler, self).__init__(config_space, metric=metric)
         if scalarization_weights is None:
             scalarization_weights = np.ones(shape=len(metric))
         self.scalarization_weights = np.asarray(scalarization_weights)

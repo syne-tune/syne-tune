@@ -87,7 +87,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
         super().__init__(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            metric_names=[metric],
+            metric = [metric],
         )
         if mode is None:
             mode = "min"

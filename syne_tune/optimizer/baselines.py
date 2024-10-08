@@ -15,10 +15,10 @@ import logging
 import copy
 from functools import partial
 
+from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers import (
-    FIFOScheduler,
     HyperbandScheduler,
-    PopulationBasedTraining,
+    PopulationBasedTraining, FIFOScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
@@ -27,9 +27,15 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     LinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
+from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
+    RandomSearcher,
+    GridSearcher
+)
+
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -47,7 +53,7 @@ logger = logging.getLogger(__name__)
 def _random_seed_from_generator(random_seed: int) -> int:
     """
     This helper makes sure that a searcher within
-    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` is seeded in the same
+    :class:`~syne_tune.optimizer.schedulers.TrialScheduler` is seeded in the same
     way whether it is created by the searcher factory, or by hand.
 
     :param random_seed: Random seed for scheduler
@@ -61,7 +67,7 @@ def _assert_searcher_must_be(kwargs: Dict[str, Any], name: str):
     assert searcher is None or searcher == name, f"Must have searcher='{name}'"
 
 
-class RandomSearch(FIFOScheduler):
+class RandomSearch(TrialScheduler):
     """Random search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
@@ -70,21 +76,21 @@ class RandomSearch(FIFOScheduler):
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
-        searcher_name = "random"
-        _assert_searcher_must_be(kwargs, searcher_name)
+
+        searcher = RandomSearcher(config_space=config_space, metric=metric, **kwargs)
         super(RandomSearch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=searcher_name,
+            searcher=searcher,
             **kwargs,
         )
 
 
-class GridSearch(FIFOScheduler):
+class GridSearch(TrialScheduler):
     """Grid search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GridSearcher`
@@ -93,16 +99,15 @@ class GridSearch(FIFOScheduler):
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
-        searcher_name = "grid"
-        _assert_searcher_must_be(kwargs, searcher_name)
+        searcher = GridSearcher(config_space, metric=metric, **kwargs)
         super(GridSearch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=searcher_name,
+            searcher=searcher,
             **kwargs,
         )
 
@@ -116,7 +121,7 @@ class BayesianOptimization(FIFOScheduler):
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
@@ -593,7 +598,7 @@ def _create_searcher_kwargs(
     return searcher_kwargs
 
 
-class BORE(FIFOScheduler):
+class BORE(TrialScheduler):
     """Bayesian Optimization by Density-Ratio Estimation (BORE).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`
@@ -603,14 +608,13 @@ class BORE(FIFOScheduler):
     :param metric: Name of metric to optimize
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
         metric: str,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -618,14 +622,11 @@ class BORE(FIFOScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
+        searcher = Bore(config_space=config_space, metric=metric, **kwargs)
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=Bore(**searcher_kwargs),
-            random_seed=random_seed,
+            searcher=searcher,
             **kwargs,
         )
 
@@ -641,7 +642,7 @@ class ASHABORE(HyperbandScheduler):
     :param resource_attr: Name of resource attribute
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -672,7 +673,7 @@ class ASHABORE(HyperbandScheduler):
         )
 
 
-class BoTorch(FIFOScheduler):
+class BoTorch(TrialScheduler):
     """Bayesian Optimization using BoTorch
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`
@@ -682,14 +683,13 @@ class BoTorch(FIFOScheduler):
     :param metric: Name of metric to optimize
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
         metric: str,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -697,19 +697,16 @@ class BoTorch(FIFOScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
+        searcher = BoTorchSearcher(config_space=config_space, metric=metric, **kwargs)
         super(BoTorch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=BoTorchSearcher(**searcher_kwargs),
-            random_seed=random_seed,
+            searcher=searcher,
             **kwargs,
         )
 
 
-class REA(FIFOScheduler):
+class REA(TrialScheduler):
     """Regularized Evolution (REA).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
@@ -725,7 +722,7 @@ class REA(FIFOScheduler):
         Defaults to 10
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -737,15 +734,14 @@ class REA(FIFOScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["population_size"] = population_size
-        searcher_kwargs["sample_size"] = sample_size
+        searcher = RegularizedEvolution(config_space, metric=metric,
+                                        population_size=population_size,
+                                        sample_size=sample_size,
+                                        **kwargs)
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=RegularizedEvolution(**searcher_kwargs),
+            searcher=searcher,
             random_seed=random_seed,
             **kwargs,
         )
@@ -772,7 +768,7 @@ def create_gaussian_process_estimator(
     return estimator
 
 
-class MORandomScalarizationBayesOpt(FIFOScheduler):
+class MORandomScalarizationBayesOpt(TrialScheduler):
     """
     Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.MultiObjectiveMultiSurrogateSearcher`
     with one standard GP surrogate model per metric (same as in
@@ -791,7 +787,7 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
     :param estimators: Use these surrogate models instead of the default GP
         one. Optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Here,
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`. Here,
         ``kwargs["search_options"]`` is used to create the searcher and its
         GP surrogate models.
     """
@@ -856,7 +852,7 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         )
 
 
-class NSGA2(FIFOScheduler):
+class NSGA2(TrialScheduler):
     """
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
     for ``kwargs["search_options"]`` parameters.
@@ -866,7 +862,7 @@ class NSGA2(FIFOScheduler):
     :param population_size: The size of the population for NSGA-2
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -878,22 +874,20 @@ class NSGA2(FIFOScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
-        searcher_kwargs["population_size"] = population_size
+
+        searcher = NSGA2Searcher(config_space, metric=metric, population_size=population_size, **kwargs)
+
         super(NSGA2, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=NSGA2Searcher(**searcher_kwargs),
+            searcher=searcher,
             random_seed=random_seed,
             **kwargs,
         )
 
 
-class MOREA(FIFOScheduler):
+class MOREA(TrialScheduler):
     """
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
@@ -909,7 +903,7 @@ class MOREA(FIFOScheduler):
         Defaults to 10
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -951,7 +945,7 @@ class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
     :param scalarization_weights: Positive weight used for the scalarization.
         Defaults to all 1
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -982,7 +976,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
     :param metric: Name of metric to optimize
     :param constraint_attr: Name of constraint metric
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -1000,7 +994,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
         )
 
 
-class ZeroShotTransfer(FIFOScheduler):
+class ZeroShotTransfer(TrialScheduler):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
     average rank obtained on historic metadata (transfer_learning_evaluations).
@@ -1024,7 +1018,7 @@ class ZeroShotTransfer(FIFOScheduler):
     :param random_seed: Used for randomly sampling candidates. Only used if
         ``use_surrogates=True``.
     :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(
@@ -1126,10 +1120,10 @@ class ASHACTS(HyperbandScheduler):
         )
 
 
-class KDE(FIFOScheduler):
+class KDE(TrialScheduler):
     """Single-fidelity variant of BOHB
 
-    Combines :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` with TPE-like
+    Combines :class:`~syne_tune.optimizer.schedulers.TrialScheduler` with TPE-like
     Bayesian optimization, using kernel density estimators.
 
     See
@@ -1138,21 +1132,19 @@ class KDE(FIFOScheduler):
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
     """
 
     def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
-        searcher_name = "kde"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super(KDE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=searcher_name,
+            searcher=KernelDensityEstimator(config_space=config_space, metric=metric, **kwargs),
             **kwargs,
         )
 
 
-class CQR(FIFOScheduler):
+class CQR(TrialScheduler):
     """
     Single-fidelity Conformal Quantile Regression approach proposed in:
         | Optimizing Hyperparameters with Conformal Quantile Regression.
@@ -1273,7 +1265,7 @@ try:
         ExpectedHyperVolumeImprovement,
     )
 
-    class EHVI(FIFOScheduler):
+    class EHVI(TrialScheduler):
         """
         Implements the Expected Hypervolume Improvement method.
 
@@ -1290,7 +1282,7 @@ try:
             Defaults to 10
         :param random_seed: Random seed, optional
         :param kwargs: Additional arguments to
-            :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+            :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
         """
 
         def __init__(
