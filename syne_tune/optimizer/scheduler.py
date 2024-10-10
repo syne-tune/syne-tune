@@ -169,8 +169,8 @@ class TrialScheduler:
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
-        mode: str = "min",
+        metric: Union[List[str], str],
+        mode: Union[List[str], str] = "min",
         searcher: Any = None,
         points_to_evaluate=None,
         random_seed: int = None,
