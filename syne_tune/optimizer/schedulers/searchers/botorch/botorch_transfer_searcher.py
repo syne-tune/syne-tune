@@ -64,13 +64,15 @@ class BoTorchTransfer(BoTorch):
         super(BoTorch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=BoTorchTransferSearcher(config_space=config_space,
-                                             metric=metric,
-                                             transfer_learning_evaluations=transfer_learning_evaluations,
-                                             new_task_id=new_task_id,
-                                             random_seed=random_seed,
-                                             encode_tasks_ordinal=encode_tasks_ordinal,
-                                             **kwargs),
+            searcher=BoTorchTransferSearcher(
+                config_space=config_space,
+                metric=metric,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                new_task_id=new_task_id,
+                random_seed=random_seed,
+                encode_tasks_ordinal=encode_tasks_ordinal,
+                **kwargs,
+            ),
             random_seed=random_seed,
             **kwargs,
         )
