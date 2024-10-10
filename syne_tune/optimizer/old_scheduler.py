@@ -22,6 +22,7 @@ from syne_tune.config_space import (
 )
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
+
 logger = logging.getLogger(__name__)
 
 

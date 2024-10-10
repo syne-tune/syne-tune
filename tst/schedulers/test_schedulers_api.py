@@ -164,10 +164,30 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
 
 
 list_schedulers_to_test = [
-    TrialScheduler(config_space, searcher=RandomSearcher(config_space, metric=metric1), metric=metric1, mode=mode),
-    TrialScheduler(config_space, searcher=KernelDensityEstimator(config_space=config_space, metric=metric1), metric=metric1, mode=mode),
-    TrialScheduler(config_space, searcher=Bore(config_space=config_space, metric=metric1), metric=metric1, mode=mode),
-    TrialScheduler(categorical_config_space, searcher=GridSearcher(categorical_config_space, metric=metric1), metric=metric1, mode=mode),
+    TrialScheduler(
+        config_space,
+        searcher=RandomSearcher(config_space, metric=metric1),
+        metric=metric1,
+        mode=mode,
+    ),
+    TrialScheduler(
+        config_space,
+        searcher=KernelDensityEstimator(config_space=config_space, metric=metric1),
+        metric=metric1,
+        mode=mode,
+    ),
+    TrialScheduler(
+        config_space,
+        searcher=Bore(config_space=config_space, metric=metric1),
+        metric=metric1,
+        mode=mode,
+    ),
+    TrialScheduler(
+        categorical_config_space,
+        searcher=GridSearcher(categorical_config_space, metric=metric1),
+        metric=metric1,
+        mode=mode,
+    ),
     HyperbandScheduler(
         config_space,
         searcher="random",
@@ -315,8 +335,10 @@ list_schedulers_to_test = [
     ),
     MedianStoppingRule(
         scheduler=TrialScheduler(
-            config_space, searcher=RandomSearcher(config_space=config_space, metric=metric1),
-            metric=metric1, mode=mode
+            config_space,
+            searcher=RandomSearcher(config_space=config_space, metric=metric1),
+            metric=metric1,
+            mode=mode,
         ),
         resource_attr=resource_attr,
         metric=metric1,

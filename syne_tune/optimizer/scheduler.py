@@ -21,7 +21,8 @@ from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
 )
-#from syne_tune.optimizer.schedulers.searchers.searcher_base import BaseSearcher
+
+# from syne_tune.optimizer.schedulers.searchers.searcher_base import BaseSearcher
 from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
@@ -165,14 +166,16 @@ class TrialScheduler:
         optional
     """
 
-    def __init__(self, config_space: Dict[str, Any],
-                 metric: str,
-                 mode: str = 'min',
-                 searcher: Any = None,
-                 points_to_evaluate=None,
-                 random_seed: int = None,
-                 **kwargs
-                 ):
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        mode: str = "min",
+        searcher: Any = None,
+        points_to_evaluate=None,
+        random_seed: int = None,
+        **kwargs,
+    ):
         if points_to_evaluate is None:
             self.points_to_evaluate = []
         else:
@@ -182,12 +185,15 @@ class TrialScheduler:
         self.mode = mode
 
         if searcher is None:
-            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import RandomSearcher
+            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
+                RandomSearcher,
+            )
+
             self.searcher = RandomSearcher(config_space=config_space, metric=metric)
         else:
             self.searcher = searcher
         if random_seed is None:
-            self.random_seed = np.random.randint(0, 2**31 - 1)
+            self.random_seed = np.random.randint(0, 2 ** 31 - 1)
         else:
             self.random_seed = random_seed
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
@@ -221,18 +227,18 @@ class TrialScheduler:
         :return: Suggestion for a trial to be started or to be resumed, see
             above. If no suggestion can be made, None is returned
         """
-        
- #       if self.time_keeper is None:
- #           self.time_keeper = RealTimeKeeper()
- #           self.time_keeper.start_of_time()
+
+        #       if self.time_keeper is None:
+        #           self.time_keeper = RealTimeKeeper()
+        #           self.time_keeper.start_of_time()
 
         # Ask searcher for config of new trial to start
-        #extra_kwargs["elapsed_time"] = self._elapsed_time()
+        # extra_kwargs["elapsed_time"] = self._elapsed_time()
         trial_id = str(trial_id)
-        config = self.searcher.get_config( trial_id=trial_id)
+        config = self.searcher.get_config(trial_id=trial_id)
         if config is not None:
             config = cast_config_values(config, self.config_space)
-            #config = self._on_config_suggest(config, trial_id, **extra_kwargs)
+            # config = self._on_config_suggest(config, trial_id, **extra_kwargs)
             config = TrialSuggestion.start_suggestion(self._postprocess_config(config))
         return config
 
@@ -267,7 +273,6 @@ class TrialScheduler:
             config_space=self.config_space,
         )
 
-
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
 
@@ -295,7 +300,9 @@ class TrialScheduler:
         :return: Decision what to do with the trial
         """
         config = self._preprocess_config(trial.config)
-        self.searcher.on_trial_result(str(trial.trial_id), config, result=result, update=False)
+        self.searcher.on_trial_result(
+            str(trial.trial_id), config, result=result, update=False
+        )
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
@@ -357,4 +364,6 @@ class TrialScheduler:
         """
         Return True if a scheduler is multi-objective.
         """
-        return True if (isinstance(self.metric, list) and len(self.metric) > 1) else False
+        return (
+            True if (isinstance(self.metric, list) and len(self.metric) > 1) else False
+        )

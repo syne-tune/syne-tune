@@ -43,14 +43,14 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 SCHEDULERS = [
     (GridSearch, False),
     (RandomSearch, False),
- #   (BayesianOptimization, False),
- #   (ASHA, True),
- #   (HyperTune, True),
- #   (DyHPO, True),
-#    (SyncHyperband, True),
-#    (DEHB, True),
-#    (BOHB, True),
-#    (SyncBOHB, True),
+    #   (BayesianOptimization, False),
+    #   (ASHA, True),
+    #   (HyperTune, True),
+    #   (DyHPO, True),
+    #    (SyncHyperband, True),
+    #    (DEHB, True),
+    #    (BOHB, True),
+    #    (SyncBOHB, True),
     (BORE, False),
     (KDE, False),
 ]
@@ -97,7 +97,7 @@ def test_allow_duplicates_or_not(tpl1, tpl2):
     }
 
     if multifid:
-        kwargs['resource_attr'] = resource_attr
+        kwargs["resource_attr"] = resource_attr
 
     scheduler = scheduler_cls(
         config_space,
@@ -167,10 +167,10 @@ def test_allow_duplicates_or_not(tpl1, tpl2):
 # botorch.exceptions.errors.ModelFittingError: All attempts to fit the model have failed.
 SCHEDULERS = [
     (RandomSearch, False, False),
- #   (BayesianOptimization, False, True),
- #   (ASHA, True, False),
- #   (HyperTune, True, True),
- #   (SyncHyperband, True, False),
+    #   (BayesianOptimization, False, True),
+    #   (ASHA, True, False),
+    #   (HyperTune, True, True),
+    #   (SyncHyperband, True, False),
     (BORE, False, False),
     # (BoTorch, False, True),
 ]
@@ -209,7 +209,7 @@ def test_restrict_configurations(scheduler_cls, is_multifid, is_bo):
         "restrict_configurations": restrict_configurations,
     }
     if is_multifid:
-        kwargs['resource_attr'] = resource_attr
+        kwargs["resource_attr"] = resource_attr
 
     if is_bo:
         kwargs["num_init_random"] = 3
