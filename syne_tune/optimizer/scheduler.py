@@ -192,7 +192,10 @@ class TrialScheduler:
         self.mode = mode
 
         if searcher is None:
-            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import RandomSearcher
+            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
+                RandomSearcher,
+            )
+
             self.searcher = RandomSearcher(config_space=config_space, metric=metric)
         else:
             self.searcher = searcher
