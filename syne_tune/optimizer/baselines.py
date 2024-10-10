@@ -796,9 +796,7 @@ class NSGA2(TrialScheduler):
         **kwargs,
     ):
 
-        searcher = NSGA2Searcher(
-            config_space, metric=metric, **kwargs
-        )
+        searcher = NSGA2Searcher(config_space, metric=metric, **kwargs)
 
         super(NSGA2, self).__init__(
             config_space=config_space,
