@@ -667,23 +667,17 @@ class REA(TrialScheduler):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        population_size: int = 100,
-        sample_size: int = 10,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         searcher = RegularizedEvolution(
             config_space,
             metric=metric,
-            population_size=population_size,
-            sample_size=sample_size,
             **kwargs,
         )
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
             searcher=searcher,
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -691,14 +685,12 @@ class REA(TrialScheduler):
 def create_gaussian_process_estimator(
     config_space: Dict[str, Any],
     metric: str,
-    random_seed: Optional[int] = None,
-    search_options: Optional[Dict[str, Any]] = None,
+    **kwargs,
 ) -> Estimator:
     scheduler = BayesianOptimization(
         config_space=config_space,
         metric=metric,
-        random_seed=random_seed,
-        search_options=search_options,
+        **kwargs,
     )
     searcher = scheduler.searcher  # GPFIFOSearcher
     state_transformer = searcher.state_transformer  # ModelStateTransformer
@@ -738,7 +730,6 @@ class MORandomScalarizationBayesOpt(TrialScheduler):
         config_space: Dict[str, Any],
         metric: List[str],
         mode: Union[List[str], str] = "min",
-        random_seed: Optional[int] = None,
         estimators: Optional[Dict[str, Estimator]] = None,
         **kwargs,
     ):
@@ -750,23 +741,20 @@ class MORandomScalarizationBayesOpt(TrialScheduler):
         except ImportError:
             raise
 
+        if type(mode) == str:
+            mode = [mode] * len(metric)
+
         if estimators is None:
             estimators = dict()
         else:
             estimators = estimators.copy()
-        if isinstance(mode, str):
-            mode = [mode] * len(metric)
-        if "search_options" in kwargs:
-            search_options = kwargs["search_options"].copy()
-        else:
-            search_options = dict()
-        search_options["no_fantasizing"] = True
-        for _metric in metric:
+        for _metric, _mode in zip(metric, mode):
             if _metric not in estimators:
                 estimators[_metric] = create_gaussian_process_estimator(
                     config_space=config_space,
                     metric=_metric,
-                    search_options=search_options,
+                    mode=_mode,
+                    **kwargs,
                 )
         # Note: ``mode`` is dealt with in the ``update`` method of the MO
         # searcher, by converting the metrics. Internally, all metrics are
@@ -775,18 +763,15 @@ class MORandomScalarizationBayesOpt(TrialScheduler):
             config_space=config_space,
             metric=metric,
             estimators=estimators,
+            scoring_class=MultiObjectiveLCBRandomLinearScalarization,
             mode=mode,
-            scoring_class=partial(
-                MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
-            ),
             **kwargs,
         )
         super().__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=searcher,
-            random_seed=random_seed,
+            mode=mode,
             **kwargs,
         )
 
@@ -808,22 +793,17 @@ class NSGA2(TrialScheduler):
         self,
         config_space: Dict[str, Any],
         metric: List[str],
-        mode: Union[List[str], str] = "min",
-        population_size: int = 20,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
 
         searcher = NSGA2Searcher(
-            config_space, metric=metric, population_size=population_size, **kwargs
+            config_space, metric=metric, **kwargs
         )
 
         super(NSGA2, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=searcher,
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -851,25 +831,16 @@ class MOREA(TrialScheduler):
         self,
         config_space: Dict[str, Any],
         metric: List[str],
-        mode: Union[List[str], str] = "min",
-        population_size: int = 100,
-        sample_size: int = 10,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         super(MOREA, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=MultiObjectiveRegularizedEvolution(
                 config_space=config_space,
                 metric=metric,
-                mode=mode,
-                population_size=population_size,
-                sample_size=sample_size,
                 **kwargs,
             ),
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -970,10 +941,8 @@ class ZeroShotTransfer(TrialScheduler):
         config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
-        mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
         use_surrogates: bool = False,
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -984,17 +953,14 @@ class ZeroShotTransfer(TrialScheduler):
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=zero_shot.ZeroShotTransfer(
                 config_space=config_space,
-                mode=mode,
                 metric=metric,
                 sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
                 transfer_learning_evaluations=transfer_learning_evaluations,
                 use_surrogates=use_surrogates,
                 **kwargs,
             ),
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -1030,8 +996,6 @@ class ASHACTS(HyperbandScheduler):
         metric: str,
         resource_attr: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        mode: str = "min",
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -1044,16 +1008,13 @@ class ASHACTS(HyperbandScheduler):
         super(ASHACTS, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=QuantileBasedSurrogateSearcher(
                 config_space=config_space,
                 metric=metric,
                 transfer_learning_evaluations=transfer_learning_evaluations,
-                mode=mode,
                 **kwargs,
             ),
             resource_attr=resource_attr,
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -1098,8 +1059,6 @@ class CQR(TrialScheduler):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        mode: str = "min",
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -1112,11 +1071,9 @@ class CQR(TrialScheduler):
         super(CQR, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=SurrogateSearcher(
-                config_space=config_space, mode=mode, metric=metric, **kwargs
+                config_space=config_space, metric=metric, **kwargs
             ),
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -1136,8 +1093,6 @@ class ASHACQR(HyperbandScheduler):
         config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
-        mode: str = "min",
-        random_seed: Optional[int] = None,
         **kwargs,
     ):
         try:
@@ -1150,12 +1105,10 @@ class ASHACQR(HyperbandScheduler):
         super(ASHACQR, self).__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
             searcher=SurrogateSearcher(
-                config_space=config_space, metric=metric, mode=mode, **kwargs
+                config_space=config_space, metric=metric, **kwargs
             ),
             resource_attr=resource_attr,
-            random_seed=random_seed,
             **kwargs,
         )
 
@@ -1172,9 +1125,6 @@ try:
             self,
             config_space: Dict[str, Any],
             metric: str,
-            mode: str = "min",
-            points_to_evaluate: Optional[list] = None,
-            random_seed: Optional[int] = None,
             **kwargs,
         ):
             """
@@ -1187,9 +1137,6 @@ try:
             super(SMAC, self).__init__(
                 config_space=config_space,
                 metric=metric,
-                mode=mode,
-                random_seed=random_seed,
-                points_to_evaluate=points_to_evaluate,
                 **kwargs,
             )
 
@@ -1225,23 +1172,17 @@ try:
             self,
             config_space: Dict[str, Any],
             metric: List[str],
-            mode: Union[List[str], str] = "min",
-            random_seed: Optional[int] = None,
             **kwargs,
         ):
 
             super(EHVI, self).__init__(
                 config_space=config_space,
                 metric=metric,
-                mode=mode,
                 searcher=ExpectedHyperVolumeImprovement(
                     config_space=config_space,
                     metric=metric,
-                    mode=mode,
-                    random_seed=random_seed,
                     **kwargs,
                 ),
-                random_seed=random_seed,
                 **kwargs,
             )
 
