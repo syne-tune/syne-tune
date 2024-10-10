@@ -114,7 +114,7 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
         self.ref_point = torch.ones(len(metric)) * 2
 
         # Set the random seed for botorch as well
-        if "random_seed" in kwargs and kwargs['random_seed'] is not None:
+        if "random_seed" in kwargs and kwargs["random_seed"] is not None:
             random.manual_seed(kwargs["random_seed"])
 
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):

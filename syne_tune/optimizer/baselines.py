@@ -121,7 +121,6 @@ class BayesianOptimization(TrialScheduler):
         )
 
 
-
 class ASHA(HyperbandScheduler):
     """Asynchronous Successive Halving (ASHA).
 
@@ -603,9 +602,9 @@ class ASHABORE(HyperbandScheduler):
         super(ASHABORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=MultiFidelityBore(config_space=config_space,
-                                       metric=metric,
-                                       **kwargs),
+            searcher=MultiFidelityBore(
+                config_space=config_space, metric=metric, **kwargs
+            ),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -862,12 +861,14 @@ class MOREA(TrialScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=MultiObjectiveRegularizedEvolution(config_space=config_space,
-                                                        metric=metric,
-                                                        mode=mode,
-                                                        population_size=population_size,
-                                                        sample_size=sample_size,
-                                                        **kwargs),
+            searcher=MultiObjectiveRegularizedEvolution(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                population_size=population_size,
+                sample_size=sample_size,
+                **kwargs,
+            ),
             random_seed=random_seed,
             **kwargs,
         )
@@ -922,8 +923,12 @@ class ConstrainedBayesianOptimization(TrialScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, constraint_attr: str, **kwargs
     ):
-        searcher = ConstrainedGPFIFOSearcher(config_space=config_space, metric=metric,
-                                             constraint_attr=constraint_attr, **kwargs)
+        searcher = ConstrainedGPFIFOSearcher(
+            config_space=config_space,
+            metric=metric,
+            constraint_attr=constraint_attr,
+            **kwargs,
+        )
 
         super(ConstrainedBayesianOptimization, self).__init__(
             config_space=config_space,
@@ -980,13 +985,15 @@ class ZeroShotTransfer(TrialScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=zero_shot.ZeroShotTransfer(config_space=config_space,
-                                                mode=mode,
-                                                metric=metric,
-                                                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
-                                                transfer_learning_evaluations=transfer_learning_evaluations,
-                                                use_surrogates=use_surrogates,
-                                                **kwargs),
+            searcher=zero_shot.ZeroShotTransfer(
+                config_space=config_space,
+                mode=mode,
+                metric=metric,
+                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                use_surrogates=use_surrogates,
+                **kwargs,
+            ),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1038,11 +1045,13 @@ class ASHACTS(HyperbandScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=QuantileBasedSurrogateSearcher(config_space=config_space,
-                                                    metric=metric,
-                                                    transfer_learning_evaluations=transfer_learning_evaluations,
-                                                    mode=mode,
-                                                    **kwargs),
+            searcher=QuantileBasedSurrogateSearcher(
+                config_space=config_space,
+                metric=metric,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                mode=mode,
+                **kwargs,
+            ),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -1104,10 +1113,9 @@ class CQR(TrialScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(config_space=config_space,
-                                       mode=mode,
-                                       metric=metric,
-                                       **kwargs),
+            searcher=SurrogateSearcher(
+                config_space=config_space, mode=mode, metric=metric, **kwargs
+            ),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1143,10 +1151,9 @@ class ASHACQR(HyperbandScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(config_space=config_space,
-                                       metric=metric,
-                                       mode=mode,
-                                       **kwargs),
+            searcher=SurrogateSearcher(
+                config_space=config_space, metric=metric, mode=mode, **kwargs
+            ),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -1227,11 +1234,13 @@ try:
                 config_space=config_space,
                 metric=metric,
                 mode=mode,
-                searcher=ExpectedHyperVolumeImprovement(config_space=config_space,
-                                                        metric=metric,
-                                                        mode=mode,
-                                                        random_seed=random_seed,
-                                                        **kwargs),
+                searcher=ExpectedHyperVolumeImprovement(
+                    config_space=config_space,
+                    metric=metric,
+                    mode=mode,
+                    random_seed=random_seed,
+                    **kwargs,
+                ),
                 random_seed=random_seed,
                 **kwargs,
             )
