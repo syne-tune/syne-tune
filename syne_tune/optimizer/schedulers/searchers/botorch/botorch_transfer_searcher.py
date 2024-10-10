@@ -27,7 +27,6 @@ except ImportError as e:
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch
 from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
-from syne_tune.optimizer.baselines import _create_searcher_kwargs
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -62,16 +61,16 @@ class BoTorchTransfer(BoTorch):
         **kwargs,
     ):
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["transfer_learning_evaluations"] = transfer_learning_evaluations
-        searcher_kwargs["new_task_id"] = new_task_id
-        searcher_kwargs["encode_tasks_ordinal"] = encode_tasks_ordinal
         super(BoTorch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=BoTorchTransferSearcher(**searcher_kwargs),
+            searcher=BoTorchTransferSearcher(config_space=config_space,
+                                             metric=metric,
+                                             transfer_learning_evaluations=transfer_learning_evaluations,
+                                             new_task_id=new_task_id,
+                                             random_seed=random_seed,
+                                             encode_tasks_ordinal=encode_tasks_ordinal,
+                                             **kwargs),
             random_seed=random_seed,
             **kwargs,
         )

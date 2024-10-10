@@ -19,13 +19,16 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers import (
     HyperbandScheduler,
     PopulationBasedTraining,
-    FIFOScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
     MultiObjectiveRegularizedEvolution,
     NSGA2Searcher,
     LinearScalarizedScheduler,
+)
+from syne_tune.optimizer.schedulers.searchers import GPFIFOSearcher
+from syne_tune.optimizer.schedulers.searchers.constrained import (
+    ConstrainedGPFIFOSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
@@ -36,6 +39,7 @@ from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
     RandomSearcher,
     GridSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.bore import Bore
 
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
@@ -44,28 +48,10 @@ from syne_tune.optimizer.schedulers.synchronous import (
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
-from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 
 from syne_tune.util import dict_get
 
 logger = logging.getLogger(__name__)
-
-
-def _random_seed_from_generator(random_seed: int) -> int:
-    """
-    This helper makes sure that a searcher within
-    :class:`~syne_tune.optimizer.schedulers.TrialScheduler` is seeded in the same
-    way whether it is created by the searcher factory, or by hand.
-
-    :param random_seed: Random seed for scheduler
-    :return: Random seed to be used for searcher created by hand
-    """
-    return RandomSeedGenerator(random_seed)()
-
-
-def _assert_searcher_must_be(kwargs: Dict[str, Any], name: str):
-    searcher = kwargs.get("searcher")
-    assert searcher is None or searcher == name, f"Must have searcher='{name}'"
 
 
 class RandomSearch(TrialScheduler):
@@ -113,7 +99,7 @@ class GridSearch(TrialScheduler):
         )
 
 
-class BayesianOptimization(FIFOScheduler):
+class BayesianOptimization(TrialScheduler):
     """Gaussian process based Bayesian optimization.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
@@ -126,24 +112,18 @@ class BayesianOptimization(FIFOScheduler):
     """
 
     def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
-        searcher_name = "bayesopt"
-        _assert_searcher_must_be(kwargs, searcher_name)
+        searcher = GPFIFOSearcher(config_space, metric=metric, **kwargs)
         super(BayesianOptimization, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=searcher_name,
+            searcher=searcher,
             **kwargs,
         )
 
 
-def _assert_need_one(kwargs: Dict[str, Any], need_one: Optional[set] = None):
-    if need_one is None:
-        need_one = {"max_t", "max_resource_attr"}
-    assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
-
 
 class ASHA(HyperbandScheduler):
-    """Asynchronous Sucessive Halving (ASHA).
+    """Asynchronous Successive Halving (ASHA).
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
     ``type="promotion"``, the latter is more useful.
@@ -160,9 +140,7 @@ class ASHA(HyperbandScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
-        _assert_need_one(kwargs)
         searcher_name = "random"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super(ASHA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -201,9 +179,7 @@ class MOBSTER(HyperbandScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
-        _assert_need_one(kwargs)
         searcher_name = "bayesopt"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super(MOBSTER, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -247,9 +223,7 @@ class HyperTune(HyperbandScheduler):
     """
 
     def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
-        _assert_need_one(kwargs)
         searcher_name = "hypertune"
-        _assert_searcher_must_be(kwargs, searcher_name)
         kwargs = copy.deepcopy(kwargs)
         search_options = dict_get(kwargs, "search_options", dict())
         k, v, supp = "model", "gp_independent", {"gp_independent", "gp_multitask"}
@@ -336,9 +310,7 @@ class DyHPO(HyperbandScheduler):
         probability_sh: Optional[float] = None,
         **kwargs,
     ):
-        _assert_need_one(kwargs)
         searcher_name = "dyhpo"
-        _assert_searcher_must_be(kwargs, searcher_name)
         scheduler_type = kwargs.get("type")
         assert (
             scheduler_type is None or scheduler_type == "dyhpo"
@@ -382,7 +354,6 @@ class PASHA(HyperbandScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
-        _assert_need_one(kwargs)
         super(PASHA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -418,9 +389,7 @@ class BOHB(HyperbandScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
-        _assert_need_one(kwargs)
         searcher_name = "kde"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super(BOHB, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -453,7 +422,6 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         super(SyncHyperband, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -490,9 +458,7 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         searcher_name = "kde"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super(SyncBOHB, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -524,7 +490,6 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         super(DEHB, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -565,9 +530,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         searcher_name = "bayesopt"
-        _assert_searcher_must_be(kwargs, searcher_name)
         search_options = dict_get(kwargs, "search_options", dict())
         if "model" not in search_options:
             search_options["model"] = "gp_independent"
@@ -579,24 +542,6 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
             resource_attr=resource_attr,
             **kwargs,
         )
-
-
-def _create_searcher_kwargs(
-    config_space: Dict[str, Any],
-    metric: Union[str, List[str]],
-    random_seed: Optional[int],
-    kwargs: Dict[str, Any],
-) -> Dict[str, Any]:
-    searcher_kwargs = dict(
-        config_space=config_space,
-        metric=metric,
-        points_to_evaluate=kwargs.get("points_to_evaluate"),
-    )
-    search_options = dict_get(kwargs, "search_options", dict())
-    searcher_kwargs.update(search_options)
-    if random_seed is not None:
-        searcher_kwargs["random_seed"] = _random_seed_from_generator(random_seed)
-    return searcher_kwargs
 
 
 class BORE(TrialScheduler):
@@ -618,10 +563,6 @@ class BORE(TrialScheduler):
         metric: str,
         **kwargs,
     ):
-        try:
-            from syne_tune.optimizer.schedulers.searchers.bore import Bore
-        except ImportError:
-            raise
 
         searcher = Bore(config_space=config_space, metric=metric, **kwargs)
         super(BORE, self).__init__(
@@ -659,15 +600,12 @@ class ASHABORE(HyperbandScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["resource_attr"] = resource_attr
-        searcher_kwargs["mode"] = kwargs.get("mode")
         super(ASHABORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=MultiFidelityBore(**searcher_kwargs),
+            searcher=MultiFidelityBore(config_space=config_space,
+                                       metric=metric,
+                                       **kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -813,10 +751,6 @@ class MORandomScalarizationBayesOpt(TrialScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-
         if estimators is None:
             estimators = dict()
         else:
@@ -839,12 +773,14 @@ class MORandomScalarizationBayesOpt(TrialScheduler):
         # searcher, by converting the metrics. Internally, all metrics are
         # minimized
         searcher = MultiObjectiveMultiSurrogateSearcher(
+            config_space=config_space,
+            metric=metric,
             estimators=estimators,
             mode=mode,
             scoring_class=partial(
                 MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
             ),
-            **searcher_kwargs,
+            **kwargs,
         )
         super().__init__(
             config_space=config_space,
@@ -922,17 +858,16 @@ class MOREA(TrialScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
-        searcher_kwargs["population_size"] = population_size
-        searcher_kwargs["sample_size"] = sample_size
         super(MOREA, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=MultiObjectiveRegularizedEvolution(**searcher_kwargs),
+            searcher=MultiObjectiveRegularizedEvolution(config_space=config_space,
+                                                        metric=metric,
+                                                        mode=mode,
+                                                        population_size=population_size,
+                                                        sample_size=sample_size,
+                                                        **kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -962,7 +897,6 @@ class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
         **kwargs,
     ):
         searcher_name = "bayesopt"
-        _assert_searcher_must_be(kwargs, searcher_name)
         super().__init__(
             config_space=config_space,
             metric=metric,
@@ -972,7 +906,7 @@ class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
         )
 
 
-class ConstrainedBayesianOptimization(FIFOScheduler):
+class ConstrainedBayesianOptimization(TrialScheduler):
     """Constrained Bayesian Optimization.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
@@ -988,14 +922,13 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, constraint_attr: str, **kwargs
     ):
-        searcher_name = "bayesopt_constrained"
-        _assert_searcher_must_be(kwargs, searcher_name)
-        search_options = dict_get(kwargs, "search_options", dict())
-        kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
+        searcher = ConstrainedGPFIFOSearcher(config_space=config_space, metric=metric,
+                                             constraint_attr=constraint_attr, **kwargs)
+
         super(ConstrainedBayesianOptimization, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=searcher_name,
+            searcher=searcher,
             **kwargs,
         )
 
@@ -1043,22 +976,17 @@ class ZeroShotTransfer(TrialScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs.update(
-            dict(
-                mode=mode,
-                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
-                transfer_learning_evaluations=transfer_learning_evaluations,
-                use_surrogates=use_surrogates,
-            )
-        )
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=zero_shot.ZeroShotTransfer(**searcher_kwargs),
+            searcher=zero_shot.ZeroShotTransfer(config_space=config_space,
+                                                mode=mode,
+                                                metric=metric,
+                                                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
+                                                transfer_learning_evaluations=transfer_learning_evaluations,
+                                                use_surrogates=use_surrogates,
+                                                **kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1106,20 +1034,15 @@ class ASHACTS(HyperbandScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs.update(
-            dict(
-                mode=mode,
-                transfer_learning_evaluations=transfer_learning_evaluations,
-            )
-        )
         super(ASHACTS, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=QuantileBasedSurrogateSearcher(**searcher_kwargs),
+            searcher=QuantileBasedSurrogateSearcher(config_space=config_space,
+                                                    metric=metric,
+                                                    transfer_learning_evaluations=transfer_learning_evaluations,
+                                                    mode=mode,
+                                                    **kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -1177,15 +1100,14 @@ class CQR(TrialScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
         super(CQR, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(**searcher_kwargs),
+            searcher=SurrogateSearcher(config_space=config_space,
+                                       mode=mode,
+                                       metric=metric,
+                                       **kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1217,15 +1139,14 @@ class ASHACQR(HyperbandScheduler):
         except ImportError:
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
         super(ASHACQR, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(**searcher_kwargs),
+            searcher=SurrogateSearcher(config_space=config_space,
+                                       metric=metric,
+                                       mode=mode,
+                                       **kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -1301,17 +1222,16 @@ try:
             random_seed: Optional[int] = None,
             **kwargs,
         ):
-            searcher_kwargs = _create_searcher_kwargs(
-                config_space, metric, random_seed, kwargs
-            )
-            searcher_kwargs["mode"] = mode
-            print(mode)
 
             super(EHVI, self).__init__(
                 config_space=config_space,
                 metric=metric,
                 mode=mode,
-                searcher=ExpectedHyperVolumeImprovement(**searcher_kwargs),
+                searcher=ExpectedHyperVolumeImprovement(config_space=config_space,
+                                                        metric=metric,
+                                                        mode=mode,
+                                                        random_seed=random_seed,
+                                                        **kwargs),
                 random_seed=random_seed,
                 **kwargs,
             )
