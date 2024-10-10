@@ -18,7 +18,8 @@ from functools import partial
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers import (
     HyperbandScheduler,
-    PopulationBasedTraining, FIFOScheduler,
+    PopulationBasedTraining,
+    FIFOScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
@@ -33,7 +34,7 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
 )
 from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
     RandomSearcher,
-    GridSearcher
+    GridSearcher,
 )
 
 from syne_tune.optimizer.schedulers.synchronous import (
@@ -734,10 +735,13 @@ class REA(TrialScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        searcher = RegularizedEvolution(config_space, metric=metric,
-                                        population_size=population_size,
-                                        sample_size=sample_size,
-                                        **kwargs)
+        searcher = RegularizedEvolution(
+            config_space,
+            metric=metric,
+            population_size=population_size,
+            sample_size=sample_size,
+            **kwargs,
+        )
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -875,7 +879,9 @@ class NSGA2(TrialScheduler):
         **kwargs,
     ):
 
-        searcher = NSGA2Searcher(config_space, metric=metric, population_size=population_size, **kwargs)
+        searcher = NSGA2Searcher(
+            config_space, metric=metric, population_size=population_size, **kwargs
+        )
 
         super(NSGA2, self).__init__(
             config_space=config_space,
@@ -1139,7 +1145,9 @@ class KDE(TrialScheduler):
         super(KDE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=KernelDensityEstimator(config_space=config_space, metric=metric, **kwargs),
+            searcher=KernelDensityEstimator(
+                config_space=config_space, metric=metric, **kwargs
+            ),
             **kwargs,
         )
 
