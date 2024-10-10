@@ -170,7 +170,7 @@ class TrialScheduler:
         self,
         config_space: Dict[str, Any],
         metric: Union[List[str], str],
-        mode: Optional[Union[str, List[str]]] = 'min',
+        mode: Optional[Union[str, List[str]]] = "min",
         searcher: Any = None,
         points_to_evaluate=None,
         random_seed: int = None,
