@@ -15,7 +15,8 @@ from typing import Dict, List, Optional, Any
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
-    TransferLearningMixin, TransferLearningMixinOld,
+    TransferLearningMixin,
+    TransferLearningMixinOld,
 )
 
 

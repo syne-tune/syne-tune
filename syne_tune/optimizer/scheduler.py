@@ -193,7 +193,7 @@ class TrialScheduler:
         else:
             self.searcher = searcher
         if random_seed is None:
-            self.random_seed = np.random.randint(0, 2 ** 31 - 1)
+            self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
