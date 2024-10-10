@@ -21,8 +21,6 @@ from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
 )
-
-# from syne_tune.optimizer.schedulers.searchers.searcher_base import BaseSearcher
 from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
@@ -182,13 +180,19 @@ class TrialScheduler:
             self.points_to_evaluate = points_to_evaluate
         self.config_space = config_space
         self.metric = metric
+
+        if isinstance(mode, List):
+            assert len(mode) == len(metric), "one mode should be given per metric"
+            assert all(
+                m in ["min", "max"] for m in mode
+            ), "all modes should be 'min' or 'max'."
+        else:
+            assert mode in ["min", "max"], "``mode`` must be 'min' or 'max'."
+
         self.mode = mode
 
         if searcher is None:
-            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
-                RandomSearcher,
-            )
-
+            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import RandomSearcher
             self.searcher = RandomSearcher(config_space=config_space, metric=metric)
         else:
             self.searcher = searcher
