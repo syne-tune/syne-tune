@@ -179,7 +179,11 @@ class TrialScheduler:
         else:
             self.points_to_evaluate = points_to_evaluate
         self.config_space = config_space
-        self.metric = metric
+
+        if isinstance(metric, List):
+            self.metric = metric
+        else:
+            self.metric = [metric]
 
         if isinstance(mode, List):
             assert len(mode) == len(metric), "one mode should be given per metric"
