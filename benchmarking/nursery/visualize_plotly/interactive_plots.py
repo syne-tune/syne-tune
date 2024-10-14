@@ -88,11 +88,6 @@ def plot_tuner_results(
         tuning_experiment = load_experiment(
             tuner_name, experiment_name=experiment_name, load_tuner=True
         )
-        if tuning_experiment.metadata is None:
-            clear_output(wait=True)
-            tuning_experiment = load_experiment(
-                tuner_name, experiment_name=experiment_name, load_tuner=True
-            )
 
         # Get metadata
         metadata = tuning_experiment.metadata
