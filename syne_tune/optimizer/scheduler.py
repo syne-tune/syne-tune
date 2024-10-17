@@ -159,7 +159,6 @@ class TrialScheduler:
         """
         raise NotImplementedError
 
-
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
 
@@ -211,7 +210,7 @@ class TrialScheduler:
         :param trial: Trial to be removed
         """
         pass
-    
+
     def metadata(self) -> Dict[str, Any]:
         """
         :return: Metadata for the scheduler

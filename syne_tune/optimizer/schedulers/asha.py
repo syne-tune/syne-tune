@@ -18,7 +18,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import (
     TrialScheduler,
     SchedulerDecision,
-    TrialSuggestion
+    TrialSuggestion,
 )
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
@@ -26,7 +26,7 @@ from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
     preprocess_config,
-    postprocess_config
+    postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
@@ -66,7 +66,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         mode: Optional[str] = "min",
-        searcher: Optional[Union[str, BaseSearcher]] = 'random_search',
+        searcher: Optional[Union[str, BaseSearcher]] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -89,12 +89,18 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.metric = metric
         if isinstance(searcher, str):
             if searcher_kwargs is None:
-                searcher_kwargs = {'mode': self.mode,
-                                   'metric': self.metric,
-                                   'config_space': self.config_space}
+                searcher_kwargs = {
+                    "mode": self.mode,
+                    "metric": self.metric,
+                    "config_space": self.config_space,
+                }
 
-            assert 'metric' in searcher_kwargs, "Key 'metric' needs to be in searcher_kwargs"
-            assert 'config_space' in searcher_kwargs, "Key 'config_space' needs to be in searcher_kwargs"
+            assert (
+                "metric" in searcher_kwargs
+            ), "Key 'metric' needs to be in searcher_kwargs"
+            assert (
+                "config_space" in searcher_kwargs
+            ), "Key 'config_space' needs to be in searcher_kwargs"
 
             self.searcher = searcher_factory(searcher, **searcher_kwargs)
         else:
@@ -107,7 +113,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         # Tracks state for new trial add
         self._brackets = [
             _Bracket(
-                grace_period, max_t, reduction_factor, s,
+                grace_period,
+                max_t,
+                reduction_factor,
+                s,
             )
             for s in range(brackets)
         ]
@@ -115,17 +124,16 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self._metric_op = 1 if self.mode == "min" else -1
         self._time_attr = time_attr
 
-
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
 
         trial_id = str(trial_id)
         config = self.searcher.get_config(trial_id=trial_id)
         if config is not None:
             config = cast_config_values(config, self.config_space)
-            config = TrialSuggestion.start_suggestion(postprocess_config(config,
-                                                                         self.config_space))
+            config = TrialSuggestion.start_suggestion(
+                postprocess_config(config, self.config_space)
+            )
         return config
-
 
     def on_trial_add(self, trial: Trial):
         sizes = np.array([len(b._rungs) for b in self._brackets])
@@ -191,13 +199,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
         return metadata
 
-
     def _check_metrics_are_present(self, result: Dict[str, Any]):
         for key in [self.metric, self._time_attr]:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
-
-
 
 
 class _Bracket:
@@ -235,10 +240,7 @@ class _Bracket:
                 else:
                     # get the list of metrics seen for the rung, compute rank and decide to continue
                     # if trial is in the top ones according to a rank induced by the ``reduction_factor``.
-                    metric_recorded = np.array(
-                        list(recorded.values())
-                        + [metric]
-                    )
+                    metric_recorded = np.array(list(recorded.values()) + [metric])
                     ranks = np.argsort(metric_recorded)
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
