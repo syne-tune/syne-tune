@@ -1065,8 +1065,9 @@ def cast_config_values(
         if name in config
     }
 
+
 def postprocess_config(
-        config: Dict[str, Any], config_space: Dict[str, Any]
+    config: Dict[str, Any], config_space: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Post-processes a config as returned by a searcher
 
@@ -1083,8 +1084,9 @@ def postprocess_config(
     new_config.update(cast_config_values(config, config_space=config_space))
     return new_config
 
+
 def preprocess_config(
-        config: Dict[str, Any], config_space: Dict[str, Any]
+    config: Dict[str, Any], config_space: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Pre-processes a config before passing it to a searcher
 
@@ -1102,6 +1104,7 @@ def preprocess_config(
         {k: v for k, v in config.items() if k in hyperparameter_keys},
         config_space=config_space,
     )
+
 
 def non_constant_hyperparameter_keys(config_space: Dict[str, Any]) -> List[str]:
     """
