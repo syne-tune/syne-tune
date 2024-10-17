@@ -11,17 +11,11 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Dict, Any
 import logging
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.config_space import (
-    non_constant_hyperparameter_keys,
-    cast_config_values,
-    config_space_to_json_dict,
-)
-from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +26,7 @@ class SchedulerDecision:
     tuner how to proceed with the reporting trial.
 
     The difference between :const:`PAUSE` and :const:`STOP` is important. If a
-    trial is stopped, it cannot be resumed afterwards. Its checkpoints may be
+    trial is stopped, it cannot be resumed afterward. Its checkpoints may be
     deleted. If a trial is paused, it may be resumed in the future, and its
     most recent checkpoint should be retained.
     """
@@ -119,95 +113,20 @@ class TrialScheduler:
     Some schedulers support pausing and resuming trials. In this case, they
     also drive the decision when to restart a paused trial.
 
-    :param config_space: Configuration space for evaluation function
-    :type config_space: Dict[str, Any]
-    :param searcher: Searcher for ``get_config`` decisions. String values
-        are passed to
-        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
-        with ``search_options`` and extra information. Supported values:
-        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_FIFO`.
-        Defaults to "random" (i.e., random search)
-    :type searcher: str or
-        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
-    :param metric: Name of metric to optimize, key in results obtained via
-        ``on_trial_result``. For multi-objective schedulers, this can also be a
-        list
-    :type metric: str or List[str]
-    :param mode: "min" if ``metric`` is minimized, "max" if ``metric`` is
-        maximized, defaults to "min". This can also be a list if ``metric`` is
-        a list
-    :type mode: str or List[str], optional
-    :param points_to_evaluate: List of configurations to be evaluated
-        initially (in that order). Each config in the list
-        can be partially specified, or even be an empty dict. For each
-        hyperparameter not specified, the default value is determined using
-        a midpoint heuristic.
-        If not given, this is mapped to ``[dict()]``, a single default config
-        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
-        configurations are specified.
-        Note: If ``searcher`` is of type :class:`BaseSearcher`,
-        ``points_to_evaluate`` must be set there.
-    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the
         scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param time_keeper: This will be used for timing here (see
-        ``_elapsed_time``). The time keeper has to be started at the beginning
-        of the experiment. If not given, we use a local time keeper here,
-        which is started with the first call to :meth:`_suggest`. Can also be set
-        after construction, with :meth:`set_time_keeper`.
-        Note: If you use
-        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`, you need
-        to pass its ``time_keeper`` here.
-    :type time_keeper: :class:`~syne_tune.backend.time_keeper.TimeKeeper`,
-        optional
     """
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: Union[List[str], str],
-        mode: Optional[Union[str, List[str]]] = "min",
-        searcher: Any = None,
-        points_to_evaluate=None,
         random_seed: int = None,
-        **kwargs,
     ):
-        if points_to_evaluate is None:
-            self.points_to_evaluate = []
-        else:
-            self.points_to_evaluate = points_to_evaluate
-        self.config_space = config_space
-
-        if isinstance(metric, List):
-            self.metric = metric
-        else:
-            self.metric = [metric]
-
-        if isinstance(mode, List):
-            assert len(mode) == len(metric), "one mode should be given per metric"
-            assert all(
-                m in ["min", "max"] for m in mode
-            ), "all modes should be 'min' or 'max'."
-        else:
-            assert mode in ["min", "max"], "``mode`` must be 'min' or 'max'."
-
-        self.mode = mode
-
-        if searcher is None:
-            from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (
-                RandomSearcher,
-            )
-
-            self.searcher = RandomSearcher(config_space=config_space, metric=metric)
-        else:
-            self.searcher = searcher
         if random_seed is None:
             self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
-        self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """Returns a suggestion for a new trial, or one to be resumed
@@ -238,51 +157,8 @@ class TrialScheduler:
         :return: Suggestion for a trial to be started or to be resumed, see
             above. If no suggestion can be made, None is returned
         """
+        raise NotImplementedError
 
-        #       if self.time_keeper is None:
-        #           self.time_keeper = RealTimeKeeper()
-        #           self.time_keeper.start_of_time()
-
-        # Ask searcher for config of new trial to start
-        # extra_kwargs["elapsed_time"] = self._elapsed_time()
-        trial_id = str(trial_id)
-        config = self.searcher.get_config(trial_id=trial_id)
-        if config is not None:
-            config = cast_config_values(config, self.config_space)
-            # config = self._on_config_suggest(config, trial_id, **extra_kwargs)
-            config = TrialSuggestion.start_suggestion(self._postprocess_config(config))
-        return config
-
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Post-processes a config as returned by a searcher
-
-        * Adding parameters which are constant, therefore do not feature
-          in the config space of the searcher
-        * Casting values to types (float, int, str) according to ``config_space``
-          value types
-
-        :param config: Config returned by searcher
-        :return: Post-processed config
-        """
-        new_config = self.config_space.copy()
-        new_config.update(cast_config_values(config, config_space=self.config_space))
-        return new_config
-
-    def _preprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Pre-processes a config before passing it to a searcher
-
-        * Removing parameters which are constant in ``config_space`` (these do
-          not feature in the config space used by the searcher)
-        * Casting values to types (float, int, str) according to
-          ``config_space`` value types
-
-        :param config: Config coming from the tuner
-        :return: Pre-processed config, can be passed to searcher
-        """
-        return cast_config_values(
-            {k: v for k, v in config.items() if k in self._hyperparameter_keys},
-            config_space=self.config_space,
-        )
 
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
@@ -294,9 +170,11 @@ class TrialScheduler:
         pass
 
     def on_trial_error(self, trial: Trial):
-        trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(trial_id)
-        logger.warning(f"trial_id {trial_id}: Evaluation failed!")
+        """Called when a trial has failed.
+
+        :param trial: Trial for which error is reported.
+        """
+        pass
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
@@ -310,10 +188,6 @@ class TrialScheduler:
         :param result: Result dictionary
         :return: Decision what to do with the trial
         """
-        config = self._preprocess_config(trial.config)
-        self.searcher.on_trial_result(
-            str(trial.trial_id), config, result=result, update=False
-        )
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
@@ -326,10 +200,7 @@ class TrialScheduler:
         :param trial: Trial which is completing
         :param result: Result dictionary
         """
-        config = self._preprocess_config(trial.config)
-        self.searcher.on_trial_result(
-            str(trial.trial_id), config, result=result, update=True
-        )
+        pass
 
     def on_trial_remove(self, trial: Trial):
         """Called to remove trial.
@@ -340,41 +211,12 @@ class TrialScheduler:
         :param trial: Trial to be removed
         """
         pass
-
-    def metric_names(self) -> List[str]:
-        """
-        :return: List of metric names. The first one is the target
-            metric optimized over, unless the scheduler is a genuine
-            multi-objective metric (for example, for sampling the Pareto front)
-        """
-        return self.metric if isinstance(self.metric, list) else [self.metric]
-
-    def metric_mode(self) -> Union[str, List[str]]:
-        """
-        :return: "min" if target metric is minimized, otherwise "max".
-            Here, "min" should be the default. For a genuine multi-objective
-            scheduler, a list of modes is returned
-        """
-        return self.mode
-
+    
     def metadata(self) -> Dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """
-        config_space_json = dump_json_with_numpy(
-            config_space_to_json_dict(self.config_space)
-        )
-        return {
-            "metric_names": self.metric_names(),
-            "metric_mode": self.metric_mode(),
-            "scheduler_name": str(self.__class__.__name__),
-            "config_space": config_space_json,
-        }
 
-    def is_multiobjective_scheduler(self) -> bool:
-        """
-        Return True if a scheduler is multi-objective.
-        """
-        return (
-            True if (isinstance(self.metric, list) and len(self.metric) > 1) else False
-        )
+        return {
+            "scheduler_name": str(self.__class__.__name__),
+        }
