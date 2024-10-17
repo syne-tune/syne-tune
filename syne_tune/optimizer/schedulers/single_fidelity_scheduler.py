@@ -18,15 +18,18 @@ from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
     preprocess_config,
-    postprocess_config
+    postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.util import dump_json_with_numpy
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion, SchedulerDecision
+from syne_tune.optimizer.scheduler import (
+    TrialScheduler,
+    TrialSuggestion,
+    SchedulerDecision,
+)
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
 logger = logging.getLogger(__name__)
-
 
 
 class SingleFidelityScheduler(TrialScheduler):
@@ -85,19 +88,23 @@ class SingleFidelityScheduler(TrialScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        searcher: Optional[Union[str, BaseSearcher]]  = 'random_search',
+        searcher: Optional[Union[str, BaseSearcher]] = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
         **kwargs,
     ):
         super().__init__(random_seed=random_seed)
-        
+
         self.config_space = config_space
 
         if isinstance(searcher, str):
             assert searcher_kwargs is not None, "You need to pass searcher_kwargs"
-            assert 'metric' in searcher_kwargs, "Key 'metric' needs to be in searcher_kwargs"
-            assert 'config_space' in searcher_kwargs, "Key 'config_space' needs to be in searcher_kwargs"
+            assert (
+                "metric" in searcher_kwargs
+            ), "Key 'metric' needs to be in searcher_kwargs"
+            assert (
+                "config_space" in searcher_kwargs
+            ), "Key 'config_space' needs to be in searcher_kwargs"
 
             self.searcher = searcher_factory(searcher, **searcher_kwargs)
         else:
@@ -109,10 +116,10 @@ class SingleFidelityScheduler(TrialScheduler):
         config = self.searcher.get_config(trial_id=trial_id)
         if config is not None:
             config = cast_config_values(config, self.config_space)
-            config = TrialSuggestion.start_suggestion(postprocess_config(config,
-                                                                         self.config_space))
+            config = TrialSuggestion.start_suggestion(
+                postprocess_config(config, self.config_space)
+            )
         return config
-
 
     def on_trial_error(self, trial: Trial):
         trial_id = str(trial.trial_id)
@@ -151,7 +158,6 @@ class SingleFidelityScheduler(TrialScheduler):
         self.searcher.on_trial_result(
             str(trial.trial_id), config, result=result, update=True
         )
-
 
     def metadata(self) -> Dict[str, Any]:
         """
