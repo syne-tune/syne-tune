@@ -208,7 +208,6 @@ class TrialScheduler:
         """
         pass
 
-
     def metadata(self) -> Dict[str, Any]:
         """
         :return: Metadata for the scheduler
