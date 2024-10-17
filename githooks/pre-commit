@@ -8,12 +8,3 @@ if [ $? -ne 0 ]; then
  exit 1
 fi
 
-
-echo "Adding license header."
-./license-add.sh
-
-if [ $? -ne 0 ]; then
- echo "Could not add license header."
- exit 1
-fi
-

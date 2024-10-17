@@ -1,4 +1,3 @@
-
 """
 Wrap Surrogates from 
 YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization

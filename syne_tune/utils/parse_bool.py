@@ -1,5 +1,3 @@
-
-
 def parse_bool(val: str) -> bool:
     val = val.upper()
     if val == "TRUE":

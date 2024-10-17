@@ -1,4 +1,3 @@
-
 import pytest
 
 from syne_tune import Tuner, StoppingCriterion

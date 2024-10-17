@@ -1,4 +1,3 @@
-
 """
 This is an example on how to use syne-tune in the ask-tell mode.
 In this setup the tuning loop and experiments are disentangled. The AskTell Scheduler suggests new configurations

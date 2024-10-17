@@ -1,4 +1,3 @@
-
 # This file has been taken from Ray. The reason for reusing the file is to be able to support the same API when
 # defining search space while avoiding to have Ray as a required dependency. We may want to add functionality in the
 # future.
