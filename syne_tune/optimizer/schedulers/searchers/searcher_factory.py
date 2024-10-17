@@ -16,13 +16,14 @@ from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import RandomSearcher
 
 
-searcher_cls_dict = {'random_search': RandomSearcher,
-                     'bore': Bore,
-                     'kde': KernelDensityEstimator,
-                     'bayesopt': GPFIFOSearcher
-                     }
+searcher_cls_dict = {
+    "random_search": RandomSearcher,
+    "bore": Bore,
+    "kde": KernelDensityEstimator,
+    "bayesopt": GPFIFOSearcher,
+}
 
 
 def searcher_factory(searcher: str, **searcher_kwargs):
-  assert searcher in searcher_cls_dict
-  return searcher_cls_dict[searcher](**searcher_kwargs)
+    assert searcher in searcher_cls_dict
+    return searcher_cls_dict[searcher](**searcher_kwargs)
