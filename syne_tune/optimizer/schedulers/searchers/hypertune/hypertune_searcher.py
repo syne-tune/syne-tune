@@ -1,3 +1,4 @@
+from typing import Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
