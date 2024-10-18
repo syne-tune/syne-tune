@@ -1,3 +1,4 @@
+import numpy as np
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
