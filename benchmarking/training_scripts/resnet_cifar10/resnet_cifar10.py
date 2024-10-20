@@ -118,7 +118,7 @@ def valid(model, valid_loader):
             correct += prediction.eq(target.view_as(prediction)).sum().item()
     n_valid = len(valid_loader.sampler)
     loss /= n_valid
-    valid_error = correct / n_valid
+    valid_error = 1 - correct / n_valid
     return loss, valid_error
 
 
