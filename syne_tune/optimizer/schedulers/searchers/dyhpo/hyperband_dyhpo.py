@@ -18,7 +18,7 @@ from collections import Counter
 from syne_tune.optimizer.schedulers.hyperband_promotion import (
     PromotionRungSystem,
 )
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers import LegacyBaseSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class DyHPORungSystem(PromotionRungSystem):
         mode: str,
         resource_attr: str,
         max_t: int,
-        searcher: BaseSearcher,
+        searcher: LegacyBaseSearcher,
         probability_sh: bool,
         random_state: RandomState,
     ):

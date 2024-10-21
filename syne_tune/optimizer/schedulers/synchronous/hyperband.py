@@ -37,7 +37,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     assert_no_invalid_options,
     Integer,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
 logger = logging.getLogger(__name__)
@@ -138,13 +138,15 @@ class SynchronousHyperbandCommon(
             )
             if searcher == "bayesopt":
                 search_options["max_epochs"] = self._max_resource_level
-            self._searcher: BaseSearcher = searcher_factory(searcher, **search_options)
+            self._searcher: LegacyBaseSearcher = searcher_factory(
+                searcher, **search_options
+            )
         else:
             self._searcher = None
         return search_options
 
     @property
-    def searcher(self) -> Optional[BaseSearcher]:
+    def searcher(self) -> Optional[LegacyBaseSearcher]:
         return self._searcher
 
     @property

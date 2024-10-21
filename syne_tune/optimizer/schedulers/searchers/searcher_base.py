@@ -14,7 +14,7 @@ from typing import Optional, Dict, Any, List, Union
 import logging
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers import LegacyBaseSearcher
 from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.utils import (
     HyperparameterRanges,
@@ -67,7 +67,7 @@ def sample_random_configuration(
     return new_config
 
 
-class StochasticSearcher(BaseSearcher):
+class StochasticSearcher(LegacyBaseSearcher):
     """
     Base class of searchers which use random decisions. Creates the
     ``random_state`` member, which must be used for all random draws.

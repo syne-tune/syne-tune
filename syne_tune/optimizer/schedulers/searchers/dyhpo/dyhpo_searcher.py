@@ -15,7 +15,7 @@ import logging
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers import (
-    BaseSearcher,
+    LegacyBaseSearcher,
     GPMultiFidelitySearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
@@ -261,7 +261,7 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
             return {"config": config}
 
 
-class DynamicHPOSearcher(BaseSearcher):
+class DynamicHPOSearcher(LegacyBaseSearcher):
     """
     Supports model-based decisions in the DyHPO algorithm proposed by Wistuba
     etal (see

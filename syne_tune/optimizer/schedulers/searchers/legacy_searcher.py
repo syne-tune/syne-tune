@@ -147,7 +147,7 @@ def impute_points_to_evaluate(
     return result
 
 
-class BaseSearcher:
+class LegacyBaseSearcher:
     """
     Base class of searchers, which are components of schedulers responsible for
     implementing :meth:`get_config`.

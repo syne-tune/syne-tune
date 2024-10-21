@@ -12,8 +12,8 @@
 # permissions and limitations under the License.
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
-    BaseSearcher,
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import (  # noqa: F401
+    LegacyBaseSearcher,
     impute_points_to_evaluate,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F401
@@ -30,7 +30,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa:
 )
 
 __all__ = [
-    "BaseSearcher",
+    "LegacyBaseSearcher",
     "impute_points_to_evaluate",
     "StochasticSearcher",
     "StochasticAndFilterDuplicatesSearcher",

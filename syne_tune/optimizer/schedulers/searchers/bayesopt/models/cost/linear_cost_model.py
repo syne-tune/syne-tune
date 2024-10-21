@@ -26,7 +26,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_COST_NAME,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import impute_points_to_evaluate
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import (
+    impute_points_to_evaluate,
+)
 
 __all__ = [
     "LinearCostModel",
