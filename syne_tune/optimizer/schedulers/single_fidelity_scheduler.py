@@ -20,7 +20,7 @@ from syne_tune.config_space import (
     preprocess_config,
     postprocess_config,
 )
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.scheduler import (
     TrialScheduler,
@@ -88,6 +88,8 @@ class SingleFidelityScheduler(TrialScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
+        metric: str,
+        do_minimize: Optional[bool] = True,
         searcher: Optional[Union[str, BaseSearcher]] = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
@@ -95,18 +97,18 @@ class SingleFidelityScheduler(TrialScheduler):
     ):
         super().__init__(random_seed=random_seed)
 
+        self.metric = metric
         self.config_space = config_space
+        self.do_minimize = do_minimize
+        self.metric_op = 1 if self.do_minimize else -1
 
         if isinstance(searcher, str):
-            assert searcher_kwargs is not None, "You need to pass searcher_kwargs"
-            assert (
-                "metric" in searcher_kwargs
-            ), "Key 'metric' needs to be in searcher_kwargs"
-            assert (
-                "config_space" in searcher_kwargs
-            ), "Key 'config_space' needs to be in searcher_kwargs"
+            if searcher_kwargs is None:
+                searcher_kwargs = {}
 
-            self.searcher = searcher_factory(searcher, **searcher_kwargs)
+            self.searcher = searcher_factory(searcher,
+                                             config_space,
+                                             **searcher_kwargs)
         else:
             self.searcher = searcher
 
@@ -139,8 +141,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = preprocess_config(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_op
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, result=result, update=False
+            str(trial.trial_id), config, observation=observation, update=False
         )
         return SchedulerDecision.CONTINUE
 
@@ -155,8 +158,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = preprocess_config(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_op
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, result=result, update=True
+            str(trial.trial_id), config, observation=observation, update=True
         )
 
     def metadata(self) -> Dict[str, Any]:
