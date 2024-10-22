@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
-    preprocess_config,
+    remove_constant_and_cast,
     postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
@@ -36,14 +36,20 @@ logger = logging.getLogger(__name__)
 
 class AsynchronousSuccessiveHalving(TrialScheduler):
     """
-    Implements Asynchronous Successive Halving
+    Implements Asynchronous Successive Halving. This code is adapted from the RayTune implementation.
+
     References:
 
+    Massively Parallel Hyperparameter Tuning
+    L. Li and K. Jamieson and A. Rostamizadeh and K. Gonina and M. Hardt and B. Recht and A. Talwalkar
+    arXiv:1810.05934 [cs.LG]
+
+    #TODO: Update the docstring
+
     :param config_space: Configuration space
-    :param metric:
-    :param mode: One of :code:`{"min", "max"}` or a list of these values (same
-        size as ``metrics``). Determines whether objectives are minimized or
-        maximized. Defaults to "min"
+    :param metric: Name of metric to optimize, key in results obtained via
+       ``on_trial_result``.
+    :param do_minimize: If True, we minimize the objective function specified by ``metric`` . Defaults to True.
     :param time_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
@@ -74,7 +80,6 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         brackets: int = 1,
         random_seed: int = None,
         searcher_kwargs: dict = None,
-        **kwargs,
     ):
         super().__init__(random_seed=random_seed)
 
@@ -110,13 +115,11 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             for s in range(brackets)
         ]
         self.num_stopped = 0
-        self.metric_op = 1 if self.do_minimize else -1
+        self.metric_multiplier = 1 if self.do_minimize else -1
         self.time_attr = time_attr
 
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-
-        trial_id = str(trial_id)
-        config = self.searcher.get_config(trial_id=trial_id)
+        config = self.searcher.suggest(trial_id=trial_id)
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = TrialSuggestion.start_suggestion(
@@ -132,15 +135,14 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.trial_info[trial.trial_id] = self.brackets[idx]
 
     def on_trial_error(self, trial: Trial):
-        trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(trial_id)
-        logger.warning(f"trial_id {trial_id}: Evaluation failed!")
+        self.searcher.on_trial_error(trial.trial_id)
+        logger.warning(f"trial_id {trial.trial_id}: Evaluation failed!")
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
-        config = preprocess_config(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_op
+        config = remove_constant_and_cast(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, observation=observation, update=False
+            trial.trial_id, config, observation=observation, update=False
         )
         self._check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
@@ -150,7 +152,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             action = bracket.on_result(
                 trial_id=trial.trial_id,
                 cur_iter=result[self.time_attr],
-                metric=result[self.metric] * self.metric_op,
+                metric=result[self.metric] * self.metric_multiplier,
             )
         if action == SchedulerDecision.STOP:
             self.num_stopped += 1
@@ -158,10 +160,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
 
-        config = preprocess_config(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_op
+        config = remove_constant_and_cast(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, observation=observation, update=True
+            trial.trial_id, config, observation=observation, update=True
         )
 
         self._check_metrics_are_present(result)
@@ -169,7 +171,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         bracket.on_result(
             trial_id=trial.trial_id,
             cur_iter=result[self.time_attr],
-            metric=result[self.metric] * self.metric_op,
+            metric=result[self.metric] * self.metric_multiplier,
         )
         del self.trial_info[trial.trial_id]
 

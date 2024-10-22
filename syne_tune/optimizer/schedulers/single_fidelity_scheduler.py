@@ -17,7 +17,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
-    preprocess_config,
+    remove_constant_and_cast,
     postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 class SingleFidelityScheduler(TrialScheduler):
     """
+    #TODO: Update docstring
+
     Schedulers maintain and drive the logic of an experiment, making decisions
     which configs to evaluate in new trials, and which trials to stop early.
 
@@ -51,38 +53,12 @@ class SingleFidelityScheduler(TrialScheduler):
     :type searcher: str or
         :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param metric: Name of metric to optimize, key in results obtained via
-        ``on_trial_result``. For multi-objective schedulers, this can also be a
-        list
-    :type metric: str or List[str]
-    :param mode: "min" if ``metric`` is minimized, "max" if ``metric`` is
-        maximized, defaults to "min". This can also be a list if ``metric`` is
-        a list
-    :type mode: str or List[str], optional
-    :param points_to_evaluate: List of configurations to be evaluated
-        initially (in that order). Each config in the list
-        can be partially specified, or even be an empty dict. For each
-        hyperparameter not specified, the default value is determined using
-        a midpoint heuristic.
-        If not given, this is mapped to ``[dict()]``, a single default config
-        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
-        configurations are specified.
-        Note: If ``searcher`` is of type :class:`BaseSearcher`,
-        ``points_to_evaluate`` must be set there.
-    :type points_to_evaluate: ``List[dict]``, optional
+        ``on_trial_result``.
+    :type metric: str
     :param random_seed: Master random seed. Generators used in the
         scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param time_keeper: This will be used for timing here (see
-        ``_elapsed_time``). The time keeper has to be started at the beginning
-        of the experiment. If not given, we use a local time keeper here,
-        which is started with the first call to :meth:`_suggest`. Can also be set
-        after construction, with :meth:`set_time_keeper`.
-        Note: If you use
-        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`, you need
-        to pass its ``time_keeper`` here.
-    :type time_keeper: :class:`~syne_tune.backend.time_keeper.TimeKeeper`,
-        optional
     """
 
     def __init__(
@@ -93,14 +69,13 @@ class SingleFidelityScheduler(TrialScheduler):
         searcher: Optional[Union[str, BaseSearcher]] = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
-        **kwargs,
     ):
         super().__init__(random_seed=random_seed)
 
         self.metric = metric
         self.config_space = config_space
         self.do_minimize = do_minimize
-        self.metric_op = 1 if self.do_minimize else -1
+        self.metric_multiplier = 1 if self.do_minimize else -1
 
         if isinstance(searcher, str):
             if searcher_kwargs is None:
@@ -112,8 +87,7 @@ class SingleFidelityScheduler(TrialScheduler):
 
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
 
-        trial_id = str(trial_id)
-        config = self.searcher.get_config(trial_id=trial_id)
+        config = self.searcher.suggest(trial_id=trial_id)
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = TrialSuggestion.start_suggestion(
@@ -122,9 +96,8 @@ class SingleFidelityScheduler(TrialScheduler):
         return config
 
     def on_trial_error(self, trial: Trial):
-        trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(trial_id)
-        logger.warning(f"trial_id {trial_id}: Evaluation failed!")
+        self.searcher.on_trial_error(trial.trial_id)
+        logger.warning(f"trial_id {trial.trial_id}: Evaluation failed!")
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
@@ -138,10 +111,10 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         :return: Decision what to do with the trial
         """
-        config = preprocess_config(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_op
+        config = remove_constant_and_cast(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, observation=observation, update=False
+            trial.trial_id, config, observation=observation, update=False
         )
         return SchedulerDecision.CONTINUE
 
@@ -155,10 +128,10 @@ class SingleFidelityScheduler(TrialScheduler):
         :param trial: Trial which is completing
         :param result: Result dictionary
         """
-        config = preprocess_config(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_op
+        config = remove_constant_and_cast(trial.config, self.config_space)
+        observation = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            str(trial.trial_id), config, observation=observation, update=True
+            trial.trial_id, config, observation=observation, update=True
         )
 
     def metadata(self) -> Dict[str, Any]:

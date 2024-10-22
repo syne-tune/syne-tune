@@ -1085,7 +1085,7 @@ def postprocess_config(
     return new_config
 
 
-def preprocess_config(
+def remove_constant_and_cast(
     config: Dict[str, Any], config_space: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Pre-processes a config before passing it to a searcher

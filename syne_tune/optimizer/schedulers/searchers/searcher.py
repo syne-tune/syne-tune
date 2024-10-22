@@ -21,6 +21,7 @@ class BaseSearcher:
     Base class of searchers, which are components of schedulers responsible for
     implementing :meth:`get_config`.
 
+    # TODO: Update docstrings
     .. note::
        This is an abstract base class. In order to implement a new searcher, try to
        start from
@@ -57,7 +58,7 @@ class BaseSearcher:
         else:
             return None  # No more initial configs
 
-    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         """Suggest a new configuration.
 
         Note: Query :meth:`_next_initial_config` for initial configs to return
@@ -75,7 +76,7 @@ class BaseSearcher:
 
     def on_trial_result(
         self,
-        trial_id: str,
+        trial_id: int,
         config: Dict[str, Any],
         observation: float,
         update: bool,
@@ -98,7 +99,7 @@ class BaseSearcher:
         if update:
             self._update(trial_id, config, observation)
 
-    def _update(self, trial_id: str, config: Dict[str, Any], observation: float):
+    def _update(self, trial_id: int, config: Dict[str, Any], observation: float):
         """Update surrogate model with result
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
@@ -109,7 +110,7 @@ class BaseSearcher:
 
     def register_pending(
         self,
-        trial_id: str,
+        trial_id: int,
         config: Optional[Dict[str, Any]] = None,
         milestone: Optional[int] = None,
     ):
@@ -128,7 +129,7 @@ class BaseSearcher:
         """
         pass
 
-    def remove_case(self, trial_id: str, **kwargs):
+    def remove_case(self, trial_id: int, **kwargs):
         """Remove data case previously appended by :meth:`_update`
 
         For searchers which maintain the dataset of all cases (reports) passed
@@ -139,7 +140,7 @@ class BaseSearcher:
         """
         pass
 
-    def evaluation_failed(self, trial_id: str):
+    def on_trial_error(self, trial_id: int):
         """Called by scheduler if an evaluation job for a trial failed.
 
         The searcher should react appropriately (e.g., remove pending evaluations
@@ -149,7 +150,7 @@ class BaseSearcher:
         """
         pass
 
-    def cleanup_pending(self, trial_id: str):
+    def cleanup_pending(self, trial_id: int):
         """Removes all pending evaluations for trial ``trial_id``.
 
         This should be called after an evaluation terminates. For various
@@ -160,20 +161,6 @@ class BaseSearcher:
         """
         pass
 
-    def dataset_size(self):
-        """
-        :return: Size of dataset a model is fitted to, or 0 if no model is
-            fitted to data
-        """
-        return 0
-
-    def model_parameters(self):
-        """
-        :return: Dictionary with current model (hyper)parameter values if
-            this is supported; otherwise empty
-        """
-        return dict()
-
     def get_state(self) -> Dict[str, Any]:
         """
         Together with :meth:`clone_from_state`, this is needed in order to
@@ -183,21 +170,3 @@ class BaseSearcher:
         :return: Pickle-able mutable state of searcher
         """
         return {"points_to_evaluate": self.points_to_evaluate}
-
-    def clone_from_state(self, state: Dict[str, Any]):
-        """
-        Together with :meth:`get_state`, this is needed in order to store and
-        re-create the mutable state of the searcher.
-
-        Given state as returned by :meth:`get_state`, this method combines the
-        non-pickle-able part of the immutable state from self with state
-        and returns the corresponding searcher clone. Afterwards, ``self`` is
-        not used anymore.
-
-        :param state: See above
-        :return: New searcher object
-        """
-        raise NotImplementedError
-
-    def _restore_from_state(self, state: Dict[str, Any]):
-        self._points_to_evaluate = state["points_to_evaluate"].copy()

@@ -184,7 +184,7 @@ class TrialScheduler:
         :param result: Result dictionary
         :return: Decision what to do with the trial
         """
-        pass
+        return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         """Notification for the completion of trial.
@@ -212,7 +212,7 @@ class TrialScheduler:
         """
         :return: Metadata for the scheduler
         """
-
         return {
             "scheduler_name": str(self.__class__.__name__),
+            "scheduler_kwargs": self.__dict__,
         }
