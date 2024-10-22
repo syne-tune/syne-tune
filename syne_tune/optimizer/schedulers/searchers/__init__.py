@@ -13,7 +13,9 @@ from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # n
     RandomSearcher,
     GridSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import legacy_searcher_factory
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import (
+    legacy_searcher_factory,
+)
 
 __all__ = [
     "LegacyBaseSearcher",
