@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Dict, Any, Union
 import logging
 
 from syne_tune.backend.trial_status import Trial
