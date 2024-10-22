@@ -6,7 +6,7 @@ from syne_tune.optimizer.schedulers.searchers import (
 )
 from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
 
-__all__ = ["searcher_factory"]
+__all__ = ["legacy_searcher_factory"]
 
 logger = logging.getLogger(__name__)
 
