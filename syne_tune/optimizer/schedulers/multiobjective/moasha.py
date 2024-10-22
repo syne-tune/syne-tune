@@ -16,10 +16,10 @@ from typing import Optional, Union, List, Dict, Any
 import numpy as np
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import (
-    TrialScheduler,
     SchedulerDecision,
     TrialSuggestion,
 )
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
     MOPriority,
     NonDominatedPriority,
@@ -28,7 +28,7 @@ from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority impor
 logger = logging.getLogger(__name__)
 
 
-class MOASHA(TrialScheduler):
+class MOASHA(LegacyTrialScheduler):
     """
     Implements MultiObjective Asynchronous Successive HAlving with different
     multiobjective sort options. References:

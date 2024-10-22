@@ -18,6 +18,9 @@ from syne_tune.callbacks.remove_checkpoints_callback import (
     DefaultRemoveCheckpointsSchedulerMixin,
 )
 from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import (
+    legacy_searcher_factory,
+)
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager import (
     SynchronousHyperbandBracketManager,
 )
@@ -38,7 +41,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Integer,
 )
 from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +140,7 @@ class SynchronousHyperbandCommon(
             )
             if searcher == "bayesopt":
                 search_options["max_epochs"] = self._max_resource_level
-            self._searcher: LegacyBaseSearcher = searcher_factory(
+            self._searcher: LegacyBaseSearcher = legacy_searcher_factory(
                 searcher, **search_options
             )
         else:
