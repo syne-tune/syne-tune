@@ -1053,6 +1053,46 @@ def cast_config_values(
     }
 
 
+def postprocess_config(
+    config: Dict[str, Any], config_space: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Post-processes a config as returned by a searcher
+
+    * Adding parameters which are constant, therefore do not feature
+      in the config space of the searcher
+    * Casting values to types (float, int, str) according to ``config_space``
+      value types
+
+    :param config: Config returned by searcher
+    :param config_space: Configuration space
+    :return: Post-processed config
+    """
+    new_config = config_space.copy()
+    new_config.update(cast_config_values(config, config_space=config_space))
+    return new_config
+
+
+def remove_constant_and_cast(
+    config: Dict[str, Any], config_space: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Pre-processes a config before passing it to a searcher
+
+    * Removing parameters which are constant in ``config_space`` (these do
+      not feature in the config space used by the searcher)
+    * Casting values to types (float, int, str) according to
+      ``config_space`` value types
+
+    :param config: Config coming from the tuner
+    :param config_space: Configuration space
+    :return: Pre-processed config, can be passed to searcher
+    """
+    hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
+    return cast_config_values(
+        {k: v for k, v in config.items() if k in hyperparameter_keys},
+        config_space=config_space,
+    )
+
+
 def non_constant_hyperparameter_keys(config_space: Dict[str, Any]) -> List[str]:
     """
     :param config_space: Configuration space

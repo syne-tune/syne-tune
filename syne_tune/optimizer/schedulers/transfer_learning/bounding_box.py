@@ -3,7 +3,8 @@ from typing import Dict, Callable, Optional, Any
 
 import pandas as pd
 
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
+from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningMixin,
@@ -19,7 +20,7 @@ from syne_tune.config_space import (
 logger = logging.getLogger(__name__)
 
 
-class BoundingBox(TransferLearningMixin, TrialScheduler):
+class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
     """
     Simple baseline that computes a bounding-box of the best candidate found in
     previous tasks to restrict the search space to only good candidates. The
@@ -65,7 +66,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
 
     def __init__(
         self,
-        scheduler_fun: Callable[[dict, str, str], TrialScheduler],
+        scheduler_fun: Callable[[dict, str, str], LegacyTrialScheduler],
         config_space: Dict[str, Any],
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],

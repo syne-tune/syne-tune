@@ -1,8 +1,9 @@
 from typing import Optional, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
-from syne_tune.optimizer.scheduler import TrialSuggestion, TrialScheduler
+from syne_tune.optimizer.schedulers.searchers import LegacyBaseSearcher
+from syne_tune.optimizer.scheduler import TrialSuggestion
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.schedulers.random_seeds import (
     RandomSeedGenerator,
     generate_random_seed,
@@ -12,7 +13,7 @@ from syne_tune.backend.trial_status import Trial
 logger = logging.getLogger(__name__)
 
 
-class TrialSchedulerWithSearcher(TrialScheduler):
+class TrialSchedulerWithSearcher(LegacyTrialScheduler):
     """
     Base class for trial schedulers which have a
     :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` member
@@ -37,7 +38,7 @@ class TrialSchedulerWithSearcher(TrialScheduler):
         self.random_seed_generator = RandomSeedGenerator(random_seed)
 
     @property
-    def searcher(self) -> Optional[BaseSearcher]:
+    def searcher(self) -> Optional[LegacyBaseSearcher]:
         raise NotImplementedError
 
     def _initialize_searcher(self):

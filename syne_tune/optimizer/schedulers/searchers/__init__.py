@@ -1,7 +1,7 @@
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
-    BaseSearcher,
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import (  # noqa: F401
+    LegacyBaseSearcher,
     impute_points_to_evaluate,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F401
@@ -13,19 +13,19 @@ from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # n
     RandomSearcher,
     GridSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa: F401
-    searcher_factory,
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import (
+    legacy_searcher_factory,
 )
 
 __all__ = [
-    "BaseSearcher",
+    "LegacyBaseSearcher",
     "impute_points_to_evaluate",
     "StochasticSearcher",
     "StochasticAndFilterDuplicatesSearcher",
     "extract_random_seed",
     "RandomSearcher",
     "GridSearcher",
-    "searcher_factory",
+    "legacy_searcher_factory",
 ]
 
 try:

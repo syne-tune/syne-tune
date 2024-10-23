@@ -8,7 +8,8 @@ from typing import Dict, Any, List, Union, Callable, Optional
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
+from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ def _all_equal(iterable: Iterable) -> bool:
     return next(g, True) and not next(g, False)
 
 
-class LinearScalarizedScheduler(TrialScheduler):
+class LinearScalarizedScheduler(LegacyTrialScheduler):
     """Scheduler with linear scalarization of multiple objectives
 
     This method optimizes a single objective equal to the linear scalarization
@@ -46,7 +47,7 @@ class LinearScalarizedScheduler(TrialScheduler):
 
     scalarization_weights: np.ndarray
     single_objective_metric: str
-    base_scheduler: TrialScheduler
+    base_scheduler: LegacyTrialScheduler
 
     def __init__(
         self,
@@ -54,7 +55,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         metric: List[str],
         mode: Union[List[str], str] = "min",
         scalarization_weights: Union[np.ndarray, List[float]] = None,
-        base_scheduler_factory: Callable[[Any], TrialScheduler] = None,
+        base_scheduler_factory: Callable[[Any], LegacyTrialScheduler] = None,
         **base_scheduler_kwargs,
     ):
         super(LinearScalarizedScheduler, self).__init__(config_space)

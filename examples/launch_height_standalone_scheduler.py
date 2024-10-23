@@ -9,8 +9,8 @@ import numpy as np
 
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import (
-    TrialScheduler,
     SchedulerDecision,
     TrialSuggestion,
 )
@@ -24,7 +24,7 @@ from examples.training_scripts.height_example.train_height import (
 )
 
 
-class SimpleScheduler(TrialScheduler):
+class SimpleScheduler(LegacyTrialScheduler):
     def __init__(
         self, config_space: Dict[str, Any], metric: str, mode: Optional[str] = None
     ):

@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Float,
     Boolean,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import (
     impute_points_to_evaluate,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (

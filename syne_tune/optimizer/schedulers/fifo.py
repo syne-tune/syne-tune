@@ -2,8 +2,10 @@ from typing import Optional, List, Dict, Any, Union
 import logging
 
 from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import (
+    legacy_searcher_factory,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
     String,
@@ -170,10 +172,12 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
             # subclass (via ``_extend_search_options``)
             if "scheduler" not in search_options:
                 search_options["scheduler"] = "fifo"
-            self._searcher: BaseSearcher = searcher_factory(searcher, **search_options)
+            self._searcher: LegacyBaseSearcher = legacy_searcher_factory(
+                searcher, **search_options
+            )
         else:
-            assert isinstance(searcher, BaseSearcher)
-            self._searcher: BaseSearcher = searcher
+            assert isinstance(searcher, LegacyBaseSearcher)
+            self._searcher: LegacyBaseSearcher = searcher
 
         self._start_time = None  # Will be set at first ``suggest``
         # Time keeper
@@ -184,7 +188,7 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
             self.time_keeper = None
 
     @property
-    def searcher(self) -> Optional[BaseSearcher]:
+    def searcher(self) -> Optional[LegacyBaseSearcher]:
         return self._searcher
 
     def set_time_keeper(self, time_keeper: TimeKeeper):

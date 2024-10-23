@@ -5,8 +5,8 @@ from typing import Optional, Dict, List
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import (
-    TrialScheduler,
     SchedulerDecision,
     TrialSuggestion,
 )
@@ -14,7 +14,7 @@ from syne_tune.optimizer.scheduler import (
 logger = logging.getLogger(__name__)
 
 
-class MedianStoppingRule(TrialScheduler):
+class MedianStoppingRule(LegacyTrialScheduler):
     """
     Applies median stopping rule in top of an existing scheduler.
 
@@ -50,7 +50,7 @@ class MedianStoppingRule(TrialScheduler):
 
     def __init__(
         self,
-        scheduler: TrialScheduler,
+        scheduler: LegacyTrialScheduler,
         resource_attr: str,
         running_average: bool = True,
         metric: Optional[str] = None,
