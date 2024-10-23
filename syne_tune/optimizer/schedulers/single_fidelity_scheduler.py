@@ -100,9 +100,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_multiplier
+        metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, observation=observation, update=False
+            trial.trial_id, config, metric=metric, update=False
         )
         return SchedulerDecision.CONTINUE
 
@@ -117,9 +117,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_multiplier
+        metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, observation=observation, update=True
+            trial.trial_id, config, metric=metric, update=True
         )
 
     def metadata(self) -> Dict[str, Any]:

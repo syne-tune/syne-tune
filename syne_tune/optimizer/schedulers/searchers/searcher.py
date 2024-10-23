@@ -1,4 +1,6 @@
 import logging
+import numpy as np
+
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -31,10 +33,16 @@ class BaseSearcher:
         self,
         config_space: Dict[str, Any],
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        random_seed: int = None,
     ):
         self.config_space = config_space
         if points_to_evaluate is None:
             self.points_to_evaluate = []
+
+        if random_seed is None:
+            self.random_seed = np.random.randint(0, 2 ** 31 - 1)
+        else:
+            self.random_seed = random_seed
 
     def _next_initial_config(self) -> Optional[Dict[str, Any]]:
         """
@@ -66,7 +74,7 @@ class BaseSearcher:
         self,
         trial_id: int,
         config: Dict[str, Any],
-        observation: float,
+        metric: float,
         update: bool,
     ):
         """Inform searcher about result
@@ -81,52 +89,10 @@ class BaseSearcher:
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param observation: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param update: Should surrogate model be updated?
         """
-        if update:
-            self._update(trial_id, config, observation)
-
-    def _update(self, trial_id: int, config: Dict[str, Any], observation: float):
-        """Update surrogate model with result
-
-        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param observation: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        """
-        raise NotImplementedError
-
-    def register_pending(
-        self,
-        trial_id: int,
-        config: Optional[Dict[str, Any]] = None,
-        milestone: Optional[int] = None,
-    ):
-        """
-        Signals to searcher that evaluation for trial has started, but not yet
-        finished, which allows model-based searchers to register this evaluation
-        as pending.
-
-        :param trial_id: ID of trial to be registered as pending evaluation
-        :param config: If ``trial_id`` has not been registered with the
-            searcher, its configuration must be passed here. Ignored
-            otherwise.
-        :param milestone: For multi-fidelity schedulers, this is the next
-            rung level the evaluation will attend, so that model registers
-            ``(config, milestone)`` as pending.
-        """
-        pass
-
-    def remove_case(self, trial_id: int, **kwargs):
-        """Remove data case previously appended by :meth:`_update`
-
-        For searchers which maintain the dataset of all cases (reports) passed
-        to update, this method allows to remove one case from the dataset.
-
-        :param trial_id: ID of trial whose data is to be removed
-        :param kwargs: Extra arguments, optional
-        """
-        pass
+        return
 
     def on_trial_error(self, trial_id: int):
         """Called by scheduler if an evaluation job for a trial failed.
@@ -136,25 +102,4 @@ class BaseSearcher:
 
         :param trial_id: ID of trial whose evaluated failed
         """
-        pass
-
-    def cleanup_pending(self, trial_id: int):
-        """Removes all pending evaluations for trial ``trial_id``.
-
-        This should be called after an evaluation terminates. For various
-        reasons (e.g., termination due to convergence), pending candidates
-        for this evaluation may still be present.
-
-        :param trial_id: ID of trial whose pending evaluations should be cleared
-        """
-        pass
-
-    def get_state(self) -> Dict[str, Any]:
-        """
-        Together with :meth:`clone_from_state`, this is needed in order to
-        store and re-create the mutable state of the searcher.
-        The state returned here must be pickle-able.
-
-        :return: Pickle-able mutable state of searcher
-        """
-        return {"points_to_evaluate": self.points_to_evaluate}
+        return

@@ -128,9 +128,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         config = remove_constant_and_cast(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_multiplier
+        metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, observation=observation, update=False
+            trial.trial_id, config, metric=metric, update=False
         )
         self._check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
@@ -149,9 +149,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
 
         config = remove_constant_and_cast(trial.config, self.config_space)
-        observation = result[self.metric] * self.metric_multiplier
+        metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, observation=observation, update=True
+            trial.trial_id, config, metric=metric, update=True
         )
 
         self._check_metrics_are_present(result)
