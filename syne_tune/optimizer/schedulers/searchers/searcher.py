@@ -40,7 +40,7 @@ class BaseSearcher:
             self.points_to_evaluate = []
 
         if random_seed is None:
-            self.random_seed = np.random.randint(0, 2 ** 31 - 1)
+            self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
 
