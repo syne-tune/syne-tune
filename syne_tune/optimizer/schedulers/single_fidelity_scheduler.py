@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, List
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -42,7 +42,7 @@ class SingleFidelityScheduler(TrialScheduler):
         :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param metric: Name of metric to optimize, key in results obtained via
         ``on_trial_result``.
-    :type metric: str
+    :type metric: List[str] | str
     :param random_seed: Master random seed. Generators used in the
         scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
@@ -52,7 +52,7 @@ class SingleFidelityScheduler(TrialScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
+        metric: List[str] | str,
         do_minimize: Optional[bool] = True,
         searcher: Optional[Union[str, BaseSearcher]] = "random_search",
         random_seed: int = None,
@@ -60,7 +60,10 @@ class SingleFidelityScheduler(TrialScheduler):
     ):
         super().__init__(random_seed=random_seed)
 
-        self.metric = metric
+        if isinstance(metric, str):
+            self.metric = [metric]
+        else:
+            self.metric = metric
         self.config_space = config_space
         self.do_minimize = do_minimize
         self.metric_multiplier = 1 if self.do_minimize else -1
@@ -100,7 +103,7 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = result[self.metric] * self.metric_multiplier
+        metric = [result[metric_name] * self.metric_multiplier for metric_name in self.metric]
         self.searcher.on_trial_result(
             trial.trial_id, config, metric=metric, update=False
         )
@@ -117,7 +120,7 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = result[self.metric] * self.metric_multiplier
+        metric = [result[metric_name] * self.metric_multiplier for metric_name in self.metric]
         self.searcher.on_trial_result(
             trial.trial_id, config, metric=metric, update=True
         )

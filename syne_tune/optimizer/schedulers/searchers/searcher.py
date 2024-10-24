@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,8 @@ class BaseSearcher:
         self.config_space = config_space
         if points_to_evaluate is None:
             self.points_to_evaluate = []
+        else:
+            self.points_to_evaluate = points_to_evaluate
 
         if random_seed is None:
             self.random_seed = np.random.randint(0, 2**31 - 1)
@@ -74,7 +76,7 @@ class BaseSearcher:
         self,
         trial_id: int,
         config: Dict[str, Any],
-        metric: float,
+        metric: List[float],
         update: bool,
     ):
         """Inform searcher about result
