@@ -1,25 +1,10 @@
-from typing import Optional, Dict, Any, Union, List
+from typing import Optional, Dict, Any, Union
 import logging
 
-from syne_tune.backend.trial_status import Trial
-from syne_tune.config_space import (
-    cast_config_values,
-    config_space_to_json_dict,
-    remove_constant_and_cast,
-    postprocess_config,
-)
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
-from syne_tune.util import dump_json_with_numpy
-from syne_tune.optimizer.scheduler import (
-    TrialScheduler,
-    TrialSuggestion,
-    SchedulerDecision,
-)
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
-
 logger = logging.getLogger(__name__)
 
 
@@ -61,12 +46,6 @@ class SingleObjectiveScheduler(SingleFidelityScheduler):
         random_seed: int = None,
         searcher_kwargs: dict = None,
     ):
-
-        if isinstance(searcher, str):
-            if searcher_kwargs is None:
-                searcher_kwargs = {}
-
-            searcher = searcher_factory(searcher, config_space, **searcher_kwargs)
 
         super().__init__(
             random_seed=random_seed,
