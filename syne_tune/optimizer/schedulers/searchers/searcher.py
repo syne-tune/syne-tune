@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
