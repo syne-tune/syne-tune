@@ -103,7 +103,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [result[metric_name] * self.metric_multiplier for metric_name in self.metric]
+        metric = [
+            result[metric_name] * self.metric_multiplier for metric_name in self.metric
+        ]
         self.searcher.on_trial_result(
             trial.trial_id, config, metric=metric, update=False
         )
@@ -120,7 +122,9 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [result[metric_name] * self.metric_multiplier for metric_name in self.metric]
+        metric = [
+            result[metric_name] * self.metric_multiplier for metric_name in self.metric
+        ]
         self.searcher.on_trial_result(
             trial.trial_id, config, metric=metric, update=True
         )
