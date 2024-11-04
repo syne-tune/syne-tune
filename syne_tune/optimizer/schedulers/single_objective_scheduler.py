@@ -1,7 +1,9 @@
 from typing import Optional, Dict, Any, Union
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
@@ -43,7 +45,7 @@ class SingleObjectiveScheduler(SingleFidelityScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, BaseSearcher]] = "random_search",
+        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
     ):
@@ -54,4 +56,5 @@ class SingleObjectiveScheduler(SingleFidelityScheduler):
             do_minimize=do_minimize,
             searcher=searcher,
             metrics=[metric],
+            searcher_kwargs=searcher_kwargs,
         )
