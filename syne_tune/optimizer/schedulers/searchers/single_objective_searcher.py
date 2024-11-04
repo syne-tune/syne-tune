@@ -1,7 +1,6 @@
 import logging
-import numpy as np
 
-from typing import Optional, List, Dict, Any
+from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
