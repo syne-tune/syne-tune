@@ -12,7 +12,7 @@ from syne_tune.config_space import (
     logfinrange,
 )
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.searchers import RandomSearcher
+from syne_tune.optimizer.schedulers.searchers import LegacyRandomSearcher
 
 
 def _to_int(a, lower, upper):
@@ -160,7 +160,7 @@ def test_points_to_evaluate():
             metric="bogus",
             points_to_evaluate=tc_src,
         )
-        searcher: RandomSearcher = scheduler.searcher
+        searcher: LegacyRandomSearcher = scheduler.searcher
         hp_ranges = searcher._hp_ranges
         assert len(tc_trg) == len(searcher._points_to_evaluate), err_msg
         assert np.allclose(
@@ -182,7 +182,7 @@ def test_points_to_evaluate_raytune():
     _myscheduler = FIFOScheduler(
         config_space, searcher="random", mode="min", metric="bogus"
     )
-    _mysearcher: RandomSearcher = _myscheduler.searcher
+    _mysearcher: LegacyRandomSearcher = _myscheduler.searcher
     hp_ranges = _mysearcher._hp_ranges
     for tc_src, tc_trg in testcases:
         err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
