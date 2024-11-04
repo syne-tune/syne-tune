@@ -34,16 +34,16 @@ def test_points_to_evaluate(name, scheduler_cls):
     ]
 
     kwargs = {
-        'config_space': config_space,
-        'random_seed': random_seed,
-        'searcher': "random_search",
-        'searcher_kwargs': {"points_to_evaluate": points_to_evaluate},
+        "config_space": config_space,
+        "random_seed": random_seed,
+        "searcher": "random_search",
+        "searcher_kwargs": {"points_to_evaluate": points_to_evaluate},
     }
 
     if scheduler_cls in [SingleObjectiveScheduler]:
-        kwargs['metric'] = metric
+        kwargs["metric"] = metric
     else:
-        kwargs['metrics'] = [metric]
+        kwargs["metrics"] = [metric]
 
     scheduler = scheduler_cls(**kwargs)
 

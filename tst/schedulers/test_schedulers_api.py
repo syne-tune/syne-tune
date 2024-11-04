@@ -7,8 +7,12 @@ import pytest
 from syne_tune.backend.trial_status import Trial
 
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.single_fidelity_scheduler import SingleFidelityScheduler
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
+from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
+    SingleFidelityScheduler,
+)
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
 
 from syne_tune.config_space import randint, uniform, choice
 
@@ -34,10 +38,22 @@ random_seed = 42
 mode = "max"
 
 list_schedulers_to_test = [
-    SingleObjectiveScheduler(config_space, searcher="random_search", metric=metric1, do_minimize=False, random_seed=random_seed),
-    SingleFidelityScheduler(config_space, searcher="random_search", metrics=[metric1, metric2], do_minimize=False,
-                             random_seed=random_seed),
+    SingleObjectiveScheduler(
+        config_space,
+        searcher="random_search",
+        metric=metric1,
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
+    SingleFidelityScheduler(
+        config_space,
+        searcher="random_search",
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
 ]
+
 
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize("scheduler", list_schedulers_to_test)
