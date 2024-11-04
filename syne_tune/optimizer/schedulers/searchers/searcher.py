@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 
+from copy import deepcopy
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ class BaseSearcher:
         if points_to_evaluate is None:
             self.points_to_evaluate = []
         else:
-            self.points_to_evaluate = points_to_evaluate
+            self.points_to_evaluate = deepcopy(points_to_evaluate)
 
         if random_seed is None:
             self.random_seed = np.random.randint(0, 2**31 - 1)
@@ -76,7 +77,7 @@ class BaseSearcher:
         self,
         trial_id: int,
         config: Dict[str, Any],
-        metric: List[float],
+        metric: float,
         update: bool,
     ):
         """Inform searcher about result

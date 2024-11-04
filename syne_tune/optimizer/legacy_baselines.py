@@ -18,6 +18,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import E
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
+    SingleFidelityScheduler,
+)
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -697,7 +703,7 @@ class BoTorch(FIFOScheduler):
         )
 
 
-class REA(FIFOScheduler):
+class REA(SingleObjectiveScheduler):
     """Regularized Evolution (REA).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
@@ -720,22 +726,24 @@ class REA(FIFOScheduler):
         self,
         config_space: Dict[str, Any],
         metric: str,
+        do_minimize: Optional[bool] = True,
         population_size: int = 100,
         sample_size: int = 10,
         random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["population_size"] = population_size
-        searcher_kwargs["sample_size"] = sample_size
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=RegularizedEvolution(**searcher_kwargs),
+            do_minimize=do_minimize,
+            searcher=RegularizedEvolution(
+                config_space=config_space,
+                population_size=population_size,
+                sample_size=sample_size,
+                points_to_evaluate=points_to_evaluate,
+            ),
             random_seed=random_seed,
-            **kwargs,
         )
 
 
@@ -881,7 +889,7 @@ class NSGA2(FIFOScheduler):
         )
 
 
-class MOREA(FIFOScheduler):
+class MOREA(SingleFidelityScheduler):
     """
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
@@ -903,26 +911,23 @@ class MOREA(FIFOScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
+        metrics: List[str],
         population_size: int = 100,
         sample_size: int = 10,
         random_seed: Optional[int] = None,
-        **kwargs,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
-        searcher_kwargs["population_size"] = population_size
-        searcher_kwargs["sample_size"] = sample_size
         super(MOREA, self).__init__(
             config_space=config_space,
-            metric=metric,
-            mode=mode,
-            searcher=MultiObjectiveRegularizedEvolution(**searcher_kwargs),
+            metrics=metrics,
+            searcher=MultiObjectiveRegularizedEvolution(
+                config_space=config_space,
+                sample_size=sample_size,
+                population_size=population_size,
+                points_to_evaluate=points_to_evaluate,
+                random_seed=random_seed,
+            ),
             random_seed=random_seed,
-            **kwargs,
         )
 
 
