@@ -21,7 +21,7 @@ class RandomSearcher(BaseSearcher):
             config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
         )
 
-    def suggest(self, **kwargs) -> Optional[dict]:
+    def suggest(self) -> Optional[dict]:
         """Sample a new configuration at random
 
         If ``allow_duplicates == False``, this is done without replacement, so
