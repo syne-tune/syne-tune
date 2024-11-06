@@ -63,7 +63,7 @@ def test_schedulers_api(scheduler):
     # checks suggestions are properly formatted
     trials = []
     for i in trial_ids:
-        suggestion = scheduler.suggest(i)
+        suggestion = scheduler.suggest()
         assert all(
             x in suggestion.config.keys() for x in config_space.keys()
         ), "suggestion configuration should contain all keys of config_space."

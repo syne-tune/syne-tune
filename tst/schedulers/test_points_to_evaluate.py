@@ -49,7 +49,7 @@ def test_points_to_evaluate(name, scheduler_cls):
 
     # Check that the first points match those defined in points_to_evaluate
     for i in range(len(points_to_evaluate)):
-        config = scheduler.suggest(i)
+        config = scheduler.suggest()
         config == points_to_evaluate[i], (
             "Initial point %s does not match listed points_to_evaluate." % i
         )
