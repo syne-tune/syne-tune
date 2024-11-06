@@ -35,7 +35,6 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
-        update: bool,
     ):
         """Inform searcher about result
 
@@ -50,6 +49,5 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param update: Should surrogate model be updated?
         """
         return
