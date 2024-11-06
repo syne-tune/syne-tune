@@ -73,9 +73,9 @@ class SingleFidelityScheduler(TrialScheduler):
         else:
             self.searcher = searcher
 
-    def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+    def suggest(self) -> Optional[TrialSuggestion]:
 
-        config = self.searcher.suggest(trial_id=trial_id)
+        config = self.searcher.suggest()
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = TrialSuggestion.start_suggestion(
@@ -104,7 +104,7 @@ class SingleFidelityScheduler(TrialScheduler):
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, update=False
+            trial.trial_id, config, metric=metric
         )
         return SchedulerDecision.CONTINUE
 
@@ -123,7 +123,7 @@ class SingleFidelityScheduler(TrialScheduler):
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, update=True
+            trial.trial_id, config, metric=metric
         )
 
     def metadata(self) -> Dict[str, Any]:
