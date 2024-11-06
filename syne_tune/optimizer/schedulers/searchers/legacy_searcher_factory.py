@@ -1,7 +1,7 @@
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import (
-    RandomSearcher,
+    LegacyRandomSearcher,
     GridSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
@@ -64,7 +64,7 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
     scheduler = kwargs.get("scheduler")
     model = kwargs.get("model", "gp_multitask")
     if searcher_name == "random":
-        searcher_cls = RandomSearcher
+        searcher_cls = LegacyRandomSearcher
     elif searcher_name == "grid":
         searcher_cls = GridSearcher
     elif searcher_name == "kde":

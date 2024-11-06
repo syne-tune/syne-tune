@@ -6,7 +6,7 @@ import copy
 
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticSearcher,
-    RandomSearcher,
+    LegacyRandomSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
@@ -465,7 +465,7 @@ class ModelBasedSearcher(StochasticSearcher):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with ``points_to_evaluate``
-            self._random_searcher = RandomSearcher(
+            self._random_searcher = LegacyRandomSearcher(
                 self.hp_ranges.config_space_for_sampling,
                 metric=self._metric,
                 points_to_evaluate=[],

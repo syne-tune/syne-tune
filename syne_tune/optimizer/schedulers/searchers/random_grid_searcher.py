@@ -26,7 +26,7 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 logger = logging.getLogger(__name__)
 
 
-class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
+class LegacyRandomSearcher(StochasticAndFilterDuplicatesSearcher):
     """
     Searcher which randomly samples configurations to try next.
 
@@ -127,7 +127,7 @@ class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
             logger.info(msg)
 
     def clone_from_state(self, state: Dict[str, Any]):
-        new_searcher = RandomSearcher(
+        new_searcher = LegacyRandomSearcher(
             self.config_space,
             metric=self._metric,
             points_to_evaluate=[],

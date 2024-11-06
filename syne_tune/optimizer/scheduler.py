@@ -117,7 +117,7 @@ class TrialScheduler:
         else:
             self.random_seed = random_seed
 
-    def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+    def suggest(self) -> Optional[TrialSuggestion]:
         """Returns a suggestion for a new trial, or one to be resumed
 
         This method returns ``suggestion`` of type :class:`TrialSuggestion` (unless
@@ -141,8 +141,6 @@ class TrialScheduler:
         Apart from the HP config, additional fields can be appended to the
         dict, these are passed to the trial function as well.
 
-        :param trial_id: ID for new trial to be started (ignored if existing
-            trial to be resumed)
         :return: Suggestion for a trial to be started or to be resumed, see
             above. If no suggestion can be made, None is returned
         """

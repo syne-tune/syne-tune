@@ -10,7 +10,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F4
     extract_random_seed,
 )
 from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # noqa: F401
-    RandomSearcher,
+    LegacyRandomSearcher,
     GridSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.legacy_searcher_factory import (
@@ -23,7 +23,7 @@ __all__ = [
     "StochasticSearcher",
     "StochasticAndFilterDuplicatesSearcher",
     "extract_random_seed",
-    "RandomSearcher",
+    "LegacyRandomSearcher",
     "GridSearcher",
     "legacy_searcher_factory",
 ]

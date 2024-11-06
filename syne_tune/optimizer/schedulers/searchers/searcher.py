@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 
+from copy import deepcopy
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -38,13 +39,15 @@ class BaseSearcher:
         self.config_space = config_space
         if points_to_evaluate is None:
             self.points_to_evaluate = []
+        else:
+            self.points_to_evaluate = deepcopy(points_to_evaluate)
 
         if random_seed is None:
             self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
 
-    def _next_initial_config(self) -> Optional[Dict[str, Any]]:
+    def _next_points_to_evaluate(self) -> Optional[Dict[str, Any]]:
         """
         :return: Next entry from remaining ``points_to_evaluate`` (popped
             from front), or None
@@ -57,7 +60,7 @@ class BaseSearcher:
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         """Suggest a new configuration.
 
-        Note: Query :meth:`_next_initial_config` for initial configs to return
+        Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
         first.
 
         :param kwargs: Extra information may be passed from scheduler to
@@ -74,8 +77,7 @@ class BaseSearcher:
         self,
         trial_id: int,
         config: Dict[str, Any],
-        metric: float,
-        update: bool,
+        metrics: List[float],
     ):
         """Inform searcher about result
 
@@ -89,8 +91,7 @@ class BaseSearcher:
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param update: Should surrogate model be updated?
+        :param metrics: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         """
         return
 
