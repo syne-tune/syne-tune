@@ -29,7 +29,7 @@ class RandomSearcher(BaseSearcher):
 
         :return: New configuration, or None
         """
-        new_config = self._next_initial_config()
+        new_config = self._next_points_to_evaluate()
         if new_config is None:
             new_config = {
                 k: v.sample() if hasattr(v, "sample") else v

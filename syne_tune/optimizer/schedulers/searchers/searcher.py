@@ -47,7 +47,7 @@ class BaseSearcher:
         else:
             self.random_seed = random_seed
 
-    def _next_initial_config(self) -> Optional[Dict[str, Any]]:
+    def _next_points_to_evaluate(self) -> Optional[Dict[str, Any]]:
         """
         :return: Next entry from remaining ``points_to_evaluate`` (popped
             from front), or None
@@ -60,7 +60,7 @@ class BaseSearcher:
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         """Suggest a new configuration.
 
-        Note: Query :meth:`_next_initial_config` for initial configs to return
+        Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
         first.
 
         :param kwargs: Extra information may be passed from scheduler to
