@@ -77,7 +77,7 @@ class BaseSearcher:
         self,
         trial_id: int,
         config: Dict[str, Any],
-        metric: List[float],
+        metrics: List[float],
     ):
         """Inform searcher about result
 
@@ -91,7 +91,7 @@ class BaseSearcher:
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metrics: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         """
         return
 
