@@ -25,20 +25,16 @@ def make_trial(trial_id: int):
         creation_time=datetime.now(),
     )
 
-list_classifiers = [
-    'xgboost',
-    'logreg',
-    'rf',
-    'mlp'
-]
+
+list_classifiers = ["xgboost", "logreg", "rf", "mlp"]
+
 
 @pytest.mark.parametrize("classifier", list_classifiers)
 def test_bore_models(classifier):
-    searcher = Bore(config_space,  classifier=classifier, feval_acq=5)
+    searcher = Bore(config_space, classifier=classifier, feval_acq=5)
 
     for i in range(10):
         config = searcher.suggest()
         searcher.on_trial_result(trial_id=i, config=config, metric=np.random.rand())
 
     config = searcher.suggest(trial_id=10)
-

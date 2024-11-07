@@ -9,7 +9,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
 from syne_tune.optimizer.schedulers.searchers.bore.mlp_classififer import MLP
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
 )
@@ -53,7 +55,7 @@ class Bore(SingleObjectiveBaseSearcher):
         :meth:`update`. After that, the BORE algorithm is used. Defaults to 6
     :param classifier_kwargs: Parameters for classifier. Optional
     """
-    
+
     def __init__(
         self,
         config_space: Dict[str, Any],
@@ -61,8 +63,8 @@ class Bore(SingleObjectiveBaseSearcher):
         random_seed: int = None,
         gamma: Optional[float] = 0.25,
         calibrate: Optional[bool] = False,
-        classifier: Optional[str] = 'xgboost',
-        acq_optimizer: Optional[str] = 'rs_with_replacement',
+        classifier: Optional[str] = "xgboost",
+        acq_optimizer: Optional[str] = "rs_with_replacement",
         feval_acq: Optional[int] = 500,
         random_prob: Optional[float] = 0.0,
         init_random: Optional[int] = 6,
@@ -71,7 +73,7 @@ class Bore(SingleObjectiveBaseSearcher):
         super().__init__(
             config_space=config_space,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
 
         self.calibrate = calibrate
@@ -92,16 +94,22 @@ class Bore(SingleObjectiveBaseSearcher):
         if self.classifier == "xgboost":
             self.model = xgboost.XGBClassifier(random_state=self.random_state)
         elif self.classifier == "logreg":
-            self.model = LogisticRegression(random_state=self.random_state, **classifier_kwargs)
+            self.model = LogisticRegression(
+                random_state=self.random_state, **classifier_kwargs
+            )
         elif self.classifier == "rf":
-            self.model = RandomForestClassifier(random_state=self.random_state, **classifier_kwargs)
+            self.model = RandomForestClassifier(
+                random_state=self.random_state, **classifier_kwargs
+            )
         elif self.classifier == "mlp":
-            self.model = MLP(n_inputs=self._hp_ranges.ndarray_size, random_state=self.random_state,
-                             **classifier_kwargs)
+            self.model = MLP(
+                n_inputs=self._hp_ranges.ndarray_size,
+                random_state=self.random_state,
+                **classifier_kwargs,
+            )
 
         self.inputs = []
         self.targets = []
-
 
     def _loss(self, x):
         if len(x.shape) < 2:
@@ -112,12 +120,12 @@ class Bore(SingleObjectiveBaseSearcher):
             return y[:, 0]
         else:
             return y[:, 1]  # return probability of class 1
-        
+
     def _get_random_config(self):
         return {
-                k: v.sample() if hasattr(v, "sample") else v
-                for k, v in self.config_space.items()
-            }
+            k: v.sample() if hasattr(v, "sample") else v
+            for k, v in self.config_space.items()
+        }
 
     def suggest(self, **kwargs):
         start_time = time.time()
@@ -149,10 +157,15 @@ class Bore(SingleObjectiveBaseSearcher):
                     best, traj = de.run()
                     config = self._hp_ranges.from_ndarray(best)
 
-                elif self.acq_optimizer == 'rs_with_replacement':
+                elif self.acq_optimizer == "rs_with_replacement":
                     # sample random configurations with replacement
-                    candidates = [self._get_random_config() for _ in range(self.feval_acq)]
-                    values = [self._loss(self._hp_ranges.to_ndarray(candidate))[0] for candidate in candidates]
+                    candidates = [
+                        self._get_random_config() for _ in range(self.feval_acq)
+                    ]
+                    values = [
+                        self._loss(self._hp_ranges.to_ndarray(candidate))[0]
+                        for candidate in candidates
+                    ]
                     ind = np.array(values).argmin()
                     config = candidates[ind]
 
@@ -165,10 +178,12 @@ class Bore(SingleObjectiveBaseSearcher):
                         xi = self._get_random_config()
                         counter += 1
                         if counter > 10000:
-                            logging.error(f'Tried 10000 times to sample a new configuration '
-                                          f'without replacement with no success.'
-                                          f'We will stop now! Current candidate set contains {len(candidates)} '
-                                          f'configurations. Try reduce the total number of samples feval_acq.')
+                            logging.error(
+                                f"Tried 10000 times to sample a new configuration "
+                                f"without replacement with no success."
+                                f"We will stop now! Current candidate set contains {len(candidates)} "
+                                f"configurations. Try reduce the total number of samples feval_acq."
+                            )
                             break
                         if xi in candidates:
                             continue
@@ -205,7 +220,8 @@ class Bore(SingleObjectiveBaseSearcher):
 
         if self.calibrate:
             self.model = CalibratedClassifierCV(
-                self.model, cv=2,
+                self.model,
+                cv=2,
             )
             self.model.fit(X, np.array(z, dtype=np.int64))
         else:
@@ -233,4 +249,3 @@ class Bore(SingleObjectiveBaseSearcher):
     ):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(metric)
-
