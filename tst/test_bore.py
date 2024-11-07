@@ -1,6 +1,4 @@
-# this test is commented as an import is causing the whole test suite to fail (without running)
-# depending on the numpy/GPy versions installed.
-"""
+import pytest
 import numpy as np
 
 from datetime import datetime
@@ -27,51 +25,20 @@ def make_trial(trial_id: int):
         creation_time=datetime.now(),
     )
 
+list_classifiers = [
+    'xgboost',
+    'logreg',
+    'rf',
+    'mlp'
+]
 
-def test_bore_xgboost():
-    searcher = Bore(config_space, metric='accuracy', acq_optimizer='de')
-
-    for i in range(10):
-        config = searcher.get_config(trial_id=i)
-        result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
-
-        searcher.on_trial_result('%d' % i, config, result, update=True)
-
-    config = searcher.get_config(trial_id=10)
-
-
-def test_bore_gp():
-    searcher = Bore(config_space, metric='accuracy', classifier='gp')
+@pytest.mark.parametrize("classifier", list_classifiers)
+def test_bore_models(classifier):
+    searcher = Bore(config_space,  classifier=classifier, feval_acq=5)
 
     for i in range(10):
-        config = searcher.get_config(trial_id=i)
-        result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
+        config = searcher.suggest()
+        searcher.on_trial_result(trial_id=i, config=config, metric=np.random.rand())
 
-        searcher.on_trial_result('%d' % i, config, result, update=True)
+    config = searcher.suggest(trial_id=10)
 
-    config = searcher.get_config(trial_id=10)
-
-
-def test_bore_mlp():
-    searcher = Bore(config_space, metric='accuracy', classifier='mlp')
-
-    for i in range(10):
-        config = searcher.get_config(trial_id=i)
-        result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
-
-        searcher.on_trial_result('%d' % i, config, result, update=True)
-
-    config = searcher.get_config(trial_id=10)
-
-
-def test_bore_rf():
-    searcher = Bore(config_space, metric='accuracy', classifier='rf')
-
-    for i in range(10):
-        config = searcher.get_config(trial_id=i)
-        result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
-
-        searcher.on_trial_result('%d' % i, config, result, update=True)
-
-    config = searcher.get_config(trial_id=10)
-"""
