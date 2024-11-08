@@ -8,11 +8,9 @@ from syne_tune.optimizer.baselines import (
     BayesianOptimization,
     ASHA,
     MOBSTER,
-    BORE,
     SyncBOHB,
     BOHB,
     KDE,
-    ASHABORE,
 )
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend.trial_status import Trial
