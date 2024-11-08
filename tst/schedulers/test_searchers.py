@@ -39,7 +39,6 @@ SCHEDULERS = [
     (DEHB, True),
     (BOHB, True),
     (SyncBOHB, True),
-    (BORE, False),
     (KDE, False),
 ]
 
@@ -158,7 +157,6 @@ SCHEDULERS = [
     (ASHA, True, False),
     (HyperTune, True, True),
     (SyncHyperband, True, False),
-    (BORE, False, False),
     # (BoTorch, False, True),
 ]
 
