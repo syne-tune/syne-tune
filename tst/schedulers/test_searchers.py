@@ -14,7 +14,6 @@ from syne_tune.optimizer.baselines import (
     DEHB,
     BOHB,
     SyncBOHB,
-    BORE,
     KDE,
 )
 from syne_tune.config_space import (

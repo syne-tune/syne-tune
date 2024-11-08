@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.random import RandomState
-from pandas.core.common import random_state
 
 from sklearn.neural_network import MLPClassifier
 
