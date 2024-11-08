@@ -15,7 +15,6 @@ SUPPORTED_SEARCHERS_FIFO = {
     "random",
     "grid",
     "kde",
-    "bore",
     "cqr",
     "botorch",
     "bayesopt",
@@ -28,7 +27,6 @@ SUPPORTED_SEARCHERS_HYPERBAND = {
     "random",
     "grid",
     "kde",
-    "bore",
     "cqr",
     "bayesopt",
     "bayesopt_cost",
@@ -81,20 +79,6 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = MultiFidelityKernelDensityEstimator
-    elif searcher_name == "bore":
-        try:
-            from syne_tune.optimizer.schedulers.searchers.bore import (
-                Bore,
-                MultiFidelityBore,
-            )
-        except ImportError:
-            raise
-
-        if scheduler == "fifo":
-            searcher_cls = Bore
-        else:
-            supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
-            searcher_cls = MultiFidelityBore
     elif searcher_name == "cqr":
         try:
             from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (

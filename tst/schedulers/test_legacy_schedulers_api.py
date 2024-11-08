@@ -152,7 +152,6 @@ list_schedulers_to_test = [
     FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
     FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
     FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
     FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
     HyperbandScheduler(
         config_space,
@@ -173,14 +172,6 @@ list_schedulers_to_test = [
     HyperbandScheduler(
         config_space,
         searcher="kde",
-        resource_attr=resource_attr,
-        max_t=max_t,
-        metric=metric1,
-        mode=mode,
-    ),
-    HyperbandScheduler(
-        config_space,
-        searcher="bore",
         resource_attr=resource_attr,
         max_t=max_t,
         metric=metric1,
