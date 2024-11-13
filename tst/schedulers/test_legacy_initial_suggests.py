@@ -8,11 +8,9 @@ from syne_tune.optimizer.baselines import (
     BayesianOptimization,
     ASHA,
     MOBSTER,
-    BORE,
     SyncBOHB,
     BOHB,
     KDE,
-    ASHABORE,
 )
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend.trial_status import Trial
@@ -21,18 +19,16 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 
 KDE_METHODS = {"BOHB", "SyncBOHB", "KDE"}
 
-MULTIFID_METHODS = {"ASHA", "MOB", "BOHB", "SyncBOHB", "ASHABORE"}
+MULTIFID_METHODS = {"ASHA", "MOB", "BOHB", "SyncBOHB"}
 
 
 list_schedulers_to_test = [
     ("BO", BayesianOptimization),
     ("ASHA", ASHA),
     ("MOB", MOBSTER),
-    ("BORE", BORE),
     ("SyncBOHB", SyncBOHB),
     ("BOHB", BOHB),
     ("KDE", KDE),
-    ("ASHABORE", ASHABORE),
 ]
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
