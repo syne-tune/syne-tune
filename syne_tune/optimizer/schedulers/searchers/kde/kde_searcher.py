@@ -4,7 +4,9 @@ import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 import syne_tune.config_space as sp
 
 logger = logging.getLogger(__name__)
@@ -73,12 +75,12 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
-        random_seed: int = None
+        random_seed: int = None,
     ):
         super().__init__(
             config_space=config_space,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
 
         self.num_evaluations = 0
@@ -196,10 +198,10 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         return res
 
     def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
     ):
         self.X.append(self._to_feature(config=config))
         self.y.append(metric)

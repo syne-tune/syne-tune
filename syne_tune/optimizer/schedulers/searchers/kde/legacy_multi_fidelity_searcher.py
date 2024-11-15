@@ -2,7 +2,9 @@ from typing import Dict, Optional, List, Any, Tuple
 import logging
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.kde.legacy_kde_searcher import LegacyKernelDensityEstimator
+from syne_tune.optimizer.schedulers.searchers.kde.legacy_kde_searcher import (
+    LegacyKernelDensityEstimator,
+)
 
 logger = logging.getLogger(__name__)
 

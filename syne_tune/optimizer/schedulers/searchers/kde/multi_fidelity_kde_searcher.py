@@ -46,7 +46,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             num_candidates=num_candidates,
             bandwidth_factor=bandwidth_factor,
             random_fraction=random_fraction,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
         self.resource_levels = []
 
@@ -84,14 +84,12 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             return super()._train_kde(sub_data, sub_targets)
 
     def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
-            resource_level: float,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: float,
     ):
-        super().on_trial_result(trial_id=trial_id,
-                                config=config,
-                                metric=metric)
+        super().on_trial_result(trial_id=trial_id, config=config, metric=metric)
         resource_level = int(resource_level)
         self.resource_levels.append(resource_level)
