@@ -2,15 +2,12 @@ from typing import Dict, Optional, List, Any, Tuple
 import logging
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
-    KernelDensityEstimator,
-)
-from tst.test_pbt import random_seed
+from syne_tune.optimizer.schedulers.searchers.kde.legacy_kde_searcher import LegacyKernelDensityEstimator
 
 logger = logging.getLogger(__name__)
 
 
-class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
+class LegacyMultiFidelityKernelDensityEstimator(LegacyKernelDensityEstimator):
     """
     Adapts :class:`KernelDensityEstimator` to the multi-fidelity setting as proposed
     by Falkner et al such that we can use it with Hyperband. Following Falkner
@@ -24,31 +21,56 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
+
+    :param resource_attr: Name of resource attribute. Defaults to
+        ``scheduler.resource_attr`` in :meth:`configure_scheduler`
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
+        metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
+        mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
-        top_n_percent: int = 15,
-        min_bandwidth: float = 1e-3,
-        num_candidates: int = 64,
-        bandwidth_factor: int = 3,
-        random_fraction: float = 0.33,
+        top_n_percent: Optional[int] = None,
+        min_bandwidth: Optional[float] = None,
+        num_candidates: Optional[int] = None,
+        bandwidth_factor: Optional[int] = None,
+        random_fraction: Optional[float] = None,
+        resource_attr: Optional[str] = None,
+        **kwargs
     ):
+        if min_bandwidth is None:
+            min_bandwidth = 0.1
         super().__init__(
             config_space,
+            metric=metric,
             points_to_evaluate=points_to_evaluate,
+            allow_duplicates=allow_duplicates,
+            mode=mode,
             num_min_data_points=num_min_data_points,
             top_n_percent=top_n_percent,
             min_bandwidth=min_bandwidth,
             num_candidates=num_candidates,
             bandwidth_factor=bandwidth_factor,
             random_fraction=random_fraction,
-            random_seed=random_seed
+            **kwargs
         )
+        self.resource_attr = resource_attr
         self.resource_levels = []
+
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
+        )
+
+        super().configure_scheduler(scheduler)
+        assert isinstance(
+            scheduler, MultiFidelitySchedulerMixin
+        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
+        self.resource_attr = scheduler.resource_attr
 
     def _highest_resource_model_can_fit(self, num_features: int) -> Optional[int]:
         unique_resource_levels, counts = np.unique(
@@ -83,15 +105,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             sub_targets = train_targets[indices]
             return super()._train_kde(sub_data, sub_targets)
 
-    def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
-            resource_level: float,
-    ):
-        super().on_trial_result(trial_id=trial_id,
-                                config=config,
-                                metric=metric)
-        resource_level = int(resource_level)
+    def _update(self, trial_id: str, config: Dict, result: Dict):
+        super()._update(trial_id=trial_id, config=config, result=result)
+        resource_level = int(result[self.resource_attr])
         self.resource_levels.append(resource_level)

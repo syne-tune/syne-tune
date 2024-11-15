@@ -67,18 +67,16 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
         searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
-            from syne_tune.optimizer.schedulers.searchers.kde import (
-                KernelDensityEstimator,
-                MultiFidelityKernelDensityEstimator,
-            )
+            from syne_tune.optimizer.schedulers.searchers.kde.legacy_kde_searcher import LegacyKernelDensityEstimator
+            from syne_tune.optimizer.schedulers.searchers.kde.legacy_multi_fidelity_searcher import LegacyMultiFidelityKernelDensityEstimator
         except ImportError:
             raise
 
         if scheduler == "fifo":
-            searcher_cls = KernelDensityEstimator
+            searcher_cls = LegacyKernelDensityEstimator
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
-            searcher_cls = MultiFidelityKernelDensityEstimator
+            searcher_cls = LegacyMultiFidelityKernelDensityEstimator
     elif searcher_name == "cqr":
         try:
             from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (

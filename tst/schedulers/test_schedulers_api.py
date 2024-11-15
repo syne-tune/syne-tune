@@ -52,6 +52,13 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    SingleObjectiveScheduler(
+        config_space,
+        searcher="kde",
+        metric=metric1,
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
     SingleFidelityScheduler(
         config_space,
         searcher="random_search",
