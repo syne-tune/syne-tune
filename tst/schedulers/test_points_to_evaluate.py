@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 
 from syne_tune.config_space import randint
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
