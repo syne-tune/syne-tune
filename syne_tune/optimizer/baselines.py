@@ -15,8 +15,8 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     LinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution,
+from syne_tune.optimizer.schedulers.searchers.legacy_regularized_evolution import (
+    LegacyRegularizedEvolution as RegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
