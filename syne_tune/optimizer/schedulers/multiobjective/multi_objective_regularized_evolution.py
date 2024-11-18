@@ -6,7 +6,7 @@ from collections import deque
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     PopulationElement,
     mutate_config,
-    sample_random_config
+    sample_random_config,
 )
 from syne_tune.config_space import config_space_size
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
@@ -14,8 +14,6 @@ from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority impor
     NonDominatedPriority,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-
-
 
 
 class MultiObjectiveRegularizedEvolution(BaseSearcher):
@@ -42,26 +40,24 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
         random_seed: int = None,
     ):
 
-       super(MultiObjectiveRegularizedEvolution, self).__init__(
+        super(MultiObjectiveRegularizedEvolution, self).__init__(
             config_space=config_space,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed
+            random_seed=random_seed,
+        )
+        assert (
+            config_space_size(config_space) != 1
+        ), f"config_space = {config_space} has size 1, does not offer any diversity"
+        self.population_size = population_size
+        self.sample_size = sample_size
+        self.population = deque()
 
-       )
-       assert (
-               config_space_size(config_space) != 1
-       ), f"config_space = {config_space} has size 1, does not offer any diversity"
-       self.population_size = population_size
-       self.sample_size = sample_size
-       self.population = deque()
+        self.random_state = np.random.RandomState(self.random_seed)
 
-       self.random_state = np.random.RandomState(self.random_seed)
-
-       if multiobjective_priority is None:
+        if multiobjective_priority is None:
             self._multiobjective_priority = NonDominatedPriority()
-       else:
+        else:
             self._multiobjective_priority = multiobjective_priority
-
 
     def suggest(self, **kwargs) -> Optional[dict]:
         initial_config = self._next_points_to_evaluate()
@@ -69,17 +65,18 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
             return initial_config
 
         if len(self.population) < self.population_size:
-            config = sample_random_config(config_space=self.config_space,
-                                          rng=self.random_state)
+            config = sample_random_config(
+                config_space=self.config_space, rng=self.random_state
+            )
         else:
             candidates = self.random_state.choice(
                 list(self.population), size=self.sample_size
             )
             parent = min(candidates, key=lambda i: i.score)
 
-            config = mutate_config(parent.config,
-                                   config_space=self.config_space,
-                                   rng=self.random_state)
+            config = mutate_config(
+                parent.config, config_space=self.config_space, rng=self.random_state
+            )
 
         return config
 

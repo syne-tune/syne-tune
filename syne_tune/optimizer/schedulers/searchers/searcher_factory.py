@@ -5,7 +5,9 @@ from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSear
 from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
+from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
+    RegularizedEvolution,
+)
 
 searcher_cls_dict = {
     "random_search": RandomSearcher,

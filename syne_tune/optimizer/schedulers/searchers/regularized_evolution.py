@@ -8,7 +8,9 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
 from syne_tune.config_space import config_space_size, non_constant_hyperparameter_keys
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -21,10 +23,12 @@ class PopulationElement:
     results: list[float] = None
 
 
-def mutate_config(config: Dict[str, Any],
-                  config_space: Dict[str, Any],
-                  rng: np.random.RandomState,
-                  num_try: int = 1000) -> Dict[str, Any]:
+def mutate_config(
+    config: Dict[str, Any],
+    config_space: Dict[str, Any],
+    rng: np.random.RandomState,
+    num_try: int = 1000,
+) -> Dict[str, Any]:
 
     child_config = copy.deepcopy(config)
     hp_name = rng.choice(non_constant_hyperparameter_keys(config_space))
@@ -39,10 +43,11 @@ def mutate_config(config: Dict[str, Any],
     return child_config
 
 
-def sample_random_config(config_space: Dict[str, Any], rng: np.random.RandomState) -> Dict[str, Any]:
+def sample_random_config(
+    config_space: Dict[str, Any], rng: np.random.RandomState
+) -> Dict[str, Any]:
     return {
-        k: v.sample() if hasattr(v, "sample") else v
-        for k, v in config_space.items()
+        k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()
     }
 
 
@@ -89,31 +94,32 @@ class RegularizedEvolution(SingleObjectiveBaseSearcher):
         self.population = deque()
         self.random_state = np.random.RandomState(self.random_seed)
 
-
     def suggest(self, **kwargs) -> Optional[dict]:
         initial_config = self._next_points_to_evaluate()
         if initial_config is not None:
             return initial_config
 
         if len(self.population) < self.population_size:
-            config = sample_random_config(config_space=self.config_space, rng=self.random_state)
+            config = sample_random_config(
+                config_space=self.config_space, rng=self.random_state
+            )
         else:
             candidates = self.random_state.choice(
                 list(self.population), size=self.sample_size
             )
             parent = min(candidates, key=lambda i: i.score)
 
-            config = mutate_config(parent.config,
-                                   config_space=self.config_space,
-                                   rng=self.random_state)
+            config = mutate_config(
+                parent.config, config_space=self.config_space, rng=self.random_state
+            )
 
         return config
 
     def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
     ):
         # Add element to the population
         element = PopulationElement(score=metric, config=config)

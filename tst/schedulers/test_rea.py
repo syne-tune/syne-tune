@@ -4,9 +4,13 @@ import numpy as np
 
 from syne_tune.config_space import randint, choice
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution, mutate_config, sample_random_config
+    RegularizedEvolution,
+    mutate_config,
+    sample_random_config,
 )
-from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import MultiObjectiveRegularizedEvolution
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
+    MultiObjectiveRegularizedEvolution,
+)
 
 
 def test_rea_config_space_size_one():
@@ -22,30 +26,25 @@ def test_rea_config_space_size_one():
             random_seed=314159,
         )
 
+
 def test_random_config():
-    config_space = {
-        "a": randint(lower=1, upper=5),
-        "b": 25
-    }
+    config_space = {"a": randint(lower=1, upper=5), "b": 25}
 
     config = sample_random_config(config_space, rng=np.random.RandomState(42))
     assert "a" in config
-    assert 1 <= config['a'] <= 5
+    assert 1 <= config["a"] <= 5
     assert "b" in config
-    assert config['b'] == 25
+    assert config["b"] == 25
 
 
 def test_mutate_config():
-    config_space = {
-        "a": randint(lower=1, upper=5),
-        "b": 25
-    }
+    config_space = {"a": randint(lower=1, upper=5), "b": 25}
 
     config = {"a": 1, "b": 25}
     mutated_config = mutate_config(config, config_space, rng=np.random.RandomState(42))
 
-    assert config['b'] == mutated_config['b']
-    assert config['a'] != mutated_config['a']
+    assert config["b"] == mutated_config["b"]
+    assert config["a"] != mutated_config["a"]
 
 
 def test_rea_population():
@@ -58,9 +57,7 @@ def test_rea_population():
     pop_size = 5
 
     searcher = RegularizedEvolution(
-        config_space=config_space,
-        random_seed=314159,
-        population_size=pop_size
+        config_space=config_space, random_seed=314159, population_size=pop_size
     )
 
     history = []
@@ -87,9 +84,7 @@ def test_mo_rea_population():
     pop_size = 5
 
     searcher = MultiObjectiveRegularizedEvolution(
-        config_space=config_space,
-        random_seed=314159,
-        population_size=pop_size
+        config_space=config_space, random_seed=314159, population_size=pop_size
     )
 
     history = []
