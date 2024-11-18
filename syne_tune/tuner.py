@@ -493,7 +493,11 @@ class Tuner:
             not suggest a new configuration (this can happen if its configuration
             space is exhausted)
         """
-        suggestion = self.scheduler.suggest(trial_id=self.trial_backend.new_trial_id())
+
+        if isinstance(self.scheduler, TrialScheduler):
+            suggestion = self.scheduler.suggest()
+        else:
+            suggestion = self.scheduler.suggest(self.trial_backend.new_trial_id())
         if suggestion is None:
             logger.info("Searcher ran out of candidates, tuning job is stopping.")
             raise StopIteration
