@@ -13,10 +13,12 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     NSGA2Searcher,
     LinearScalarizedScheduler,
 )
-from syne_tune.optimizer.schedulers.multiobjective.legacy_multi_objective_regularized_evolution import LegacyMultiObjectiveRegularizedEvolution
+from syne_tune.optimizer.schedulers.multiobjective.legacy_multi_objective_regularized_evolution import (
+    LegacyMultiObjectiveRegularizedEvolution,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.legacy_regularized_evolution import (
-    LegacyRegularizedEvolution
+    LegacyRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
