@@ -55,7 +55,7 @@ class LegacyRegularizedEvolution(StochasticSearcher):
         sample_size: int = 10,
         **kwargs,
     ):
-        super(RegularizedEvolution, self).__init__(
+        super(LegacyRegularizedEvolution, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
         assert (
