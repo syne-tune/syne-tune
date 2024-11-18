@@ -10,12 +10,11 @@ from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTa
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
 )
+from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
+    BlackboxRecipe,
+)
 from syne_tune.config_space import uniform, loguniform
 from syne_tune.util import catchtime
-
-# TODO
-# create bb_dict
-# save eval as metadata
 
 BLACKBOX_NAME = "hpob_"
 
@@ -311,7 +310,7 @@ def merge_multiple_dicts(train_dict, *dicts):
     return result_dict
 
 
-class HPOBRecipe():
+class HPOBRecipe(BlackboxRecipe):
     def __init__(self):
         super(HPOBRecipe, self).__init__(
             name=BLACKBOX_NAME,
