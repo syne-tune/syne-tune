@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class PopulationElement:
     score: float = 0
     config: Dict[str, Any] = None
-    results: list[float] = None
+    results: List[float] = None
 
 
 def mutate_config(
