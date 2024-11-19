@@ -5,7 +5,6 @@ import numpy as np
 from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
     KernelDensityEstimator,
 )
-from tst.test_pbt import random_seed
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +35,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
+        random_seed: int | None = None,
     ):
         super().__init__(
             config_space,
