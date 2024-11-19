@@ -7,6 +7,7 @@ import pytest
 from syne_tune.backend.trial_status import Trial
 
 from syne_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.optimizer.schedulers.multiobjective import MultiObjectiveRegularizedEvolution
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
@@ -62,6 +63,23 @@ list_schedulers_to_test = [
     SingleFidelityScheduler(
         config_space,
         searcher="random_search",
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
+    SingleObjectiveScheduler(
+        config_space,
+        searcher="regularized_evolution",
+        metric=metric1,
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
+    SingleFidelityScheduler(
+        config_space,
+        searcher=MultiObjectiveRegularizedEvolution(
+            config_space=config_space,
+            random_seed=random_seed,
+        ),
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
