@@ -7,7 +7,9 @@ import pytest
 from syne_tune.backend.trial_status import Trial
 
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.multiobjective import MultiObjectiveRegularizedEvolution
+from syne_tune.optimizer.schedulers.multiobjective import (
+    MultiObjectiveRegularizedEvolution,
+)
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )

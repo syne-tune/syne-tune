@@ -1,7 +1,9 @@
 import pytest
 
 from syne_tune.config_space import randint
-from syne_tune.optimizer.schedulers.multiobjective import MultiObjectiveRegularizedEvolution
+from syne_tune.optimizer.schedulers.multiobjective import (
+    MultiObjectiveRegularizedEvolution,
+)
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
@@ -74,7 +76,6 @@ list_schedulers_to_test = [
         metrics=[metric],
         do_minimize=False,
         random_seed=random_seed,
-
     ),
 ]
 
