@@ -35,7 +35,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
-        random_seed: int | None = None,
+        random_seed: Optional[int] = None,
     ):
         super().__init__(
             config_space,
