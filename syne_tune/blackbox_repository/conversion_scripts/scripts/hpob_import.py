@@ -257,7 +257,7 @@ def convert_dataset(search_space, df, dataset):
 
 
 def load_data():
-    hpob_data_file = Path("~/.blackbox-repository/").expanduser() / "hpob-data.zip"
+    hpob_data_file = repository_path / "hpob-data.zip"
     if not hpob_data_file.exists():
         data_src = "https://rewind.tf.uni-freiburg.de/index.php/s/xdrJQPCTNi2zbfL/download/hpob-data.zip"
         print(f"did not find {hpob_data_file}, downloading {data_src}")
