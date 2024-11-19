@@ -497,7 +497,9 @@ class Tuner:
         if isinstance(self.scheduler, TrialScheduler):
             suggestion = self.scheduler.suggest()
         else:
-            logger.warning(f"Scheduler {type(self.scheduler).__name__} is deprecated and will be removed in the next release!")
+            logger.warning(
+                f"Scheduler {type(self.scheduler).__name__} is deprecated and will be removed in the next release!"
+            )
             suggestion = self.scheduler.suggest(self.trial_backend.new_trial_id())
         if suggestion is None:
             logger.info("Searcher ran out of candidates, tuning job is stopping.")
