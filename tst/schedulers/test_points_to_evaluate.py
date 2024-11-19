@@ -1,6 +1,9 @@
 import pytest
 
 from syne_tune.config_space import randint
+from syne_tune.optimizer.schedulers.multiobjective import (
+    MultiObjectiveRegularizedEvolution,
+)
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
@@ -54,6 +57,25 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
         searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+    ),
+    SingleFidelityScheduler(
+        config_space,
+        searcher="regularized_evolution",
+        metrics=[metric],
+        do_minimize=False,
+        random_seed=random_seed,
+        searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+    ),
+    SingleFidelityScheduler(
+        config_space,
+        searcher=MultiObjectiveRegularizedEvolution(
+            config_space=config_space,
+            random_seed=random_seed,
+            points_to_evaluate=points_to_evaluate,
+        ),
+        metrics=[metric],
+        do_minimize=False,
+        random_seed=random_seed,
     ),
 ]
 
