@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 NOISE_LEVEL = 1e-3
 
 
-class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
+class LegacyBoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
     """
     A searcher that suggest configurations using BOTORCH to build GP surrogate
     and optimize acquisition function.
@@ -291,7 +291,7 @@ class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
         return self._mode
 
 
-class BotorchSearcher(BoTorchSearcher):
+class LegacyBotorchSearcher(LegacyBoTorchSearcher):
     """
     Downwards compatibility. Please use :class:`BoTorchSearcher` instead
     """

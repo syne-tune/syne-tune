@@ -3,9 +3,8 @@ __all__ = []
 import logging
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (  # noqa: F401
-        BoTorchSearcher,
-        BotorchSearcher,  # deprecated
+    from syne_tune.optimizer.schedulers.searchers.botorch.legacy_botorch_searcher import (  # noqa: F401
+       LegacyBoTorchSearcher,
     )
 
     __all__.append("BoTorchSearcher")
