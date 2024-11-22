@@ -1,7 +1,9 @@
 from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import BoTorchSearcher
+from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+    BoTorchSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
