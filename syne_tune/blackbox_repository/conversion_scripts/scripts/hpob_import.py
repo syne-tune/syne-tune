@@ -23,7 +23,7 @@ SEARCH_SPACE_4796 = {
         "minsplit": loguniform(2.0, 128.0),
         "minbucket": loguniform(1.0, 64.0),
         "cp": loguniform(0.0002, 0.1),
-    }
+    },
 }
 
 SEARCH_SPACE_5527 = {
@@ -238,7 +238,9 @@ MAX_RESOURCE_LEVEL = 100
 def generate_hpob(search_space):
     print("generating hpob")
     raw_data_dicts = load_data()
-    merged_datasets = merge_multiple_dicts(raw_data_dicts[0], raw_data_dicts[1], raw_data_dicts[2])
+    merged_datasets = merge_multiple_dicts(
+        raw_data_dicts[0], raw_data_dicts[1], raw_data_dicts[2]
+    )
     df = pd.DataFrame.from_dict(merged_datasets)
 
     blackbox_name = BLACKBOX_NAME + search_space["name"]
@@ -258,7 +260,7 @@ def generate_hpob(search_space):
 def convert_dataset(search_space, dataset_name, dataset):
     hp_cols = list(search_space["config_space"].keys())
     n_hps = len(hp_cols)
-    n_evals = len(dataset['X'])
+    n_evals = len(dataset["X"])
     hps = np.zeros((n_evals, n_hps))
 
     for i, config in enumerate(dataset["X"]):
@@ -268,8 +270,10 @@ def convert_dataset(search_space, dataset_name, dataset):
 
     objective_names = ["metric_accuracy"]
 
-    objective_evaluations = np.array(dataset['y'])  # np.array.shape = (N,)
-    objective_evaluations = objective_evaluations.reshape(objective_evaluations.shape[0], 1, 1, 1)
+    objective_evaluations = np.array(dataset["y"])  # np.array.shape = (N,)
+    objective_evaluations = objective_evaluations.reshape(
+        objective_evaluations.shape[0], 1, 1, 1
+    )
 
     fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
 
@@ -278,7 +282,7 @@ def convert_dataset(search_space, dataset_name, dataset):
         configuration_space=search_space["config_space"],
         objectives_evaluations=objective_evaluations,
         objectives_names=objective_names,
-        fidelity_space=fidelity_space
+        fidelity_space=fidelity_space,
     )
 
 
@@ -311,8 +315,8 @@ def load_data():
 def merge_multiple_dicts(train_dict, validation_dict, test_dict):
     result_dict = train_dict.copy()
 
-    for dataset in result_dict['4796']:
-        print(len(result_dict['4796'][dataset]['X']))
+    for dataset in result_dict["4796"]:
+        print(len(result_dict["4796"][dataset]["X"]))
     search_spaces = list(train_dict.keys())
 
     for search_space in search_spaces:
@@ -321,23 +325,33 @@ def merge_multiple_dicts(train_dict, validation_dict, test_dict):
 
         for dataset in validation_datasets:
             if dataset in result_dict[search_space].keys():
-                result_dict[search_space][dataset]['X'] += validation_dict[search_space][dataset]['X']
-                result_dict[search_space][dataset]['y'] += validation_dict[search_space][dataset]['y']
+                result_dict[search_space][dataset]["X"] += validation_dict[
+                    search_space
+                ][dataset]["X"]
+                result_dict[search_space][dataset]["y"] += validation_dict[
+                    search_space
+                ][dataset]["y"]
             else:
-                result_dict[search_space][dataset] = validation_dict[search_space][dataset]
+                result_dict[search_space][dataset] = validation_dict[search_space][
+                    dataset
+                ]
 
         for dataset in test_datasets:
             if dataset in result_dict[search_space].keys():
-                result_dict[search_space][dataset]['X'] += test_dict[search_space][dataset]['X']
-                result_dict[search_space][dataset]['y'] += test_dict[search_space][dataset]['y']
+                result_dict[search_space][dataset]["X"] += test_dict[search_space][
+                    dataset
+                ]["X"]
+                result_dict[search_space][dataset]["y"] += test_dict[search_space][
+                    dataset
+                ]["y"]
             else:
                 result_dict[search_space][dataset] = test_dict[search_space][dataset]
 
     summe_eval = 0
     datasets = 0
-    for i in result_dict['4796']:
+    for i in result_dict["4796"]:
         datasets += 1
-        summe_eval += len(result_dict['4796'][i]['X'])
+        summe_eval += len(result_dict["4796"][i]["X"])
     print("eval ", summe_eval)
     print("datasets", datasets)
     return result_dict
@@ -348,7 +362,7 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name="hpob_4796",
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-                           "Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+            "Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
 
     def _generate_on_disk(self):
