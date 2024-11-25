@@ -347,13 +347,6 @@ def merge_multiple_dicts(train_dict, validation_dict, test_dict):
             else:
                 result_dict[search_space][dataset] = test_dict[search_space][dataset]
 
-    summe_eval = 0
-    datasets = 0
-    for i in result_dict["4796"]:
-        datasets += 1
-        summe_eval += len(result_dict["4796"][i]["X"])
-    print("eval ", summe_eval)
-    print("datasets", datasets)
     return result_dict
 
 
@@ -362,15 +355,11 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name="hpob_4796",
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-            "Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+                           "Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
 
     def _generate_on_disk(self):
         generate_hpob(SEARCH_SPACE_4796)
-
-
-# class HPORecipe4796(HPOBRecipe):
-#    super(name='HPOB_4796')
 
 
 if __name__ == "__main__":
