@@ -3,7 +3,9 @@ import logging
 
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
 )
@@ -66,9 +68,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         random_seed: int = None,
     ):
         super(BoTorchSearcher, self).__init__(
-            config_space,
-            points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed
+            config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
         )
         assert num_init_random >= 2
         self.num_minimum_observations = num_init_random
@@ -86,10 +86,10 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         self.random_state = np.random.RandomState(self.random_seed)
 
     def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
     ):
         trial_id = int(trial_id)
         self.trial_observations[trial_id] = metric
@@ -125,7 +125,6 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             self.trial_configs[trial_id] = config_suggested
 
         return config_suggested
-
 
     def evaluation_failed(self, trial_id: int):
         self.cleanup_pending(trial_id)
@@ -189,11 +188,11 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             # Continuous optimization of acquisition function only if
             # ``restrict_configurations`` not used
             candidate, acq_value = optimize_acqf(
-                    acq,
-                    bounds=self._get_gp_bounds(),
-                    q=1,
-                    num_restarts=3,
-                    raw_samples=100,
+                acq,
+                bounds=self._get_gp_bounds(),
+                q=1,
+                num_restarts=3,
+                raw_samples=100,
             )
             candidate = candidate.detach().numpy()[0]
             return self._config_from_ndarray(candidate)
@@ -245,4 +244,3 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             for trial, config in self.trial_configs.items()
             if trial in self.pending_trials
         ]
-
