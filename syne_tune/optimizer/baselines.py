@@ -687,7 +687,9 @@ class BoTorch(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.botorch.legacy_botorch_searcher import LegacyBoTorchSearcher
+            from syne_tune.optimizer.schedulers.searchers.botorch.legacy_botorch_searcher import (
+                LegacyBoTorchSearcher,
+            )
         except ImportError:
             raise
 
