@@ -602,7 +602,9 @@ class BORE(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.bore.legacy_bore import LegacyBore
+            from syne_tune.optimizer.schedulers.searchers.bore.legacy_bore import (
+                LegacyBore
+            )
         except ImportError:
             raise
 
@@ -641,7 +643,9 @@ class ASHABORE(HyperbandScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.bore.legacy_multi_fidelity_bore import LegacyMultiFidelityBore
+            from syne_tune.optimizer.schedulers.searchers.bore.legacy_multi_fidelity_bore import (
+                LegacyMultiFidelityBore
+            )
         except ImportError:
             raise
 
