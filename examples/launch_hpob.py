@@ -42,9 +42,7 @@ if __name__ == "__main__":
     metric = "metric_accuracy"
 
     bb_dict = load_blackbox(blackbox_name)
-    hpob_evaluations = load_hpob_evaluations(
-        blackbox_name, test_task, metric
-    )
+    hpob_evaluations = load_hpob_evaluations(blackbox_name, test_task, metric)
 
     scheduler = BoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(

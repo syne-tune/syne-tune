@@ -12,7 +12,13 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
-from syne_tune.config_space import uniform, loguniform, randint, config_space_to_json_dict, config_space_from_json_dict
+from syne_tune.config_space import (
+    uniform,
+    loguniform,
+    randint,
+    config_space_to_json_dict,
+    config_space_from_json_dict,
+)
 from syne_tune.util import catchtime, dump_json_with_numpy
 
 from syne_tune.blackbox_repository.serialize import (
@@ -244,7 +250,7 @@ MAX_RESOURCE_LEVEL = 100
 
 
 def serialize(
-        bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -294,6 +300,7 @@ def serialize(
         metadata=metadata,
     )
 
+
 def deserialize(path: str) -> Dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
@@ -331,6 +338,7 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
             objectives_names=objectives_names,
         )
     return bb_dict
+
 
 def generate_hpob(search_space):
     print("generating hpob_" + search_space["name"])
@@ -377,7 +385,9 @@ def convert_dataset(search_space, dataset_name, dataset):
         objective_evaluations.shape[0], 1, 1, 1
     )
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)}
+    fidelity_space = {
+        RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
+    }
 
     return BlackboxTabular(
         hyperparameters=hyperparameters,
@@ -455,7 +465,7 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name=name,
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-                           " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+            " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
         self.search_space = search_space
 

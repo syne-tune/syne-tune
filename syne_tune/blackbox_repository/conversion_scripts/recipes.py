@@ -17,7 +17,7 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import
     HPOBRecipe6794,
     HPOBRecipe7607,
     HPOBRecipe7609,
-    HPOBRecipe5889
+    HPOBRecipe5889,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
