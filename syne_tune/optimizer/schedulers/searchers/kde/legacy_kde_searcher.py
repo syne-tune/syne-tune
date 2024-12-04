@@ -4,15 +4,18 @@ import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
-    SingleObjectiveBaseSearcher,
+from syne_tune.optimizer.schedulers.searchers import (
+    StochasticAndFilterDuplicatesSearcher,
 )
 import syne_tune.config_space as sp
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class KernelDensityEstimator(SingleObjectiveBaseSearcher):
+class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
     """
     Fits two kernel density estimators (KDE) to model the density of the top N
     configurations as well as the density of the configurations that are not
@@ -68,21 +71,40 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
     def __init__(
         self,
         config_space: Dict[str, Any],
+        metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
+        mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
-        top_n_percent: int = 15,
-        min_bandwidth: float = 1e-3,
-        num_candidates: int = 64,
-        bandwidth_factor: int = 3,
-        random_fraction: float = 0.33,
-        random_seed: Optional[int] = None,
+        top_n_percent: Optional[int] = None,
+        min_bandwidth: Optional[float] = None,
+        num_candidates: Optional[int] = None,
+        bandwidth_factor: Optional[int] = None,
+        random_fraction: Optional[float] = None,
+        **kwargs,
     ):
+        k = "restrict_configurations"
+        if kwargs.get(k) is not None:
+            logger.warning(f"{k} is not supported")
+            del kwargs[k]
         super().__init__(
             config_space=config_space,
+            metric=metric,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed,
+            allow_duplicates=allow_duplicates,
+            mode="min" if mode is None else mode,
+            **kwargs,
         )
-
+        if top_n_percent is None:
+            top_n_percent = 15
+        if min_bandwidth is None:
+            min_bandwidth = 1e-3
+        if num_candidates is None:
+            num_candidates = 64
+        if bandwidth_factor is None:
+            bandwidth_factor = 3
+        if random_fraction is None:
+            random_fraction = 0.33
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
         self.random_fraction = random_fraction
@@ -100,12 +122,11 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
             hp: dict(zip(map.values(), map.keys()))
             for hp, map in self.categorical_maps.items()
         }
-        self.random_state = np.random.RandomState(self.random_seed)
 
         self.good_kde = None
         self.bad_kde = None
 
-        self.vartypes = list()
+        self.vartypes = []
 
         for name, hp in self.config_space.items():
             if isinstance(hp, sp.Categorical):
@@ -126,6 +147,17 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         assert self.num_min_data_points >= len(
             self.vartypes
         ), f"num_min_data_points = {num_min_data_points}, must be >= {len(self.vartypes)}"
+        self._resource_attr = kwargs.get("resource_attr")
+        # Debug log printing (switched on by default)
+        debug_log = kwargs.get("debug_log", True)
+        if isinstance(debug_log, bool):
+            if debug_log:
+                self._debug_log = DebugLogPrinter()
+            else:
+                self._debug_log = None
+        else:
+            assert isinstance(debug_log, DebugLogPrinter)
+            self._debug_log = debug_log
 
     def _to_feature(self, config):
         def numerize(value, domain, categorical_map):
@@ -197,23 +229,36 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
                 res[k] = domain
         return res
 
-    def on_trial_result(
-        self,
-        trial_id: int,
-        config: Dict[str, Any],
-        metric: float,
-    ):
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
+
+        assert isinstance(
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
+        super().configure_scheduler(scheduler)
+
+    def _to_objective(self, result: Dict[str, Any]) -> float:
+        if self._mode == "min":
+            return result[self._metric]
+        else:
+            return -result[self._metric]
+
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         self.X.append(self._to_feature(config=config))
-        self.y.append(metric)
+        self.y.append(self._to_objective(result))
+        if self._debug_log is not None:
+            metric_val = result[self._metric]
+            if self._resource_attr is not None:
+                # For HyperbandScheduler, also add the resource attribute
+                resource = int(result[self._resource_attr])
+                trial_id = trial_id + ":{}".format(resource)
+            msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
+            logger.info(msg)
 
-    def _get_random_config(self):
-        return {
-            k: v.sample() if hasattr(v, "sample") else v
-            for k, v in self.config_space.items()
-        }
-
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
-        suggestion = self._next_points_to_evaluate()
+    def _get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+        suggestion = self._next_initial_config()
         if suggestion is None:
             if self.y:
                 models = self._train_kde(np.array(self.X), np.array(self.y))
@@ -342,3 +387,6 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth, None)
 
         return bad_kde, good_kde
+
+    def clone_from_state(self, state: Dict[str, Any]):
+        raise NotImplementedError
