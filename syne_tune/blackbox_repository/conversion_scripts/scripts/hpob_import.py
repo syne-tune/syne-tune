@@ -3,16 +3,24 @@ import urllib.request
 import json
 import pandas as pd
 import numpy as np
-
-from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from pathlib import Path
+from typing import Dict, Optional
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
 )
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
-from syne_tune.config_space import uniform, loguniform, randint
-from syne_tune.util import catchtime
+from syne_tune.config_space import uniform, loguniform, randint, config_space_to_json_dict, config_space_from_json_dict
+from syne_tune.util import catchtime, dump_json_with_numpy
+
+from syne_tune.blackbox_repository.serialize import (
+    deserialize_configspace,
+    deserialize_metadata,
+    serialize_configspace,
+    serialize_metadata,
+)
 
 BLACKBOX_NAME = "hpob_"
 
@@ -235,8 +243,97 @@ RESOURCE_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 
 
+def serialize(
+        bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+):
+    # check all blackboxes share the objectives
+    bb_first = next(iter(bb_dict.values()))
+    for bb in bb_dict.values():
+        assert bb.objectives_names == bb_first.objectives_names
+
+    path = Path(path)
+    path.mkdir(exist_ok=True)
+
+    serialize_configspace(
+        path=path,
+        configuration_space=bb_first.configuration_space,
+    )
+
+    for task, bb in bb_dict.items():
+        bb.hyperparameters.to_parquet(
+            path / f"{task}-hyperparameters.parquet",
+            index=False,
+            compression="gzip",
+            engine="fastparquet",
+        )
+
+        dump_json_with_numpy(
+            config_space_to_json_dict(bb_dict[task].fidelity_space),
+            filename=path / f"{task}-fidelity_space.json",
+        )
+
+        with open(path / f"{task}-objectives_evaluations.npy", "wb") as f:
+            np.save(
+                f,
+                bb_dict[task].objectives_evaluations.astype(np.float32),
+                allow_pickle=False,
+            )
+
+        with open(path / f"{task}-fidelity_values.npy", "wb") as f:
+            np.save(f, bb_dict[task].fidelity_values, allow_pickle=False)
+
+    metadata = metadata.copy() if metadata else {}
+    metadata.update(
+        {
+            "objectives_names": bb_first.objectives_names,
+            "task_names": list(bb_dict.keys()),
+        }
+    )
+    serialize_metadata(
+        path=path,
+        metadata=metadata,
+    )
+
+def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+    """
+    Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
+    TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.
+    A possible way to unify is to have serialize also be a free function for BlackboxOffline.
+    :param path: a path that contains blackboxes that were saved with ``serialize``
+    :return: a dictionary from task name to blackbox
+    """
+    path = Path(path)
+    configuration_space, _ = deserialize_configspace(path)
+    metadata = deserialize_metadata(path)
+    objectives_names = metadata["objectives_names"]
+    task_names = metadata["task_names"]
+
+    bb_dict = {}
+    for task in task_names:
+        hyperparameters = pd.read_parquet(
+            Path(path) / f"{task}-hyperparameters.parquet", engine="fastparquet"
+        )
+        with open(path / f"{task}-fidelity_space.json", "r") as file:
+            fidelity_space = config_space_from_json_dict(json.load(file))
+
+        with open(path / f"{task}-fidelity_values.npy", "rb") as f:
+            fidelity_values = np.load(f)
+
+        with open(path / f"{task}-objectives_evaluations.npy", "rb") as f:
+            objectives_evaluations = np.load(f)
+
+        bb_dict[task] = BlackboxTabular(
+            hyperparameters=hyperparameters,
+            configuration_space=configuration_space,
+            fidelity_space=fidelity_space,
+            objectives_evaluations=objectives_evaluations,
+            fidelity_values=fidelity_values,
+            objectives_names=objectives_names,
+        )
+    return bb_dict
+
 def generate_hpob(search_space):
-    print("generating hpob")
+    print("generating hpob_" + search_space["name"])
     raw_data_dicts = load_data()
     merged_datasets = merge_multiple_dicts(
         raw_data_dicts[0], raw_data_dicts[1], raw_data_dicts[2]
@@ -268,6 +365,11 @@ def convert_dataset(search_space, dataset_name, dataset):
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
 
+    # For BlackboxSurrogate
+    # hyperparameters = hyperparameters.reshape(
+    #    hyperparameters.shape[0], hyperparameters.shape[1], 1, 1
+    # )
+
     objective_names = ["metric_accuracy"]
 
     objective_evaluations = np.array(dataset["y"])  # np.array.shape = (N,)
@@ -275,7 +377,7 @@ def convert_dataset(search_space, dataset_name, dataset):
         objective_evaluations.shape[0], 1, 1, 1
     )
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
+    fidelity_space = {RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)}
 
     return BlackboxTabular(
         hyperparameters=hyperparameters,
@@ -315,8 +417,6 @@ def load_data():
 def merge_multiple_dicts(train_dict, validation_dict, test_dict):
     result_dict = train_dict.copy()
 
-    for dataset in result_dict["4796"]:
-        print(len(result_dict["4796"][dataset]["X"]))
     search_spaces = list(train_dict.keys())
 
     for search_space in search_spaces:
@@ -351,16 +451,143 @@ def merge_multiple_dicts(train_dict, validation_dict, test_dict):
 
 
 class HPOBRecipe(BlackboxRecipe):
-    def __init__(self):
+    def __init__(self, search_space, name):
         super(HPOBRecipe, self).__init__(
-            name="hpob_4796",
+            name=name,
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-                           "Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+                           " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
+        self.search_space = search_space
 
     def _generate_on_disk(self):
-        generate_hpob(SEARCH_SPACE_4796)
+        generate_hpob(self.search_space)
+
+
+class HPOBRecipe4796(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_4796, "hpob_4796")
+
+
+class HPOBRecipe5527(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5527, "hpob_5527")
+
+
+class HPOBRecipe5636(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5636, "hpob_5636")
+
+
+class HPOBRecipe5859(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5859, "hpob_5859")
+
+
+class HPOBRecipe5860(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5860, "hpob_5860")
+
+
+class HPOBRecipe5891(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5891, "hpob_5891")
+
+
+class HPOBRecipe5906(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5906, "hpob_5906")
+
+
+class HPOBRecipe5965(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5965, "hpob_5965")
+
+
+class HPOBRecipe5970(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5970, "hpob_5970")
+
+
+class HPOBRecipe5971(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5971, "hpob_5971")
+
+
+class HPOBRecipe6766(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_6766, "hpob_6766")
+
+
+class HPOBRecipe6767(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_6767, "hpob_6767")
+
+
+class HPOBRecipe6794(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_6794, "hpob_6794")
+
+
+class HPOBRecipe7607(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_7607, "hpob_7607")
+
+
+class HPOBRecipe7609(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_7609, "hpob_7609")
+
+
+class HPOBRecipe5889(HPOBRecipe):
+    def __init__(self):
+        super().__init__(SEARCH_SPACE_5889, "hpob_5889")
 
 
 if __name__ == "__main__":
-    HPOBRecipe().generate()
+    HPOBRecipe4796_instance = HPOBRecipe4796()
+    HPOBRecipe4796_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5527_instance = HPOBRecipe5527()
+    HPOBRecipe5527_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5636_instance = HPOBRecipe5636()
+    HPOBRecipe5636_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5859_instance = HPOBRecipe5859()
+    HPOBRecipe5859_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5860_instance = HPOBRecipe5860()
+    HPOBRecipe5860_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5891_instance = HPOBRecipe5891()
+    HPOBRecipe5891_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5906_instance = HPOBRecipe5906()
+    HPOBRecipe5906_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5965_instance = HPOBRecipe5965()
+    HPOBRecipe5965_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5970_instance = HPOBRecipe5970()
+    HPOBRecipe5970_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5971_instance = HPOBRecipe5971()
+    HPOBRecipe5971_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe6766_instance = HPOBRecipe6766()
+    HPOBRecipe6766_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe6767_instance = HPOBRecipe6767()
+    HPOBRecipe6767_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe6794_instance = HPOBRecipe6794()
+    HPOBRecipe6794_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe7607_instance = HPOBRecipe7607()
+    HPOBRecipe7607_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe7609_instance = HPOBRecipe7609()
+    HPOBRecipe7609_instance.generate(upload_on_hub=False)
+
+    HPOBRecipe5889_instance = HPOBRecipe5889()
+    HPOBRecipe5889_instance.generate(upload_on_hub=False)

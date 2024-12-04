@@ -14,6 +14,10 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import 
     deserialize as deserialize_pd1,
 )
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import (
+    deserialize as deserialize_hpob,
+)
+
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (
     generate_blackbox_recipes,
 )
@@ -105,6 +109,8 @@ def load_blackbox(
         return instantiate_yahpo(name, **yahpo_kwargs)
     elif name.startswith("pd1"):
         return deserialize_pd1(blackbox_path)
+    elif name.startswith("hpob"):
+        return deserialize_hpob(blackbox_path)
     elif (blackbox_path / "hyperparameters.parquet").exists():
         return deserialize_tabular(blackbox_path)
     else:
