@@ -63,14 +63,10 @@ def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
         )
         for node in hp_cols
     }
-    metric = "error"
-    resource_attr = "epoch"
     searcher = MultiFidelityKernelDensityEstimator(
         config_space=config_space,
-        metric=metric,
         points_to_evaluate=[],
         top_n_percent=top_n_percent,
-        resource_attr=resource_attr,
     )
     # Sample data at random (except for ``resource_levels``)
     hp_ranges = make_hyperparameter_ranges(config_space)
@@ -82,10 +78,11 @@ def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
     for trial_id, config, resource, metric_val in zip(
         trial_ids, configs, resource_levels, metric_values
     ):
-        searcher._update(
+        searcher.on_trial_result(
             trial_id=trial_id,
             config=config,
-            result={metric: metric_val, resource_attr: resource},
+            metric=metric_val,
+            resource_level=resource,
         )
     # Test n_good
     num_features = len(hp_cols)

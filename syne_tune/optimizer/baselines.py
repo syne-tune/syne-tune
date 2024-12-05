@@ -10,13 +10,15 @@ from syne_tune.optimizer.schedulers import (
 )
 from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
-    MultiObjectiveRegularizedEvolution,
     NSGA2Searcher,
     LinearScalarizedScheduler,
 )
+from syne_tune.optimizer.schedulers.multiobjective.legacy_multi_objective_regularized_evolution import (
+    LegacyMultiObjectiveRegularizedEvolution,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution,
+from syne_tune.optimizer.schedulers.searchers.legacy_regularized_evolution import (
+    LegacyRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
@@ -602,7 +604,9 @@ class BORE(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.bore import Bore
+            from syne_tune.optimizer.schedulers.searchers.bore.legacy_bore import (
+                LegacyBore,
+            )
         except ImportError:
             raise
 
@@ -612,7 +616,7 @@ class BORE(FIFOScheduler):
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=Bore(**searcher_kwargs),
+            searcher=LegacyBore(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -641,7 +645,9 @@ class ASHABORE(HyperbandScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.bore import MultiFidelityBore
+            from syne_tune.optimizer.schedulers.searchers.bore.legacy_multi_fidelity_bore import (
+                LegacyMultiFidelityBore,
+            )
         except ImportError:
             raise
 
@@ -653,7 +659,7 @@ class ASHABORE(HyperbandScheduler):
         super(ASHABORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=MultiFidelityBore(**searcher_kwargs),
+            searcher=LegacyMultiFidelityBore(**searcher_kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
@@ -733,7 +739,7 @@ class REA(FIFOScheduler):
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=RegularizedEvolution(**searcher_kwargs),
+            searcher=LegacyRegularizedEvolution(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -920,7 +926,7 @@ class MOREA(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=MultiObjectiveRegularizedEvolution(**searcher_kwargs),
+            searcher=LegacyMultiObjectiveRegularizedEvolution(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )

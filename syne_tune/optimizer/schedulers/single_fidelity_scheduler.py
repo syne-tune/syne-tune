@@ -132,3 +132,9 @@ class SingleFidelityScheduler(TrialScheduler):
         )
         metadata["config_space"] = config_space_json
         return metadata
+
+    def metric_names(self) -> List[str]:
+        return self.metrics
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"
