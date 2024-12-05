@@ -2,7 +2,8 @@ import logging
 from syne_tune.blackbox_repository import (
     load_blackbox,
     BlackboxRepositoryBackend,
-    UserBlackboxBackend, add_surrogate,
+    UserBlackboxBackend,
+    add_surrogate,
 )
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -46,12 +47,10 @@ if __name__ == "__main__":
     n_workers = 4
 
     metric = "metric_accuracy"
-    blackbox = load_blackbox('hpob_4796')['3549']
+    blackbox = load_blackbox("hpob_4796")["3549"]
     trial_backend = BlackboxRepositoryBackend(
-        blackbox_name='hpob_4796',
-        dataset='3549',
-        elapsed_time_attr='metric_elapsed_time'
+        blackbox_name="hpob_4796",
+        dataset="3549",
+        elapsed_time_attr="metric_elapsed_time",
     )
     simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)
-
-
