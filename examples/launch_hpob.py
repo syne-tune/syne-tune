@@ -1,78 +1,35 @@
-from typing import Dict
-
-from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
-    BoundingBox,
+import logging
+from syne_tune.blackbox_repository import (
+    load_blackbox,
+    BlackboxRepositoryBackend,
+    UserBlackboxBackend, add_surrogate,
 )
+
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import StoppingCriterion, Tuner
 
 
-def load_hpob_evaluations(
-    blackbox_name: str, test_task: str, metric: str
-) -> Dict[str, TransferLearningTaskEvaluations]:
-    bb_dict = load_blackbox(blackbox_name)
-    metric_index = [
-        i
-        for i, name in enumerate(bb_dict[test_task].objectives_names)
-        if name == metric
-    ][0]
-    transfer_learning_evaluations = {
-        task: TransferLearningTaskEvaluations(
-            hyperparameters=bb.hyperparameters,
-            configuration_space=bb.configuration_space,
-            objectives_evaluations=bb.objectives_evaluations[
-                ..., metric_index : metric_index + 1
-            ],
-            objectives_names=[metric],
-        )
-        for task, bb in bb_dict.items()
-        if task != test_task
-    }
-    return transfer_learning_evaluations
-
-
-if __name__ == "__main__":
-    blackbox_name = "hpob_4796"
-    test_task = "3549"
-    elapsed_time_attr = "metric_elapsed_time"
-    metric = "metric_accuracy"
-
-    bb_dict = load_blackbox(blackbox_name)
-    hpob_evaluations = load_hpob_evaluations(blackbox_name, test_task, metric)
-
-    scheduler = BoundingBox(
-        scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
-            new_config_space,
-            points_to_evaluate=[],
-            searcher="random",
-            metric=metric,
-            mode=mode,
+def simulate_benchmark(blackbox, trial_backend, metric):
+    # Asynchronous successive halving
+    max_resource_attr = "epochs"
+    scheduler = RandomSearch(
+        config_space=blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
         ),
-        mode="max",
-        config_space=bb_dict[test_task].configuration_space,
+        max_resource_attr=max_resource_attr,
         metric=metric,
-        num_hyperparameters_per_task=3,
-        transfer_learning_evaluations=hpob_evaluations,
+        random_seed=31415927,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=7200)
-
-    trial_backend = BlackboxRepositoryBackend(
-        blackbox_name=blackbox_name,
-        elapsed_time_attr=elapsed_time_attr,
-        dataset=test_task,
-    )
 
     # It is important to set ``sleep_time`` to 0 here (mandatory for simulator backend)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
-        n_workers=4,
+        n_workers=n_workers,
         sleep_time=0,
         # This callback is required in order to make things work with the
         # simulator callback. It makes sure that results are stored with
@@ -82,9 +39,19 @@ if __name__ == "__main__":
     )
     tuner.run()
 
-    tuning_experiment = load_experiment(tuner.name)
-    print(tuning_experiment)
 
-    print(f"best result found: {tuning_experiment.best_config()}")
+if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
 
-    tuning_experiment.plot()
+    n_workers = 4
+
+    metric = "metric_accuracy"
+    blackbox = load_blackbox('hpob_4796')['3549']
+    trial_backend = BlackboxRepositoryBackend(
+        blackbox_name='hpob_4796',
+        dataset='3549',
+        elapsed_time_attr='metric_elapsed_time'
+    )
+    simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)
+
+

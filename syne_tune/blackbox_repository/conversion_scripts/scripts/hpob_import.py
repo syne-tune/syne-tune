@@ -135,7 +135,6 @@ SEARCH_SPACE_5970 = {
     "name": "5970",
     "config_space": {
         "alpha": loguniform(1.0, 2.72),
-        # TODO check these values again, were they in logspace already?
         "lambda": loguniform(0.001, 1024.0),
     },
 }
@@ -164,7 +163,6 @@ SEARCH_SPACE_6766 = {
     "name": "6766",
     "config_space": {
         "alpha": loguniform(1.0, 2.72),
-        # TODO again here, is this already in logspace?
         "lambda": loguniform(0.001, 1024.0),
     },
 }
@@ -250,7 +248,7 @@ MAX_RESOURCE_LEVEL = 100
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+        bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -465,7 +463,7 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name=name,
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-            " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+                           " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
         self.search_space = search_space
 
