@@ -6,6 +6,7 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, Optional
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
 )
@@ -29,6 +30,7 @@ from syne_tune.blackbox_repository.serialize import (
 )
 
 BLACKBOX_NAME = "hpob_"
+METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 # configuration_space values taken from "https://raw.githubusercontent.com/machinelearningnuremberg/HPO-B/refs/heads/main/hpob-data/meta-dataset-descriptors.json"
 SEARCH_SPACE_4796 = {
@@ -248,7 +250,7 @@ MAX_RESOURCE_LEVEL = 100
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+        bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -357,6 +359,9 @@ def generate_hpob(search_space):
         serialize(
             bb_dict=bb_dict,
             path=repository_path / blackbox_name,
+            metadata={
+                metric_elapsed_time: METRIC_ELAPSED_TIME
+            },
         )
 
 
@@ -367,20 +372,22 @@ def convert_dataset(search_space, dataset_name, dataset):
     hps = np.zeros((n_evals, n_hps))
 
     for i, config in enumerate(dataset["X"]):
-        hps[i] = config  # Directly assign each config to the corresponding row in hps
+        hps[i] = config
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
 
-    # For BlackboxSurrogate
-    # hyperparameters = hyperparameters.reshape(
-    #    hyperparameters.shape[0], hyperparameters.shape[1], 1, 1
-    # )
-
-    objective_names = ["metric_accuracy"]
+    objective_names = ["metric_accuracy", "metric_elapsed_time"]
 
     objective_evaluations = np.array(dataset["y"])  # np.array.shape = (N,)
     objective_evaluations = objective_evaluations.reshape(
         objective_evaluations.shape[0], 1, 1, 1
+    )
+
+    # Create a metric_elapsed_time array filled with ones as runtime was not provided in the dataset
+    elapsed_time_array = np.ones_like(objective_evaluations)
+
+    objective_evaluations = np.concatenate(
+        [objective_evaluations, elapsed_time_array], axis=-1
     )
 
     fidelity_space = {
@@ -463,7 +470,7 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name=name,
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-            " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+                           " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
         self.search_space = search_space
 
