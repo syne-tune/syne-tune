@@ -44,6 +44,6 @@ if __name__ == "__main__":
         blackbox_name="hpob_4796",
         dataset="3549",
         elapsed_time_attr="metric_elapsed_time",
-        surrogate="XGBRegressor"
+        surrogate="XGBRegressor",
     )
     simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)

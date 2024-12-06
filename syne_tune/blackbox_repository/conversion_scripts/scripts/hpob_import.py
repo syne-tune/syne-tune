@@ -250,7 +250,7 @@ MAX_RESOURCE_LEVEL = 100
 
 
 def serialize(
-        bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -359,9 +359,7 @@ def generate_hpob(search_space):
         serialize(
             bb_dict=bb_dict,
             path=repository_path / blackbox_name,
-            metadata={
-                metric_elapsed_time: METRIC_ELAPSED_TIME
-            },
+            metadata={metric_elapsed_time: METRIC_ELAPSED_TIME},
         )
 
 
@@ -470,7 +468,7 @@ class HPOBRecipe(BlackboxRecipe):
         super(HPOBRecipe, self).__init__(
             name=name,
             cite_reference="HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML."
-                           " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
+            " Sebastian Pineda-Arango and Hadi S. Jomaa and Martin Wistuba and Josif Grabocka, 2021.",
         )
         self.search_space = search_space
 
