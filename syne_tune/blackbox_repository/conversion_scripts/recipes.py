@@ -1,5 +1,23 @@
 import logging
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import (
+    HPOBRecipe4796,
+    HPOBRecipe5527,
+    HPOBRecipe5636,
+    HPOBRecipe5859,
+    HPOBRecipe5860,
+    HPOBRecipe5891,
+    HPOBRecipe5906,
+    HPOBRecipe5965,
+    HPOBRecipe5970,
+    HPOBRecipe5971,
+    HPOBRecipe6766,
+    HPOBRecipe6767,
+    HPOBRecipe6794,
+    HPOBRecipe7607,
+    HPOBRecipe7609,
+    HPOBRecipe5889,
+)
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
     XGBoostRecipe,
@@ -17,7 +35,6 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import 
     PD1Recipe,
 )
 
-
 # add a blackbox recipe here to expose it in Syne Tune
 recipes = [
     DeepARRecipe(),
@@ -26,8 +43,23 @@ recipes = [
     FCNETRecipe(),
     LCBenchRecipe(),
     PD1Recipe(),
+    HPOBRecipe4796(),
+    HPOBRecipe5527(),
+    HPOBRecipe5636(),
+    HPOBRecipe5859(),
+    HPOBRecipe5860(),
+    HPOBRecipe5891(),
+    HPOBRecipe5906(),
+    HPOBRecipe5965(),
+    HPOBRecipe5970(),
+    HPOBRecipe5971(),
+    HPOBRecipe6766(),
+    HPOBRecipe6767(),
+    HPOBRecipe6794(),
+    HPOBRecipe7607(),
+    HPOBRecipe7609(),
+    HPOBRecipe5889(),
 ]
-
 
 try:
     from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
@@ -39,6 +71,5 @@ try:
         recipes.append(YAHPORecipe("yahpo-" + scenario))
 except ImportError as e:
     logging.debug(e)
-
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}
