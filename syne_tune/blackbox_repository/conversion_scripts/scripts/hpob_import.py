@@ -559,25 +559,25 @@ class HPOBRecipe5889(HPOBRecipe):
 
 
 if __name__ == "__main__":
-    recipes = [HPOBRecipe4796,
-               HPOBRecipe5527,
-               HPOBRecipe5636,
-               HPOBRecipe5859,
-               HPOBRecipe5860,
-               HPOBRecipe5891,
-               HPOBRecipe5906,
-               HPOBRecipe5965,
-               HPOBRecipe5970,
-               HPOBRecipe5971,
-               HPOBRecipe6766,
-               HPOBRecipe6767,
-               HPOBRecipe6794,
-               HPOBRecipe7607,
-               HPOBRecipe7609,
-               HPOBRecipe5889]
+    recipes = [
+        HPOBRecipe4796,
+        HPOBRecipe5527,
+        HPOBRecipe5636,
+        HPOBRecipe5859,
+        HPOBRecipe5860,
+        HPOBRecipe5891,
+        HPOBRecipe5906,
+        HPOBRecipe5965,
+        HPOBRecipe5970,
+        HPOBRecipe5971,
+        HPOBRecipe6766,
+        HPOBRecipe6767,
+        HPOBRecipe6794,
+        HPOBRecipe7607,
+        HPOBRecipe7609,
+        HPOBRecipe5889,
+    ]
 
     for recipe in recipes:
         instance = recipe()
         instance.generate(upload_on_hub=False)
-
-
