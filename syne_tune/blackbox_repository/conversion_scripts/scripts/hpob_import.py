@@ -249,6 +249,9 @@ RESOURCE_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 
 
+# serialize() and deserialize() had to be overwritten,
+# since the HPO-B dataset does not provide the same number of evaluations for each blackbox.
+# This is a constraint in the original serialize() function.
 def serialize(
     bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
 ):
@@ -387,7 +390,7 @@ def convert_dataset(search_space, dataset_name, dataset):
     objective_evaluations = np.concatenate(
         [objective_evaluations, elapsed_time_array], axis=-1
     )
-
+    # fidelity space initialized as constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
@@ -415,7 +418,6 @@ def load_data():
     meta_train_file = "hpob-data/meta-train-dataset.json"
     meta_validation_file = "hpob-data/meta-validation-dataset.json"
 
-    # search spaces: 4796, 5527, 5636, 5859, 5860, 5891, 5906, 5965, 5970, 5971, 6766, 6767, 6794, 7607, 7609, 5889
     with (
         open(meta_test_file, mode="r", encoding="utf-8") as test_file,
         open(meta_train_file, mode="r", encoding="utf-8") as train_file,
@@ -557,50 +559,25 @@ class HPOBRecipe5889(HPOBRecipe):
 
 
 if __name__ == "__main__":
-    HPOBRecipe4796_instance = HPOBRecipe4796()
-    HPOBRecipe4796_instance.generate(upload_on_hub=False)
+    recipes = [HPOBRecipe4796,
+               HPOBRecipe5527,
+               HPOBRecipe5636,
+               HPOBRecipe5859,
+               HPOBRecipe5860,
+               HPOBRecipe5891,
+               HPOBRecipe5906,
+               HPOBRecipe5965,
+               HPOBRecipe5970,
+               HPOBRecipe5971,
+               HPOBRecipe6766,
+               HPOBRecipe6767,
+               HPOBRecipe6794,
+               HPOBRecipe7607,
+               HPOBRecipe7609,
+               HPOBRecipe5889]
 
-    HPOBRecipe5527_instance = HPOBRecipe5527()
-    HPOBRecipe5527_instance.generate(upload_on_hub=False)
+    for recipe in recipes:
+        instance = recipe()
+        instance.generate(upload_on_hub=False)
 
-    HPOBRecipe5636_instance = HPOBRecipe5636()
-    HPOBRecipe5636_instance.generate(upload_on_hub=False)
 
-    HPOBRecipe5859_instance = HPOBRecipe5859()
-    HPOBRecipe5859_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5860_instance = HPOBRecipe5860()
-    HPOBRecipe5860_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5891_instance = HPOBRecipe5891()
-    HPOBRecipe5891_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5906_instance = HPOBRecipe5906()
-    HPOBRecipe5906_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5965_instance = HPOBRecipe5965()
-    HPOBRecipe5965_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5970_instance = HPOBRecipe5970()
-    HPOBRecipe5970_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5971_instance = HPOBRecipe5971()
-    HPOBRecipe5971_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe6766_instance = HPOBRecipe6766()
-    HPOBRecipe6766_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe6767_instance = HPOBRecipe6767()
-    HPOBRecipe6767_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe6794_instance = HPOBRecipe6794()
-    HPOBRecipe6794_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe7607_instance = HPOBRecipe7607()
-    HPOBRecipe7607_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe7609_instance = HPOBRecipe7609()
-    HPOBRecipe7609_instance.generate(upload_on_hub=False)
-
-    HPOBRecipe5889_instance = HPOBRecipe5889()
-    HPOBRecipe5889_instance.generate(upload_on_hub=False)

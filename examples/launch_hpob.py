@@ -1,3 +1,7 @@
+"""
+This example shows how to run RandomSearch on Benchmarks from HPO-B by Pineda et al.
+We use a XGBoost surrogate model to predict the performance of unobserved hyperparameter configurations.
+"""
 import logging
 from syne_tune.blackbox_repository import (
     load_blackbox,
