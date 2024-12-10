@@ -95,7 +95,9 @@ def test_mo_rea_population():
 
     assert len(searcher.population) == 5
     config = searcher.suggest()
-    searcher.on_trial_complete(pop_size + 1, config, [np.random.rand(), np.random.rand()])
+    searcher.on_trial_complete(
+        pop_size + 1, config, [np.random.rand(), np.random.rand()]
+    )
 
     # assert that we removed the oldest element from the population
     assert history[0] not in searcher.population
