@@ -197,7 +197,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
                 res[k] = domain
         return res
 
-    def on_trial_result(
+    def on_trial_complete(
         self,
         trial_id: int,
         config: Dict[str, Any],
@@ -282,9 +282,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
                         )
 
                     config = self._from_feature(candidate)
-                    if (
-                        val_current_best is None or val_current_best > val
-                    ) and not self.should_not_suggest(config):
+                    if val_current_best is None or val_current_best > val:
                         suggestion = config
                         val_current_best = val
 

@@ -80,7 +80,7 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
 
         return config
 
-    def on_trial_result(
+    def on_trial_complete(
         self,
         trial_id: int,
         config: Dict[str, Any],
