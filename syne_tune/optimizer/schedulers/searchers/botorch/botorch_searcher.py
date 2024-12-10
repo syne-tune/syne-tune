@@ -85,7 +85,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         random.manual_seed(self.random_seed)
         self.random_state = np.random.RandomState(self.random_seed)
 
-    def on_trial_result(
+    def on_trial_complete(
         self,
         trial_id: int,
         config: Dict[str, Any],
