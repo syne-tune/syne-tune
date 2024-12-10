@@ -16,7 +16,7 @@ searcher_cls_dict = {
     "bore": Bore,
     "kde": KernelDensityEstimator,
     "regularized_evolution": RegularizedEvolution,
-    "botorch": BoTorchSearcher
+    "botorch": BoTorchSearcher,
 }
 
 
