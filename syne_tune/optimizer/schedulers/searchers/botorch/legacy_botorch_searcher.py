@@ -69,7 +69,7 @@ class LegacyBoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
         input_warping: bool = True,
         **kwargs,
     ):
-        super(BoTorchSearcher, self).__init__(
+        super(LegacyBoTorchSearcher, self).__init__(
             config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
