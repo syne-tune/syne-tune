@@ -64,7 +64,7 @@ class Bore(SingleObjectiveBaseSearcher):
         gamma: Optional[float] = 0.25,
         calibrate: Optional[bool] = False,
         classifier: Optional[str] = "xgboost",
-        acq_optimizer: Optional[str] = "rs_with_replacement",
+        acq_optimizer: Optional[str] = "rs",
         feval_acq: Optional[int] = 500,
         random_prob: Optional[float] = 0.0,
         init_random: Optional[int] = 6,
@@ -241,7 +241,7 @@ class Bore(SingleObjectiveBaseSearcher):
         )
         return True
 
-    def on_trial_result(
+    def on_trial_complete(
         self,
         trial_id: int,
         config: Dict[str, Any],
