@@ -120,7 +120,7 @@ class SingleFidelityScheduler(TrialScheduler):
         metric = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
-        self.searcher.on_trial_result(trial.trial_id, config, metric)
+        self.searcher.on_trial_complete(trial.trial_id, config, metric)
 
     def metadata(self) -> Dict[str, Any]:
         """
