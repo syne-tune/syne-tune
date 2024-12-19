@@ -18,10 +18,6 @@ RESOURCE_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-# TODO ask about types. How to handle provided defualt value?
-# TODO Correct classes used?
-# TODO hwo to handle None in choice from LinearModel? Removed for developing purposes
-# TODO what about RandomForest, ExtraTrees, heterogenous choice data types as well
 CONFIGURATION_SPACE_KNeighbors = {
     "n_neighbors": choice([3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 20, 30, 40, 50]),
     "weights": choice(["uniform", "distance"]),
@@ -30,7 +26,7 @@ CONFIGURATION_SPACE_KNeighbors = {
 
 CONFIGURATION_SPACE_LinearModel = {
     "C": uniform(lower=0.1, upper=1e3),
-    "proc.skew_threshold": choice([0.99, 0.9, 0.999]),
+    "proc.skew_threshold": choice(['0.99', '0.9', '0.999', 'None']),
     "proc.impute_strategy": choice(["median", "mean"]),
     "penalty": choice(["L2", "L1"]),
 }
@@ -38,16 +34,16 @@ CONFIGURATION_SPACE_LinearModel = {
 CONFIGURATION_SPACE_RandomForest = {
     "max_leaf_nodes": randint(5000, 50000),
     "min_samples_leaf": choice([1, 2, 3, 4, 5, 10, 20, 40, 80]),
-    #'max_features': choice(['sqrt', 'log2', 0.5, 0.75, 1.0])
+    'max_features': choice(['sqrt', 'log2', '0.5', '0.75', '1.0'])
 }
 
 CONFIGURATION_SPACE_ExtraTrees = {
     "max_leaf_nodes": randint(5000, 50000),
     "min_samples_leaf": choice([1, 2, 3, 4, 5, 10, 20, 40, 80]),
-    #'max_features': choice(['sqrt', 'log2', 0.5, 0.75, 1.0])
+    'max_features': choice(['sqrt', 'log2', '0.5', '0.75', '1.0'])
 }
 
-CONFIGURATION_SPACE_MLP = {
+CONFIGURATION_SPACE_NeuralNetTorch = {
     "learning_rate": loguniform(1e-4, 3e-2),
     "weight_decay": loguniform(1e-12, 0.1),
     "dropout_prob": uniform(0.0, 0.4),
@@ -89,30 +85,29 @@ CONFIGURATION_SPACE_CatBoost = {
 }
 
 
-def generate_tabrepo(config_space):
-    print("generating")
 
-    blackbox_name = BLACKBOX_NAME
+def generate_tabrepo(config_space, bb_name):
+    print(f"generating {bb_name}")
+
+    blackbox_name = bb_name
     bb_dict = {}
 
     # D244_F3_C1530 for full datasets
-    context_name = "D244_F3_C1530_30"
+    context_name = "D244_F3_C1530_3"
 
-    repo: EvaluationRepository = load_repository(context_name, cache=True)
-
-    config = "CatBoost_r1_BAG_L1"
-    config_type = repo.config_type(config=config)
-    config_hyperparameters = repo.config_hyperparameters(config=config)
+    repo: EvaluationRepository = load_repository(context_name, cache=True, load_predictions=False)
 
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
+    metrics = metrics[metrics.index.get_level_values('framework').str.split('_').str[0] == bb_name.split('_')[1]]
+    for dataset_name, group in metrics.groupby('dataset'):
+        print(f"Processing dataset: {dataset_name}")
+        hyperparameters_configurations = {}
+        for framework in group.index.to_frame(index=False)['framework'].values:
+            # check for right amount of hyperparameter, as they contain additional value ag_args
+            #if len(repo.config_hyperparameters(config=framework)) == len(config_space) + 1:
+            hyperparameters_configurations[framework] = repo.config_hyperparameters(config=framework)
+        bb_dict[dataset_name] = convert_dataset(config_space, group, hyperparameters_configurations)
 
-    with pd.option_context(
-        "display.max_rows", None, "display.max_columns", None, "display.width", 1000
-    ):
-        print(f"Config Metrics Example:\n{metrics}")
-
-    for dataset in repo.datasets():
-        bb_dict[dataset] = convert_dataset(metrics)
     with catchtime("saving to disk"):
         serialize(
             bb_dict=bb_dict,
@@ -121,40 +116,63 @@ def generate_tabrepo(config_space):
         )
 
 
-def convert_dataset(config_space):
+def convert_dataset(config_space, evaluations, configurations):
     # names of hyperparameters
     hp_cols = list(config_space.keys())
     # number of hyperparameters
     n_hps = len(hp_cols)
     # number of evaluations
-    n_evals = None
+    n_evals = len(evaluations.xs(0, level='fold'))
     # initialize hyperparameter array with shape(n_evals, n_hps)
-    hps = np.zeros((n_evals, n_hps))
+    hps = np.zeros((n_evals, n_hps), dtype=object)
 
-    for i, config in enumerate(dataset["X"]):
-        hps[i] = config
+    n_seeds = 3
+
+    #TODO muss das arr die werte in der reihenfolge des configuration space enthalten?
+
+    for i, config in enumerate(configurations):
+        arr = []
+        for key in config_space.keys():
+            # this handles cases, where not all hps are set
+            if key in configurations[config].keys():
+                # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
+                if key == 'max_features':
+                    arr.append(str(configurations[config][key]))
+                # set hp to 0 if not existent
+                else:
+                    arr.append(configurations[config][key])
+            else:
+                arr.append(None)
+        hps[i] = arr
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
-
     objective_names = [
         "metric_error",
         "metric_error_val",
-        "metric_time_train_s",
+        "metric_elapsed_time",
         "metric_time_infer_s",
         "metric_rank",
     ]
+    n_objectives = len(objective_names)
 
-    objective_evaluations = np.array(dataset["y"])  # np.array.shape = (N,)
-    objective_evaluations = objective_evaluations.reshape(
-        objective_evaluations.shape[0], 1, 1, 1
-    )
+    objective_evaluations = []
 
-    # Create a metric_elapsed_time array filled with ones as runtime was not provided in the dataset
-    elapsed_time_array = np.ones_like(objective_evaluations)
+    # Iterate over each fold
+    for i, fold in enumerate([0, 1, 2]):
+        fold_data = evaluations.xs(fold, level='fold')
+        # Iterate over each row in the fold and extract the metrics
+        for j, (_, row) in enumerate(fold_data.iterrows()):
+            metrics = row[['metric_error', 'metric_error_val', 'time_train_s', 'time_infer_s', 'rank']].values
 
-    objective_evaluations = np.concatenate(
-        [objective_evaluations, elapsed_time_array], axis=-1
-    )
+            # If the row doesn't exist in arr, create it
+            if len(objective_evaluations) <= j:
+                objective_evaluations.append([[], [], []])  # Create a list for each row
+
+            # Add metrics to the correct position in the row's list (corresponding to the current fold)
+            print(metrics)
+            objective_evaluations[j][i] = metrics  # arr[j][i] corresponds to row j, fold i
+    objective_evaluations = np.array(objective_evaluations)
+    objective_evaluations = objective_evaluations.reshape(n_evals, n_seeds, 1, n_objectives)
     # fidelity space initialized as constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
@@ -169,55 +187,55 @@ def convert_dataset(config_space):
     )
 
 
-class TABREPORecipe(BlackboxRecipe):
+class TabrepoRecipe(BlackboxRecipe):
     def __init__(self, config_space, name):
-        super(TABREPORecipe, self).__init__(
+        super(TabrepoRecipe, self).__init__(
             name=name,
             cite_reference="TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications"
             "David Salinas and Nick Erickson",
         )
         self.config_space = config_space
 
-        def _generate_on_disk(self):
-            generate_tabrepo(self.config_space)
+    def _generate_on_disk(self):
+        generate_tabrepo(self.config_space, self.name)
 
 
-class TABREPORecipeKNeighbors(TABREPORecipe):
+class TabrepoRecipeKNeighbors(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_KNeighbors, BLACKBOX_NAME + "KNeighbors")
 
 
-class TABREPOMLP(TABREPORecipe):
+class TabrepoNeuralNetTorch(TabrepoRecipe):
     def __init__(self):
-        super().__init__(CONFIGURATION_SPACE_MLP, BLACKBOX_NAME + "MLP")
+        super().__init__(CONFIGURATION_SPACE_NeuralNetTorch, BLACKBOX_NAME + "NeuralNetTorch")
 
 
-class TABREPOExtraTrees(TABREPORecipe):
+class TabrepoExtraTrees(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_ExtraTrees, BLACKBOX_NAME + "ExtraTrees")
 
 
-class TABREPOCatBoost(TABREPORecipe):
+class TabrepoCatBoost(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_CatBoost, BLACKBOX_NAME + "CatBoost")
 
 
-class TABREPOXGBoost(TABREPORecipe):
+class TabrepoXGBoost(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_XGBoost, BLACKBOX_NAME + "XGBoost")
 
 
-class TABREPOLightGBM(TABREPORecipe):
+class TabrepoLightGBM(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_LightGBM, BLACKBOX_NAME + "LightGBM")
 
 
-class TABREPOLinearModel(TABREPORecipe):
+class TabrepoLinearModel(TabrepoRecipe):
     def __init__(self):
         super().__init__(CONFIGURATION_SPACE_LinearModel, BLACKBOX_NAME + "LinearModel")
 
 
-class TABREPORandomForest(TABREPORecipe):
+class TabrepoRandomForest(TabrepoRecipe):
     def __init__(self):
         super().__init__(
             CONFIGURATION_SPACE_RandomForest, BLACKBOX_NAME + "RandomForest"
@@ -225,16 +243,16 @@ class TABREPORandomForest(TABREPORecipe):
 
 
 if __name__ == "__main__":
-    """recipes = [TABREPORecipeKNeighbors,
-               TABREPOMLP,
-               TABREPOExtraTrees,
-               TABREPOCatBoost,
-               TABREPOXGBoost,
-               TABREPOLightGBM,
-               TABREPOLinearModel,
-               TABREPORandomForest
+    recipes = [TabrepoRecipeKNeighbors,
+               TabrepoNeuralNetTorch,
+               TabrepoRandomForest,
+               TabrepoExtraTrees,
+               TabrepoCatBoost,
+               TabrepoXGBoost,
+               TabrepoLightGBM,
                ]
+    #recipes = [TabrepoLinearModel]
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=False)"""
+        instance.generate(upload_on_hub=False)
