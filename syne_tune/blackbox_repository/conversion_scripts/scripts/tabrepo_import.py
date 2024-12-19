@@ -26,7 +26,7 @@ CONFIGURATION_SPACE_KNeighbors = {
 
 CONFIGURATION_SPACE_LinearModel = {
     "C": uniform(lower=0.1, upper=1e3),
-    "proc.skew_threshold": choice(['0.99', '0.9', '0.999', 'None']),
+    "proc.skew_threshold": choice(["0.99", "0.9", "0.999", "None"]),
     "proc.impute_strategy": choice(["median", "mean"]),
     "penalty": choice(["L2", "L1"]),
 }
@@ -34,13 +34,13 @@ CONFIGURATION_SPACE_LinearModel = {
 CONFIGURATION_SPACE_RandomForest = {
     "max_leaf_nodes": randint(5000, 50000),
     "min_samples_leaf": choice([1, 2, 3, 4, 5, 10, 20, 40, 80]),
-    'max_features': choice(['sqrt', 'log2', '0.5', '0.75', '1.0'])
+    "max_features": choice(["sqrt", "log2", "0.5", "0.75", "1.0"]),
 }
 
 CONFIGURATION_SPACE_ExtraTrees = {
     "max_leaf_nodes": randint(5000, 50000),
     "min_samples_leaf": choice([1, 2, 3, 4, 5, 10, 20, 40, 80]),
-    'max_features': choice(['sqrt', 'log2', '0.5', '0.75', '1.0'])
+    "max_features": choice(["sqrt", "log2", "0.5", "0.75", "1.0"]),
 }
 
 CONFIGURATION_SPACE_NeuralNetTorch = {
@@ -85,7 +85,6 @@ CONFIGURATION_SPACE_CatBoost = {
 }
 
 
-
 def generate_tabrepo(config_space, bb_name):
     print(f"generating {bb_name}")
 
@@ -95,18 +94,27 @@ def generate_tabrepo(config_space, bb_name):
     # D244_F3_C1530 for full datasets
     context_name = "D244_F3_C1530_3"
 
-    repo: EvaluationRepository = load_repository(context_name, cache=True, load_predictions=False)
+    repo: EvaluationRepository = load_repository(
+        context_name, cache=True, load_predictions=False
+    )
 
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
-    metrics = metrics[metrics.index.get_level_values('framework').str.split('_').str[0] == bb_name.split('_')[1]]
-    for dataset_name, group in metrics.groupby('dataset'):
+    metrics = metrics[
+        metrics.index.get_level_values("framework").str.split("_").str[0]
+        == bb_name.split("_")[1]
+    ]
+    for dataset_name, group in metrics.groupby("dataset"):
         print(f"Processing dataset: {dataset_name}")
         hyperparameters_configurations = {}
-        for framework in group.index.to_frame(index=False)['framework'].values:
+        for framework in group.index.to_frame(index=False)["framework"].values:
             # check for right amount of hyperparameter, as they contain additional value ag_args
-            #if len(repo.config_hyperparameters(config=framework)) == len(config_space) + 1:
-            hyperparameters_configurations[framework] = repo.config_hyperparameters(config=framework)
-        bb_dict[dataset_name] = convert_dataset(config_space, group, hyperparameters_configurations)
+            # if len(repo.config_hyperparameters(config=framework)) == len(config_space) + 1:
+            hyperparameters_configurations[framework] = repo.config_hyperparameters(
+                config=framework
+            )
+        bb_dict[dataset_name] = convert_dataset(
+            config_space, group, hyperparameters_configurations
+        )
 
     with catchtime("saving to disk"):
         serialize(
@@ -122,13 +130,13 @@ def convert_dataset(config_space, evaluations, configurations):
     # number of hyperparameters
     n_hps = len(hp_cols)
     # number of evaluations
-    n_evals = len(evaluations.xs(0, level='fold'))
+    n_evals = len(evaluations.xs(0, level="fold"))
     # initialize hyperparameter array with shape(n_evals, n_hps)
     hps = np.zeros((n_evals, n_hps), dtype=object)
 
     n_seeds = 3
 
-    #TODO muss das arr die werte in der reihenfolge des configuration space enthalten?
+    # TODO muss das arr die werte in der reihenfolge des configuration space enthalten?
 
     for i, config in enumerate(configurations):
         arr = []
@@ -136,7 +144,7 @@ def convert_dataset(config_space, evaluations, configurations):
             # this handles cases, where not all hps are set
             if key in configurations[config].keys():
                 # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
-                if key == 'max_features':
+                if key == "max_features":
                     arr.append(str(configurations[config][key]))
                 # set hp to 0 if not existent
                 else:
@@ -159,10 +167,18 @@ def convert_dataset(config_space, evaluations, configurations):
 
     # Iterate over each fold
     for i, fold in enumerate([0, 1, 2]):
-        fold_data = evaluations.xs(fold, level='fold')
+        fold_data = evaluations.xs(fold, level="fold")
         # Iterate over each row in the fold and extract the metrics
         for j, (_, row) in enumerate(fold_data.iterrows()):
-            metrics = row[['metric_error', 'metric_error_val', 'time_train_s', 'time_infer_s', 'rank']].values
+            metrics = row[
+                [
+                    "metric_error",
+                    "metric_error_val",
+                    "time_train_s",
+                    "time_infer_s",
+                    "rank",
+                ]
+            ].values
 
             # If the row doesn't exist in arr, create it
             if len(objective_evaluations) <= j:
@@ -170,9 +186,13 @@ def convert_dataset(config_space, evaluations, configurations):
 
             # Add metrics to the correct position in the row's list (corresponding to the current fold)
             print(metrics)
-            objective_evaluations[j][i] = metrics  # arr[j][i] corresponds to row j, fold i
+            objective_evaluations[j][
+                i
+            ] = metrics  # arr[j][i] corresponds to row j, fold i
     objective_evaluations = np.array(objective_evaluations)
-    objective_evaluations = objective_evaluations.reshape(n_evals, n_seeds, 1, n_objectives)
+    objective_evaluations = objective_evaluations.reshape(
+        n_evals, n_seeds, 1, n_objectives
+    )
     # fidelity space initialized as constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
@@ -207,7 +227,9 @@ class TabrepoRecipeKNeighbors(TabrepoRecipe):
 
 class TabrepoNeuralNetTorch(TabrepoRecipe):
     def __init__(self):
-        super().__init__(CONFIGURATION_SPACE_NeuralNetTorch, BLACKBOX_NAME + "NeuralNetTorch")
+        super().__init__(
+            CONFIGURATION_SPACE_NeuralNetTorch, BLACKBOX_NAME + "NeuralNetTorch"
+        )
 
 
 class TabrepoExtraTrees(TabrepoRecipe):
@@ -243,15 +265,16 @@ class TabrepoRandomForest(TabrepoRecipe):
 
 
 if __name__ == "__main__":
-    recipes = [TabrepoRecipeKNeighbors,
-               TabrepoNeuralNetTorch,
-               TabrepoRandomForest,
-               TabrepoExtraTrees,
-               TabrepoCatBoost,
-               TabrepoXGBoost,
-               TabrepoLightGBM,
-               ]
-    #recipes = [TabrepoLinearModel]
+    recipes = [
+        TabrepoRecipeKNeighbors,
+        TabrepoNeuralNetTorch,
+        TabrepoRandomForest,
+        TabrepoExtraTrees,
+        TabrepoCatBoost,
+        TabrepoXGBoost,
+        TabrepoLightGBM,
+    ]
+    # recipes = [TabrepoLinearModel]
 
     for recipe in recipes:
         instance = recipe()

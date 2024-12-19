@@ -26,7 +26,7 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.tabrepo_import imp
     TabrepoExtraTrees,
     TabrepoNeuralNetTorch,
     TabrepoLightGBM,
-    TabrepoRecipeKNeighbors
+    TabrepoRecipeKNeighbors,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
@@ -76,7 +76,7 @@ recipes = [
     TabrepoExtraTrees(),
     TabrepoNeuralNetTorch(),
     TabrepoLightGBM(),
-    TabrepoRecipeKNeighbors()
+    TabrepoRecipeKNeighbors(),
 ]
 
 try:
