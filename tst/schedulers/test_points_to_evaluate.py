@@ -60,6 +60,14 @@ list_schedulers_to_test = [
     ),
     SingleFidelityScheduler(
         config_space,
+        searcher="botorch",
+        metrics=[metric],
+        do_minimize=False,
+        random_seed=random_seed,
+        searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+    ),
+    SingleFidelityScheduler(
+        config_space,
         searcher="regularized_evolution",
         metrics=[metric],
         do_minimize=False,
