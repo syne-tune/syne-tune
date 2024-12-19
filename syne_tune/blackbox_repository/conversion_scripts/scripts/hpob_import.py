@@ -366,7 +366,7 @@ def generate_hpob(search_space):
         )
 
 
-def convert_dataset(search_space, dataset_name, dataset):
+def convert_dataset(search_space, dataset):
     hp_cols = list(search_space["config_space"].keys())
     n_hps = len(hp_cols)
     n_evals = len(dataset["X"])

@@ -18,6 +18,16 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import
     HPOBRecipe7609,
     HPOBRecipe5889,
 )
+from syne_tune.blackbox_repository.conversion_scripts.scripts.tabrepo_import import (
+    TabrepoRandomForest,
+    TabrepoLinearModel,
+    TabrepoCatBoost,
+    TabrepoXGBoost,
+    TabrepoExtraTrees,
+    TabrepoNeuralNetTorch,
+    TabrepoLightGBM,
+    TabrepoRecipeKNeighbors,
+)
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
     XGBoostRecipe,
@@ -59,6 +69,14 @@ recipes = [
     HPOBRecipe7607(),
     HPOBRecipe7609(),
     HPOBRecipe5889(),
+    TabrepoRandomForest(),
+    TabrepoLinearModel(),
+    TabrepoCatBoost(),
+    TabrepoXGBoost(),
+    TabrepoExtraTrees(),
+    TabrepoNeuralNetTorch(),
+    TabrepoLightGBM(),
+    TabrepoRecipeKNeighbors(),
 ]
 
 try:
