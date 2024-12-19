@@ -88,7 +88,6 @@ CONFIGURATION_SPACE_CatBoost = {
 def generate_tabrepo(config_space, bb_name):
     print(f"generating {bb_name}")
 
-    blackbox_name = bb_name
     bb_dict = {}
 
     # D244_F3_C1530 for full datasets
@@ -117,7 +116,7 @@ def generate_tabrepo(config_space, bb_name):
     with catchtime("saving to disk"):
         serialize(
             bb_dict=bb_dict,
-            path=repository_path / blackbox_name,
+            path=repository_path / bb_name,
             metadata={metric_elapsed_time: METRIC_ELAPSED_TIME},
         )
 
@@ -134,8 +133,6 @@ def convert_dataset(config_space, evaluations, configurations):
 
     n_seeds = 3
 
-    # TODO muss das arr die werte in der reihenfolge des configuration space enthalten?
-
     for i, config in enumerate(configurations):
         arr = []
         for key in config_space.keys():
@@ -144,14 +141,15 @@ def convert_dataset(config_space, evaluations, configurations):
                 # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
                 if key == "max_features":
                     arr.append(str(configurations[config][key]))
-                # set hp to 0 if not existent
                 else:
                     arr.append(configurations[config][key])
+            # set hp to None if not existent
             else:
                 arr.append(None)
         hps[i] = arr
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
+    # can I just rename time_train to metric elapsed time or does the data need to be changed somehow?
     objective_names = [
         "metric_error",
         "metric_error_val",
@@ -264,8 +262,8 @@ if __name__ == "__main__":
         TabrepoCatBoost,
         TabrepoXGBoost,
         TabrepoLightGBM,
+        #TabrepoLinearModel
     ]
-    # recipes = [TabrepoLinearModel]
 
     for recipe in recipes:
         instance = recipe()
