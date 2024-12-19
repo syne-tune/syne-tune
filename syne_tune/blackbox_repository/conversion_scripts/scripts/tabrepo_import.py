@@ -179,9 +179,7 @@ def convert_dataset(config_space, evaluations, configurations):
             if len(objective_evaluations) <= j:
                 objective_evaluations.append([[], [], []])
 
-            objective_evaluations[j][
-                i
-            ] = metrics
+            objective_evaluations[j][i] = metrics
     objective_evaluations = np.array(objective_evaluations)
     objective_evaluations = objective_evaluations.reshape(
         n_evals, n_seeds, 1, n_objectives
