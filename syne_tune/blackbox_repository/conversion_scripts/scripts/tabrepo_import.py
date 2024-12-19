@@ -107,8 +107,6 @@ def generate_tabrepo(config_space, bb_name):
         print(f"Processing dataset: {dataset_name}")
         hyperparameters_configurations = {}
         for framework in group.index.to_frame(index=False)["framework"].values:
-            # check for right amount of hyperparameter, as they contain additional value ag_args
-            # if len(repo.config_hyperparameters(config=framework)) == len(config_space) + 1:
             hyperparameters_configurations[framework] = repo.config_hyperparameters(
                 config=framework
             )
@@ -165,10 +163,8 @@ def convert_dataset(config_space, evaluations, configurations):
 
     objective_evaluations = []
 
-    # Iterate over each fold
     for i, fold in enumerate([0, 1, 2]):
         fold_data = evaluations.xs(fold, level="fold")
-        # Iterate over each row in the fold and extract the metrics
         for j, (_, row) in enumerate(fold_data.iterrows()):
             metrics = row[
                 [
@@ -180,15 +176,12 @@ def convert_dataset(config_space, evaluations, configurations):
                 ]
             ].values
 
-            # If the row doesn't exist in arr, create it
             if len(objective_evaluations) <= j:
-                objective_evaluations.append([[], [], []])  # Create a list for each row
+                objective_evaluations.append([[], [], []])
 
-            # Add metrics to the correct position in the row's list (corresponding to the current fold)
-            print(metrics)
             objective_evaluations[j][
                 i
-            ] = metrics  # arr[j][i] corresponds to row j, fold i
+            ] = metrics
     objective_evaluations = np.array(objective_evaluations)
     objective_evaluations = objective_evaluations.reshape(
         n_evals, n_seeds, 1, n_objectives
