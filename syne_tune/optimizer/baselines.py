@@ -1165,8 +1165,8 @@ class CQR(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-                SurrogateSearcher,
+            from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searcher import (
+                LegacySurrogateSearcher,
             )
         except ImportError:
             raise
@@ -1179,7 +1179,7 @@ class CQR(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(**searcher_kwargs),
+            searcher=LegacySurrogateSearcher(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1205,8 +1205,8 @@ class ASHACQR(HyperbandScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-                SurrogateSearcher,
+            from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searcher import (
+                LegacySurrogateSearcher,
             )
         except ImportError:
             raise
@@ -1219,7 +1219,7 @@ class ASHACQR(HyperbandScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=SurrogateSearcher(**searcher_kwargs),
+            searcher=LegacySurrogateSearcher(**searcher_kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
