@@ -11,7 +11,9 @@ from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_surrogate import (
     QuantileRegressionSurrogateModel,
 )
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import catchtime
 
@@ -63,9 +65,8 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         self.new_candidates_sampled = False
         self.sampler = None
         self.max_fit_samples = max_fit_samples
-        
-        self.random_state = np.random.RandomState(self.random_seed)
 
+        self.random_state = np.random.RandomState(self.random_seed)
 
     def get_config(self, trial_id: str, **kwargs) -> Optional[TrialSuggestion]:
         trial_id = int(trial_id)
@@ -130,7 +131,6 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
-
     ):
 
         self.trial_results[trial_id].append(metric)
