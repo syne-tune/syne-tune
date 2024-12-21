@@ -157,7 +157,8 @@ class Tuner:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
                 "_", "-"
             )
-        if suffix_tuner_name or tuner_name is None:
+
+        if suffix_tuner_name:
             self.name = name_from_base(tuner_name, default="st-tuner")
         else:
             self.name = tuner_name
