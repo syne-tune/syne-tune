@@ -153,7 +153,7 @@ class Tuner:
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
-        if tuner_name is not None:
+        if tuner_name is None:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
                 "_", "-"
             )
