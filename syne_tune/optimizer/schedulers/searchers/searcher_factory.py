@@ -1,6 +1,7 @@
 from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import SurrogateSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
@@ -15,6 +16,7 @@ searcher_cls_dict = {
     "kde": KernelDensityEstimator,
     "bayesopt": GPFIFOSearcher,
     "regularized_evolution": RegularizedEvolution,
+    "cqr": SurrogateSearcher,
 }
 
 
