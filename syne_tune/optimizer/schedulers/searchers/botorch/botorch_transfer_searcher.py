@@ -14,7 +14,9 @@ except ImportError as e:
 
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch
-from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
+from syne_tune.optimizer.schedulers.searchers.botorch.legacy_botorch_searcher import (
+    LegacyBoTorchSearcher,
+)
 from syne_tune.optimizer.baselines import _create_searcher_kwargs
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -65,7 +67,7 @@ class BoTorchTransfer(BoTorch):
         )
 
 
-class BoTorchTransferSearcher(BoTorchSearcher):
+class BoTorchTransferSearcher(LegacyBoTorchSearcher):
     def __init__(
         self,
         config_space: dict,
