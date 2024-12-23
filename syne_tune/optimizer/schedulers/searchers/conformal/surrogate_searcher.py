@@ -112,7 +112,7 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
             config_space=self.config_space,
             max_fit_samples=self.max_fit_samples,
             random_state=self.random_state,
-            mode='min',
+            mode="min",
             min_samples_to_conformalize=32,
             valid_fraction=0.1,
             **self.surrogate_kwargs,
