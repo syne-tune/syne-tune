@@ -8,6 +8,7 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.config_space import (
@@ -60,7 +61,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, BaseSearcher]] = "random_search",
+        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -106,8 +107,8 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.metric_multiplier = 1 if self.do_minimize else -1
         self.time_attr = time_attr
 
-    def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        config = self.searcher.suggest(trial_id=trial_id)
+    def suggest(self) -> Optional[TrialSuggestion]:
+        config = self.searcher.suggest()
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = TrialSuggestion.start_suggestion(
@@ -130,7 +131,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, update=False
+            trial.trial_id, config, metric=metric
         )
         self._check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
@@ -140,7 +141,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             action = bracket.on_result(
                 trial_id=trial.trial_id,
                 cur_iter=result[self.time_attr],
-                metric=result[self.metric] * self.metric_multiplier,
+                metric=metric,
             )
         if action == SchedulerDecision.STOP:
             self.num_stopped += 1
@@ -151,7 +152,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, update=True
+            trial.trial_id, config, metric=metric
         )
 
         self._check_metrics_are_present(result)
@@ -159,7 +160,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         bracket.on_result(
             trial_id=trial.trial_id,
             cur_iter=result[self.time_attr],
-            metric=result[self.metric] * self.metric_multiplier,
+            metric=metric,
         )
         del self.trial_info[trial.trial_id]
 

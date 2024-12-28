@@ -16,7 +16,7 @@ from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-
+from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice
 
 config_space = {
@@ -93,6 +93,13 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="random_search",
+        time_attr=resource_attr
+    )
 ]
 
 
