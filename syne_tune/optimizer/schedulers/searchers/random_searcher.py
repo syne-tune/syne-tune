@@ -2,14 +2,16 @@ import logging
 from typing import Optional, List, Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 
 logger = logging.getLogger(__name__)
 
+
 def sample_random_config(config_space):
     return {
-        k: v.sample() if hasattr(v, "sample") else v
-        for k, v in config_space.items()
+        k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()
     }
 
 

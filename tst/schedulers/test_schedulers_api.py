@@ -98,8 +98,8 @@ list_schedulers_to_test = [
         metric=metric1,
         random_seed=random_seed,
         searcher="random_search",
-        time_attr=resource_attr
-    )
+        time_attr=resource_attr,
+    ),
 ]
 
 

@@ -8,7 +8,9 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.config_space import (
@@ -130,9 +132,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
-        self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric
-        )
+        self.searcher.on_trial_result(trial.trial_id, config, metric=metric)
         self._check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
             action = SchedulerDecision.STOP
@@ -151,9 +151,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
-        self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric
-        )
+        self.searcher.on_trial_result(trial.trial_id, config, metric=metric)
 
         self._check_metrics_are_present(result)
         bracket = self.trial_info[trial.trial_id]
