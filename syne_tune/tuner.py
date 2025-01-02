@@ -153,12 +153,14 @@ class Tuner:
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
-        if tuner_name is not None:
+        if tuner_name is None:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
                 "_", "-"
             )
-        if suffix_tuner_name or tuner_name is None:
-            self.name = name_from_base(tuner_name, default="st-tuner")
+
+        if suffix_tuner_name:
+            # suffix a timestamp to get a unique string
+            self.name = name_from_base(tuner_name)
         else:
             self.name = tuner_name
 
