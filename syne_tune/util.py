@@ -81,7 +81,7 @@ def name_from_base(base: Optional[str], max_length: int = 63) -> str:
     :return: Input parameter with appended timestamp
     """
     if base is None:
-        base = 'st-tuner'
+        base = "st-tuner"
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
