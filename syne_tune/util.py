@@ -69,7 +69,7 @@ def experiment_path(
     return result_path
 
 
-def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
+def name_from_base(base: Optional[str], max_length: int = 63) -> str:
     """Append a timestamp to the provided string.
 
     This function assures that the total length of the resulting string is
@@ -77,12 +77,11 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
     necessary.
 
     :param base: String used as prefix to generate the unique name
-    :param default: String used if :code:`base is None`
     :param max_length: Maximum length for the resulting string (default: 63)
     :return: Input parameter with appended timestamp
     """
     if base is None:
-        base = default
+        base = 'st-tuner'
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
