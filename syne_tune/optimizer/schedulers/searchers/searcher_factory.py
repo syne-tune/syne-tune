@@ -1,6 +1,9 @@
 from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+    SurrogateSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
     BoTorchSearcher,
 )
@@ -16,6 +19,7 @@ searcher_cls_dict = {
     "bore": Bore,
     "kde": KernelDensityEstimator,
     "regularized_evolution": RegularizedEvolution,
+    "cqr": SurrogateSearcher,
     "botorch": BoTorchSearcher,
 }
 
