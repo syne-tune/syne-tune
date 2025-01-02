@@ -163,7 +163,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def on_trial_remove(self, trial: Trial):
         del self.trial_info[trial.trial_id]
-        
+
     def metric_names(self) -> List[str]:
         return [self.metric]
 
