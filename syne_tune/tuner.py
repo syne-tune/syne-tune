@@ -159,7 +159,8 @@ class Tuner:
             )
 
         if suffix_tuner_name:
-            self.name = name_from_base(tuner_name, default="st-tuner")
+            # suffix a timestamp to get a unique string
+            self.name = name_from_base(tuner_name)
         else:
             self.name = tuner_name
 
