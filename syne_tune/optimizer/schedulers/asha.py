@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict, Any, List
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -12,7 +12,6 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
 from syne_tune.util import dump_json_with_numpy
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.config_space import (
     cast_config_values,
     config_space_to_json_dict,
@@ -164,6 +163,12 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def on_trial_remove(self, trial: Trial):
         del self.trial_info[trial.trial_id]
+        
+    def metric_names(self) -> List[str]:
+        return [self.metric]
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"
 
     def metadata(self) -> Dict[str, Any]:
         """
