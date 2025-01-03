@@ -180,7 +180,8 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         )
         metadata["config_space"] = config_space_json
         metadata["metric"] = self.metric
-
+        metadata['metric_names'] = self.metric_names()
+        metadata['metric_mode'] = self.metric_mode()
         return metadata
 
     def _check_metrics_are_present(self, result: Dict[str, Any]):
@@ -223,6 +224,7 @@ class _Bracket:
                     # if trial is in the top ones according to a rank induced by the ``reduction_factor``.
                     metric_recorded = np.array(list(recorded.values()) + [metric])
                     ranks = np.argsort(metric_recorded)
+                    ranks = ranks / ranks.shape[0]
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
                         action = SchedulerDecision.STOP
