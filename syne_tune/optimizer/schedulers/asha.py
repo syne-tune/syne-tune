@@ -180,8 +180,8 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         )
         metadata["config_space"] = config_space_json
         metadata["metric"] = self.metric
-        metadata['metric_names'] = self.metric_names()
-        metadata['metric_mode'] = self.metric_mode()
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
         return metadata
 
     def _check_metrics_are_present(self, result: Dict[str, Any]):
