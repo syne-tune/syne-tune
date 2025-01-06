@@ -38,7 +38,7 @@ required_yahpo = load_requirements(
     "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-yahpo.txt"
 )
 required_tabrepo = load_requirements(
-"syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-tabrepo.txt"
+    "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-tabrepo.txt"
 )
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
