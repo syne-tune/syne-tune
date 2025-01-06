@@ -71,7 +71,21 @@ list_schedulers_to_test = [
     ),
     SingleObjectiveScheduler(
         config_space,
+        searcher="botorch",
+        metric=metric1,
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
+    SingleObjectiveScheduler(
+        config_space,
         searcher="regularized_evolution",
+        metric=metric1,
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
+    SingleObjectiveScheduler(
+        config_space,
+        searcher="cqr",
         metric=metric1,
         do_minimize=False,
         random_seed=random_seed,

@@ -41,8 +41,8 @@ from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objecti
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
     SKLearnEstimatorWrapper,
 )
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-    SurrogateSearcher,
+from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searcher import (
+    LegacySurrogateSearcher,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
@@ -212,7 +212,7 @@ list_schedulers_to_test = [
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
     FIFOScheduler(
-        searcher=SurrogateSearcher(
+        searcher=LegacySurrogateSearcher(
             mode=mode,
             config_space=config_space,
             metric=metric1,
