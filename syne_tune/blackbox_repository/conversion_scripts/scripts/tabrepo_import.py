@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from tabrepo import load_repository, get_context, list_contexts, EvaluationRepository
+from tabrepo import load_repository, EvaluationRepository
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
