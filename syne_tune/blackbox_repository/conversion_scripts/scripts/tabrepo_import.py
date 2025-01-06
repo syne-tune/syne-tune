@@ -18,6 +18,9 @@ RESOURCE_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
+# D244_F3_C1530 for full datasets
+CONTEXT_NAME = "D244_F3_C1530_3"
+
 CONFIGURATION_SPACE_KNeighbors = {
     "n_neighbors": choice([3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 20, 30, 40, 50]),
     "weights": choice(["uniform", "distance"]),
@@ -85,13 +88,10 @@ CONFIGURATION_SPACE_CatBoost = {
 }
 
 
-def generate_tabrepo(config_space: dict, bb_name: str):
+def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     print(f"generating {bb_name}")
 
     bb_dict = {}
-
-    # D244_F3_C1530 for full datasets
-    context_name = "D244_F3_C1530_3"
 
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
@@ -215,7 +215,7 @@ class TabrepoRecipe(BlackboxRecipe):
         self.config_space = config_space
 
     def _generate_on_disk(self):
-        generate_tabrepo(self.config_space, self.name)
+        generate_tabrepo(self.config_space, self.name, CONTEXT_NAME)
 
 
 class TabrepoRecipeKNeighbors(TabrepoRecipe):
