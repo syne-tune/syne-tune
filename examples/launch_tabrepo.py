@@ -1,5 +1,9 @@
 """
-This example shows how to run RandomSearch on Benchmarks from TabRepo by Salinas and Erickson
+This example shows how to run random search on the TabRepo benchmark. For more details see: 
+
+TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications},
+David Salinas and Nick Erickson
+AutoML Conference 2024 (ABCD Track)
 We use a XGBoost surrogate model to predict the performance of unobserved hyperparameter configurations.
 """
 import logging
