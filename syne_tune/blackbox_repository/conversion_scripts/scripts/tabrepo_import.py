@@ -85,7 +85,7 @@ CONFIGURATION_SPACE_CatBoost = {
 }
 
 
-def generate_tabrepo(config_space, bb_name):
+def generate_tabrepo(config_space: dict, bb_name: str):
     print(f"generating {bb_name}")
 
     bb_dict = {}
@@ -97,11 +97,15 @@ def generate_tabrepo(config_space, bb_name):
         context_name, cache=True, load_predictions=False
     )
 
+    # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
+    # We select the metrics for the current blackbox method
     metrics = metrics[
         metrics.index.get_level_values("framework").str.split("_").str[0]
         == bb_name.split("_")[1]
     ]
+    # We iterate over each dataset and pass the metrics for the corresponding hyperparameter configurations and
+    # search space to the convert_dataset() function
     for dataset_name, group in metrics.groupby("dataset"):
         print(f"Processing dataset: {dataset_name}")
         hyperparameters_configurations = {}
@@ -121,7 +125,8 @@ def generate_tabrepo(config_space, bb_name):
         )
 
 
-def convert_dataset(config_space, evaluations, configurations):
+def convert_dataset(config_space: dict, evaluations: pd.DataFrame, configurations: dict):
+    print(f"type is: {type(evaluations)})")
     # names of hyperparameters
     hp_cols = list(config_space.keys())
     # number of hyperparameters
@@ -182,7 +187,8 @@ def convert_dataset(config_space, evaluations, configurations):
     objective_evaluations = objective_evaluations.reshape(
         n_evals, n_seeds, 1, n_objectives
     )
-    # Tabrepo does not provide performance across different fidelities. We initialize the fidelity space as a constant value, since it is required as an argument
+    # Tabrepo does not provide performance across different fidelities.
+    # We initialize the fidelity space as a constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
@@ -201,8 +207,8 @@ class TabrepoRecipe(BlackboxRecipe):
         super(TabrepoRecipe, self).__init__(
             name=name,
             cite_reference="TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications"
-            "David Salinas and Nick Erickson",
-            "AutoML Conference 2024 (ABCD Track)",
+            "David Salinas and Nick Erickson"
+            "AutoML Conference 2024 (ABCD Track)"
         )
         self.config_space = config_space
 
