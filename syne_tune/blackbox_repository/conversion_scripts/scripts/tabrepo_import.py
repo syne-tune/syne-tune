@@ -125,7 +125,9 @@ def generate_tabrepo(config_space: dict, bb_name: str):
         )
 
 
-def convert_dataset(config_space: dict, evaluations: pd.DataFrame, configurations: dict):
+def convert_dataset(
+    config_space: dict, evaluations: pd.DataFrame, configurations: dict
+):
     print(f"type is: {type(evaluations)})")
     # names of hyperparameters
     hp_cols = list(config_space.keys())
@@ -208,7 +210,7 @@ class TabrepoRecipe(BlackboxRecipe):
             name=name,
             cite_reference="TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications"
             "David Salinas and Nick Erickson"
-            "AutoML Conference 2024 (ABCD Track)"
+            "AutoML Conference 2024 (ABCD Track)",
         )
         self.config_space = config_space
 
