@@ -83,12 +83,12 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
             searcher_cls = LegacyMultiFidelityKernelDensityEstimator
     elif searcher_name == "cqr":
         try:
-            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-                SurrogateSearcher,
+            from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searcher import (
+                LegacySurrogateSearcher,
             )
         except ImportError:
             raise
-        searcher_cls = SurrogateSearcher
+        searcher_cls = LegacySurrogateSearcher
     elif searcher_name == "botorch":
         try:
             from syne_tune.optimizer.schedulers.searchers.botorch import (

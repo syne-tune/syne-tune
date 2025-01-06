@@ -182,7 +182,7 @@ def convert_dataset(config_space, evaluations, configurations):
     objective_evaluations = objective_evaluations.reshape(
         n_evals, n_seeds, 1, n_objectives
     )
-    # fidelity space initialized as constant value, since it is required as an argument
+    # Tabrepo does not provide performance across different fidelities. We initialize the fidelity space as a constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
@@ -202,6 +202,7 @@ class TabrepoRecipe(BlackboxRecipe):
             name=name,
             cite_reference="TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications"
             "David Salinas and Nick Erickson",
+            "AutoML Conference 2024 (ABCD Track)",
         )
         self.config_space = config_space
 

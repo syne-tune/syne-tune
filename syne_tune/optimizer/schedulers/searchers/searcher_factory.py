@@ -1,7 +1,12 @@
 from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+    SurrogateSearcher,
+)
+from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+    BoTorchSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -13,8 +18,9 @@ searcher_cls_dict = {
     "random_search": RandomSearcher,
     "bore": Bore,
     "kde": KernelDensityEstimator,
-    "bayesopt": GPFIFOSearcher,
     "regularized_evolution": RegularizedEvolution,
+    "cqr": SurrogateSearcher,
+    "botorch": BoTorchSearcher,
 }
 
 

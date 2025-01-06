@@ -1,17 +1,18 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List
 
 import numpy as np
 import pandas as pd
 
 from syne_tune.config_space import Domain
-
+from syne_tune.optimizer.scheduler import TrialSuggestion
+from syne_tune.optimizer.schedulers.searchers import (
+    impute_points_to_evaluate,
+    StochasticSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_surrogate import (
     QuantileRegressionSurrogateModel,
-)
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
-    SingleObjectiveBaseSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import catchtime
@@ -19,10 +20,12 @@ from syne_tune.util import catchtime
 logger = logging.getLogger(__name__)
 
 
-class SurrogateSearcher(SingleObjectiveBaseSearcher):
+class LegacySurrogateSearcher(StochasticSearcher):
     def __init__(
         self,
         config_space: Dict,
+        metric: str,
+        mode: str = "min",
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
         points_to_evaluate: Optional[List[Dict]] = None,
@@ -37,36 +40,45 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         :param update_frequency: surrogates are only updated every `update_frequency` results, can be used to save
         scheduling time.
         :param points_to_evaluate: list of configuration to evaluate first.
+        :param surrogate: surrogate to use, can be "GP", "QuantileRegression", "ConformalQuantileRegression", "BORE" or "REA".
         :param max_fit_samples: if the number of observation exceed this parameter, then `max_fit_samples` random samples
         are used to fit the model.
         :param random_seed:
         :param surrogate_kwargs:
         """
-        super(SurrogateSearcher, self).__init__(
+        super(LegacySurrogateSearcher, self).__init__(
             config_space=config_space,
-            points_to_evaluate=points_to_evaluate,
+            metric=metric,
+            metric_names=[metric],
+            mode=mode,
+            points_to_evaluate=[],
             random_seed=random_seed,
         )
+        assert mode in ["min", "max"]
         self.surrogate_kwargs = surrogate_kwargs
         self.num_init_random_draws = num_init_random_draws
         self.update_frequency = update_frequency
+        self.mode = mode
+        self.metric = metric
         self.trial_results = defaultdict(list)  # list of results for each trials
         self.trial_configs = {}
         self.hp_ranges = make_hyperparameter_ranges(config_space=config_space)
+        self._points_to_evaluate = impute_points_to_evaluate(
+            points_to_evaluate, config_space
+        )
         self.surrogate_model = None
         self.index_last_result_fit = None
         self.new_candidates_sampled = False
         self.sampler = None
         self.max_fit_samples = max_fit_samples
 
-        self.random_state = np.random.RandomState(self.random_seed)
-
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
-        trial_id = len(self.trial_configs)
+    def get_config(self, trial_id: str, **kwargs) -> Optional[TrialSuggestion]:
+        trial_id = int(trial_id)
         logger.debug(f"get_config trial {trial_id}, {self.num_results()} results")
-        config = self._next_points_to_evaluate()
-
-        if config is None:
+        if self._points_to_evaluate:
+            logger.debug(f"trial {trial_id}: pick from points to evaluate")
+            config = self._points_to_evaluate.pop(0)
+        else:
             if self.should_update():
                 logger.debug(f"trial {trial_id}: fit model")
                 with catchtime(f"fit model with {self.num_results()} observations"):
@@ -112,21 +124,19 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
             config_space=self.config_space,
             max_fit_samples=self.max_fit_samples,
             random_state=self.random_state,
-            mode="min",
+            mode=self.mode,
             min_samples_to_conformalize=32,
             valid_fraction=0.1,
             **self.surrogate_kwargs,
         )
         self.surrogate_model.fit(df_features=X, y=z)
 
-    def on_trial_complete(
-        self,
-        trial_id: int,
-        config: Dict[str, Any],
-        metric: float,
+    def on_trial_result(
+        self, trial_id: str, config: Dict, result: Dict, update: bool = True
     ):
-
-        self.trial_results[trial_id].append(metric)
+        trial_id = int(trial_id)
+        y = result[self.metric]
+        self.trial_results[trial_id].append(y)
 
     def sample_random(self) -> Dict:
         return {
@@ -136,3 +146,12 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
 
     def configs_to_df(self, configs: List[Dict]) -> pd.DataFrame:
         return pd.DataFrame(configs)
+
+    def metric_names(self) -> List[str]:
+        return [self.metric]
+
+    def metric_mode(self) -> str:
+        return self.mode
+
+    def clone_from_state(self, state: dict):
+        pass
