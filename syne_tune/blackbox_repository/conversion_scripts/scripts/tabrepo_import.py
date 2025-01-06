@@ -202,6 +202,7 @@ class TabrepoRecipe(BlackboxRecipe):
             name=name,
             cite_reference="TabRepo: A Large Scale Repository of Tabular Model Evaluations and its Auto{ML} Applications"
             "David Salinas and Nick Erickson",
+            "AutoML Conference 2024 (ABCD Track)",
         )
         self.config_space = config_space
 
