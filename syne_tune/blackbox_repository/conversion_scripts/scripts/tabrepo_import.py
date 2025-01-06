@@ -182,7 +182,7 @@ def convert_dataset(config_space, evaluations, configurations):
     objective_evaluations = objective_evaluations.reshape(
         n_evals, n_seeds, 1, n_objectives
     )
-    # fidelity space initialized as constant value, since it is required as an argument
+    # Tabrepo does not provide performance across different fidelities. We initialize the fidelity space as a constant value, since it is required as an argument
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
