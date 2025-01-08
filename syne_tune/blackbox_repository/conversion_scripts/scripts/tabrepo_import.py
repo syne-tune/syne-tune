@@ -107,7 +107,9 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     # We exclude configurations containing _c suffix
     # The _c configs are configurations that were default configurations of AG at the time of TabRepo
     # and have now been replaced by portfolio _r configurations
-    metrics = metrics[metrics.index.get_level_values("framework").str.contains("_c") == False]
+    metrics = metrics[
+        metrics.index.get_level_values("framework").str.contains("_c") == False
+    ]
     # We iterate over each dataset and pass the metrics for the corresponding hyperparameter configurations and
     # search space to the convert_dataset() function
     for dataset_name, group in metrics.groupby("dataset"):
@@ -115,7 +117,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
         hyperparameters_configurations = {}
         for framework in group.index.to_frame(index=False)["framework"].values:
             hyperparameters_configurations[framework] = repo.config_hyperparameters(
-            config=framework
+                config=framework
             )
 
         bb_dict[dataset_name] = convert_dataset(
