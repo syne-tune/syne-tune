@@ -95,6 +95,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     bb_dict = {}
 
     from tabrepo import load_repository, EvaluationRepository
+
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
     )
