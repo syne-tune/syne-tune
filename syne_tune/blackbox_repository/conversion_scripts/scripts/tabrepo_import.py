@@ -104,6 +104,10 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
         metrics.index.get_level_values("framework").str.split("_").str[0]
         == bb_name.split("_")[1]
     ]
+    # We exclude configurations containing _c suffix
+    # The _c configs are configurations that were default configurations of AG at the time of TabRepo
+    # and have now been replaced by portfolio _r configurations
+    metrics = metrics[metrics.index.get_level_values("framework").str.contains("_c") == False]
     # We iterate over each dataset and pass the metrics for the corresponding hyperparameter configurations and
     # search space to the convert_dataset() function
     for dataset_name, group in metrics.groupby("dataset"):
@@ -111,8 +115,9 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
         hyperparameters_configurations = {}
         for framework in group.index.to_frame(index=False)["framework"].values:
             hyperparameters_configurations[framework] = repo.config_hyperparameters(
-                config=framework
+            config=framework
             )
+
         bb_dict[dataset_name] = convert_dataset(
             config_space, group, hyperparameters_configurations
         )
@@ -143,20 +148,14 @@ def convert_dataset(
     for i, config in enumerate(configurations):
         arr = []
         for key in config_space.keys():
-            # this handles cases, where not all hps are set
-            if key in configurations[config].keys():
-                # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
-                if key == "max_features":
-                    arr.append(str(configurations[config][key]))
-                else:
-                    arr.append(configurations[config][key])
-            # set hp to None if not existent
+            # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
+            if key == "max_features":
+                arr.append(str(configurations[config][key]))
             else:
-                arr.append(None)
+                arr.append(configurations[config][key])
         hps[i] = arr
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
-    # can I just rename time_train to metric elapsed time or does the data need to be changed somehow?
     objective_names = [
         "metric_error",
         "metric_error_val",
