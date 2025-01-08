@@ -96,7 +96,6 @@ setup(
         "blackbox-repository": required_blackbox_repository,
         "benchmarks": required_benchmarks,
         "yahpo": required_yahpo,
-        "tabrepo": required_tabrepo,
         "raytune": required_ray,
         "botorch": required_botorch,
         "bore": required_bore,
