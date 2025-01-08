@@ -272,7 +272,7 @@ if __name__ == "__main__":
         TabrepoCatBoost,
         TabrepoXGBoost,
         TabrepoLightGBM,
-        # TabrepoLinearModel
+        TabrepoLinearModel
     ]
 
     for recipe in recipes:
