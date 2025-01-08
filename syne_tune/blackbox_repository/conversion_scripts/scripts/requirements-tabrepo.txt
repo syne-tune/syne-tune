@@ -1,1 +1,1 @@
--e git+https://github.com/autogluon/tabrepo.git
+git+https://github.com/autogluon/tabrepo.git
