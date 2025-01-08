@@ -336,11 +336,12 @@ def serialize(
         engine="fastparquet",
     )
 
-    with open(path / "objectives_evaluations.npy", "wb") as f:
+    with (open(path / "objectives_evaluations.npy", "wb") as f):
         # (num_tasks, num_hps, num_seeds, num_fidelities, num_objectives)
         objectives = np.stack(
             [bb_dict[task].objectives_evaluations for task in bb_dict.keys()]
         )
+
         np.save(f, objectives.astype(np.float32), allow_pickle=False)
 
     with open(path / "fidelities_values.npy", "wb") as f:
