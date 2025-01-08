@@ -1,8 +1,7 @@
+# To re-generate this benchmark you need to install tabrepo from https://github.com/autogluon/tabrepo.git
+# The import currently resides in the generate tabrepo function
 import pandas as pd
 import numpy as np
-
-# To re-generate this benchmark you need to install tabrepo from https://github.com/autogluon/tabrepo.git
-from tabrepo import load_repository, EvaluationRepository
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
@@ -95,6 +94,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
 
     bb_dict = {}
 
+    from tabrepo import load_repository, EvaluationRepository
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
     )
