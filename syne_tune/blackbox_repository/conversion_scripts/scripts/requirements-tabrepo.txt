@@ -1,1 +1,1 @@
-tabrepo @ git+https://github.com/autogluon/tabrepo.git
+git+git://github.com/autogluon/tabrepo.git#egg=tabrepo
