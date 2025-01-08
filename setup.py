@@ -37,9 +37,6 @@ required_blackbox_repository = load_requirements(
 required_yahpo = load_requirements(
     "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-yahpo.txt"
 )
-required_tabrepo = load_requirements(
-    "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-tabrepo.txt"
-)
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
 required_aws = load_requirements("requirements-aws.txt")
@@ -61,7 +58,6 @@ required_extra = (
     + required_blackbox_repository
     + required_yahpo
     + required_ray
-    + required_tabrepo
 )
 
 # Botorch only supports python version >= 3.8
@@ -96,7 +92,6 @@ setup(
         "blackbox-repository": required_blackbox_repository,
         "benchmarks": required_benchmarks,
         "yahpo": required_yahpo,
-        "tarepo": required_tabrepo,
         "raytune": required_ray,
         "botorch": required_botorch,
         "bore": required_bore,
