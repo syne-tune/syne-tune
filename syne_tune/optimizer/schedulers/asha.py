@@ -223,8 +223,9 @@ class _Bracket:
                     # get the list of metrics seen for the rung, compute rank and decide to continue
                     # if trial is in the top ones according to a rank induced by the ``reduction_factor``.
                     metric_recorded = np.array(list(recorded.values()) + [metric])
-                    ranks = np.argsort(metric_recorded)
-                    ranks = ranks / ranks.shape[0]
+                    ranks = np.searchsorted(sorted(metric_recorded), metric_recorded) / len(
+                        metric_recorded
+                    )
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
                         action = SchedulerDecision.STOP
