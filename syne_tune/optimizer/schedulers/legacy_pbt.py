@@ -59,7 +59,7 @@ _CONSTRAINTS = {
 }
 
 
-class PopulationBasedTraining(FIFOScheduler):
+class LegacyPopulationBasedTraining(FIFOScheduler):
     """
     Implements the Population Based Training (PBT) algorithm. This is an adapted
     version of the Ray Tune implementation:
