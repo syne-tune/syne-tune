@@ -9,7 +9,11 @@ from typing import Callable, List, Optional, Tuple, Dict, Any
 
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion, TrialScheduler
+from syne_tune.optimizer.scheduler import (
+    SchedulerDecision,
+    TrialSuggestion,
+    TrialScheduler,
+)
 from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
@@ -122,20 +126,24 @@ class PopulationBasedTraining(TrialScheduler):
     """
 
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            custom_explore_fn: Optional[Callable[[dict], dict]] = None,
-            do_minimize: Optional[bool] = True,
-            random_seed: int = None,
-            searcher_kwargs: dict = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        custom_explore_fn: Optional[Callable[[dict], dict]] = None,
+        do_minimize: Optional[bool] = True,
+        random_seed: int = None,
+        searcher_kwargs: dict = None,
     ):
         # The current implementation only supports a random searcher
         self.metric = metric
         self.config_space = config_space
-        self._searcher = RandomSearcher(config_space=config_space,
-                                        random_seed=random_seed,
-                                        points_to_evaluate=searcher_kwargs['points_to_evaluate'] if 'points_to_evaluate' in searcher_kwargs else None)
+        self._searcher = RandomSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+            points_to_evaluate=searcher_kwargs["points_to_evaluate"]
+            if "points_to_evaluate" in searcher_kwargs
+            else None,
+        )
         self._resource_attr = kwargs["resource_attr"]
         self._population_size = kwargs["population_size"]
         self._perturbation_interval = kwargs["perturbation_interval"]
