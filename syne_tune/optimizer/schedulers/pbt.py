@@ -31,7 +31,6 @@ class PBTTrialState:
     stopped: bool = False
 
 
-
 class PopulationBasedTraining(TrialScheduler):
     """
     Implements the Population Based Training (PBT) algorithm. This is an adapted
@@ -123,7 +122,7 @@ class PopulationBasedTraining(TrialScheduler):
         self.searcher = RandomSearcher(
             config_space=config_space,
             random_seed=self.random_seed,
-            points_to_evaluate=self.searcher_kwargs.get("points_to_evaluate")
+            points_to_evaluate=self.searcher_kwargs.get("points_to_evaluate"),
         )
         self.resource_attr = resource_attr
         self.population_size = population_size
@@ -267,9 +266,7 @@ class PopulationBasedTraining(TrialScheduler):
             )
         else:
             trial_id_to_continue, config = self.trial_decisions_stack.pop()
-            config = cast_config_values(
-                config=config, config_space=self.config_space
-            )
+            config = cast_config_values(config=config, config_space=self.config_space)
             return TrialSuggestion.start_suggestion(
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
