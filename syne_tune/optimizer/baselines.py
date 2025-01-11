@@ -6,8 +6,8 @@ from functools import partial
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
     HyperbandScheduler,
-    PopulationBasedTraining,
 )
+from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
 from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
     NSGA2Searcher,
@@ -1324,7 +1324,7 @@ baselines_dict = {
     "MOBSTER": MOBSTER,
     "PASHA": PASHA,
     "MOASHA": MOASHA,
-    "PBT": PopulationBasedTraining,
+    "PBT": LegacyPopulationBasedTraining,
     "BORE": BORE,
     "REA": REA,
     "SyncHyperband": SyncHyperband,
