@@ -33,19 +33,19 @@ class MultiFidelityBore(Bore):
     """
 
     def __init__(
-            self,
-            resource_attr: str,
-            config_space: Dict[str, Any],
-            points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
-            random_seed: int = None,
-            gamma: Optional[float] = 0.25,
-            calibrate: Optional[bool] = False,
-            classifier: Optional[str] = "xgboost",
-            acq_optimizer: Optional[str] = "rs",
-            feval_acq: Optional[int] = 500,
-            random_prob: Optional[float] = 0.0,
-            init_random: Optional[int] = 6,
-            classifier_kwargs: Optional[dict] = None,
+        self,
+        resource_attr: str,
+        config_space: Dict[str, Any],
+        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        random_seed: int = None,
+        gamma: Optional[float] = 0.25,
+        calibrate: Optional[bool] = False,
+        classifier: Optional[str] = "xgboost",
+        acq_optimizer: Optional[str] = "rs",
+        feval_acq: Optional[int] = 500,
+        random_prob: Optional[float] = 0.0,
+        init_random: Optional[int] = 6,
+        classifier_kwargs: Optional[dict] = None,
     ):
         if acq_optimizer is None:
             acq_optimizer = "rs_with_replacement"
@@ -60,7 +60,7 @@ class MultiFidelityBore(Bore):
             random_prob=random_prob,
             init_random=init_random,
             classifier_kwargs=classifier_kwargs,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
         self.resource_attr = resource_attr
         self.resource_levels = []
@@ -84,7 +84,6 @@ class MultiFidelityBore(Bore):
         train_targets = np.array([self.targets[i] for i in indices])
 
         return super()._train_model(train_data, train_targets)
-
 
     def on_trial_result(
         self,
