@@ -29,12 +29,10 @@ class MultiFidelityBore(Bore):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`:
 
-    :param resource_attr: Name of resource attribute. Defaults to "epoch"
     """
 
     def __init__(
         self,
-        resource_attr: str,
         config_space: Dict[str, Any],
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
         random_seed: int = None,
@@ -62,7 +60,6 @@ class MultiFidelityBore(Bore):
             classifier_kwargs=classifier_kwargs,
             random_seed=random_seed,
         )
-        self.resource_attr = resource_attr
         self.resource_levels = []
 
     def _train_model(self, train_data: np.ndarray, train_targets: np.ndarray) -> bool:
