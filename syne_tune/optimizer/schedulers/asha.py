@@ -18,7 +18,9 @@ from syne_tune.config_space import (
     remove_constant_and_cast,
     postprocess_config,
 )
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher_factory import multi_fidelity_searcher_factory
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher_factory import (
+    multi_fidelity_searcher_factory,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +88,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
 
-            self.searcher = multi_fidelity_searcher_factory(searcher, config_space, **searcher_kwargs)
+            self.searcher = multi_fidelity_searcher_factory(
+                searcher, config_space, **searcher_kwargs
+            )
         else:
             self.searcher = searcher
 
