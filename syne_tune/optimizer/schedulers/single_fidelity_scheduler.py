@@ -9,6 +9,7 @@ from syne_tune.config_space import (
     postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.scheduler import (
     TrialScheduler,
@@ -103,7 +104,11 @@ class SingleFidelityScheduler(TrialScheduler):
         metric = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
-        self.searcher.on_trial_result(trial.trial_id, config, metric)
+
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            self.searcher.on_trial_result(trial.trial_id, config, metric[0])
+        else:
+            self.searcher.on_trial_result(trial.trial_id, config, metric)
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
@@ -120,7 +125,11 @@ class SingleFidelityScheduler(TrialScheduler):
         metric = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
-        self.searcher.on_trial_complete(trial.trial_id, config, metric)
+
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            self.searcher.on_trial_complete(trial.trial_id, config, metric[0])
+        else:
+            self.searcher.on_trial_complete(trial.trial_id, config, metric)
 
     def metadata(self) -> Dict[str, Any]:
         """
@@ -131,6 +140,8 @@ class SingleFidelityScheduler(TrialScheduler):
             config_space_to_json_dict(self.config_space)
         )
         metadata["config_space"] = config_space_json
+        metadata['metric_names'] = self.metric_names()
+        metadata['metric_mode'] = self.metric_mode()
         return metadata
 
     def metric_names(self) -> List[str]:
