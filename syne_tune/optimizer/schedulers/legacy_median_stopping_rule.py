@@ -1,23 +1,20 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.util import dump_json_with_numpy
-
 
 logger = logging.getLogger(__name__)
 
 
-class MedianStoppingRule(TrialScheduler):
+class LegacyMedianStoppingRule(LegacyTrialScheduler):
     """
     Applies median stopping rule in top of an existing scheduler.
 
@@ -53,17 +50,15 @@ class MedianStoppingRule(TrialScheduler):
 
     def __init__(
         self,
-        scheduler: TrialScheduler,
+        scheduler: LegacyTrialScheduler,
         resource_attr: str,
         running_average: bool = True,
         metric: Optional[str] = None,
         grace_time: Optional[int] = 1,
         grace_population: int = 5,
         rank_cutoff: float = 0.5,
-        random_seed: int = None,
-        do_minimize: Optional[bool] = True,
     ):
-        super(MedianStoppingRule, self).__init__(random_seed=random_seed)
+        super(LegacyMedianStoppingRule, self).__init__(config_space=scheduler.config_space)
         if metric is None and hasattr(scheduler, "metric"):
             metric = getattr(scheduler, "metric")
         self.metric = metric
@@ -74,20 +69,17 @@ class MedianStoppingRule(TrialScheduler):
         self.grace_time = grace_time
         self.min_samples_required = grace_population
         self.running_average = running_average
-
-        self.metric_multiplier = 1 if do_minimize else -1
-
-
         if running_average:
             self.trial_to_results = defaultdict(list)
+        self.mode = scheduler.metric_mode()
 
-
-    def suggest(self) -> Optional[TrialSuggestion]:
-        return self.scheduler.suggest()
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        return self.scheduler._suggest(trial_id=trial_id)
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
-        new_metric = result[self.metric] * self.metric_multiplier
-
+        new_metric = result[self.metric]
+        if self.mode == "max":
+            new_metric *= -1
         time_step = result[self.resource_attr]
 
         if self.running_average:
@@ -129,12 +121,8 @@ class MedianStoppingRule(TrialScheduler):
             return True
         return False
 
-    
-    def metadata(self) -> Dict[str, Any]:
-        """
-        :return: Metadata for the scheduler
-        """
-        metadata = super().metadata()
-        metadata_scheduler = self.scheduler.metadata()
+    def metric_names(self) -> List[str]:
+        return self.scheduler.metric_names()
 
-        return metadata_scheduler | metadata
+    def metric_mode(self) -> str:
+        return self.scheduler.metric_mode()

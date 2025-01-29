@@ -18,6 +18,7 @@ from syne_tune.optimizer.schedulers.single_objective_scheduler import (
 )
 
 from syne_tune.config_space import randint, uniform, choice
+from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 
 config_space = {
     "steps": 100,
@@ -99,6 +100,13 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
+    ),
+    MedianStoppingRule(
+        scheduler=SingleObjectiveScheduler(
+            config_space, searcher="random_search", metric=metric1,
+        ),
+        resource_attr=resource_attr,
+        metric=metric1,
     ),
 ]
 
