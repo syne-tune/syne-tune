@@ -58,7 +58,9 @@ class LegacyMedianStoppingRule(LegacyTrialScheduler):
         grace_population: int = 5,
         rank_cutoff: float = 0.5,
     ):
-        super(LegacyMedianStoppingRule, self).__init__(config_space=scheduler.config_space)
+        super(LegacyMedianStoppingRule, self).__init__(
+            config_space=scheduler.config_space
+        )
         if metric is None and hasattr(scheduler, "metric"):
             metric = getattr(scheduler, "metric")
         self.metric = metric
