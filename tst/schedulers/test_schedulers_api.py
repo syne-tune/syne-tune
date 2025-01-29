@@ -103,7 +103,9 @@ list_schedulers_to_test = [
     ),
     MedianStoppingRule(
         scheduler=SingleObjectiveScheduler(
-            config_space, searcher="random_search", metric=metric1,
+            config_space,
+            searcher="random_search",
+            metric=metric1,
         ),
         resource_attr=resource_attr,
         metric=metric1,
