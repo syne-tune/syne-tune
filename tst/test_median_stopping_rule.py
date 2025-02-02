@@ -34,13 +34,13 @@ def make_trial(trial_id: int):
 def test_median_stopping_rule():
     random_seed = 42
     scheduler = MedianStoppingRule(
-        scheduler = SingleObjectiveScheduler(
+        scheduler=SingleObjectiveScheduler(
             config_space,
             searcher="random_search",
             metric=metric,
         ),
-        resource_attr = 'step',
-        metric = metric,
+        resource_attr="step",
+        metric=metric,
         random_seed=random_seed,
         grace_population=1,
     )
