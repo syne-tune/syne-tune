@@ -2,11 +2,18 @@ from typing import Dict, Optional, Any, List
 import logging
 
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import BoTorchSearcher
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import SurrogateSearcher
+from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+    BoTorchSearcher,
+)
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+    SurrogateSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.bore import Bore, MultiFidelityBore
-from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator, MultiFidelityKernelDensityEstimator
+from syne_tune.optimizer.schedulers.searchers.kde import (
+    KernelDensityEstimator,
+    MultiFidelityKernelDensityEstimator,
+)
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
@@ -47,7 +54,7 @@ class RandomSearch(SingleFidelityScheduler):
             searcher=RandomSearcher(
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
-                random_seed=random_seed
+                random_seed=random_seed,
             ),
             random_seed=random_seed,
         )
@@ -80,7 +87,7 @@ class BORE(SingleObjectiveScheduler):
             searcher=Bore(
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
-                random_seed=random_seed
+                random_seed=random_seed,
             ),
             random_seed=random_seed,
         )
@@ -131,7 +138,6 @@ class TPE(SingleObjectiveScheduler):
         )
 
 
-
 class REA(SingleObjectiveScheduler):
     """Random search.
 
@@ -145,14 +151,14 @@ class REA(SingleObjectiveScheduler):
     """
 
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            population_size: int = 100,
-            sample_size: int = 10,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        population_size: int = 100,
+        sample_size: int = 10,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(REA, self).__init__(
             config_space=config_space,
@@ -163,7 +169,7 @@ class REA(SingleObjectiveScheduler):
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
                 population_size=population_size,
-                sample_size=sample_size
+                sample_size=sample_size,
             ),
             random_seed=random_seed,
         )
@@ -182,12 +188,12 @@ class BOTorch(SingleObjectiveScheduler):
     """
 
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(BOTorch, self).__init__(
             config_space=config_space,
@@ -201,6 +207,7 @@ class BOTorch(SingleObjectiveScheduler):
             random_seed=random_seed,
         )
 
+
 class ASHA(AsynchronousSuccessiveHalving):
     """Random search.
 
@@ -212,15 +219,16 @@ class ASHA(AsynchronousSuccessiveHalving):
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
+
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            time_attr: str,
-            max_t: int,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        time_attr: str,
+        max_t: int,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(ASHA, self).__init__(
             config_space=config_space,
@@ -235,8 +243,8 @@ class ASHA(AsynchronousSuccessiveHalving):
             random_seed=random_seed,
             time_attr=time_attr,
         )
-        
-        
+
+
 class ASHABORE(AsynchronousSuccessiveHalving):
     """Random search.
 
@@ -248,15 +256,16 @@ class ASHABORE(AsynchronousSuccessiveHalving):
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
+
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            time_attr: str,
-            max_t: int,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        time_attr: str,
+        max_t: int,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(ASHABORE, self).__init__(
             config_space=config_space,
@@ -266,9 +275,10 @@ class ASHABORE(AsynchronousSuccessiveHalving):
             searcher="bore",
             random_seed=random_seed,
             time_attr=time_attr,
-            searcher_kwargs={"points_to_evaluate": points_to_evaluate}
+            searcher_kwargs={"points_to_evaluate": points_to_evaluate},
         )
-        
+
+
 class ASHACQR(AsynchronousSuccessiveHalving):
     """Random search.
 
@@ -280,15 +290,16 @@ class ASHACQR(AsynchronousSuccessiveHalving):
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
+
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            time_attr: str,
-            max_t: int,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        time_attr: str,
+        max_t: int,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(ASHACQR, self).__init__(
             config_space=config_space,
@@ -298,9 +309,10 @@ class ASHACQR(AsynchronousSuccessiveHalving):
             searcher="cqr",
             random_seed=random_seed,
             time_attr=time_attr,
-            searcher_kwargs={"points_to_evaluate": points_to_evaluate}
+            searcher_kwargs={"points_to_evaluate": points_to_evaluate},
         )
-        
+
+
 class BOHB(AsynchronousSuccessiveHalving):
     """Random search.
 
@@ -312,21 +324,22 @@ class BOHB(AsynchronousSuccessiveHalving):
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
+
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            time_attr: str,
-            max_t: int,
-            do_minimize: Optional[bool] = True,
-            random_seed: Optional[int] = None,
-            num_min_data_points: Optional[int] = None,
-            top_n_percent: int = 15,
-            min_bandwidth: float = 1e-3,
-            num_candidates: int = 64,
-            bandwidth_factor: int = 3,
-            random_fraction: float = 0.33,
-            points_to_evaluate: Optional[List[dict]] = None,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        time_attr: str,
+        max_t: int,
+        do_minimize: Optional[bool] = True,
+        random_seed: Optional[int] = None,
+        num_min_data_points: Optional[int] = None,
+        top_n_percent: int = 15,
+        min_bandwidth: float = 1e-3,
+        num_candidates: int = 64,
+        bandwidth_factor: int = 3,
+        random_fraction: float = 0.33,
+        points_to_evaluate: Optional[List[dict]] = None,
     ):
         super(BOHB, self).__init__(
             config_space=config_space,
@@ -347,6 +360,7 @@ class BOHB(AsynchronousSuccessiveHalving):
             random_seed=random_seed,
             time_attr=time_attr,
         )
+
 
 class CQR(SingleObjectiveScheduler):
     """Random search.
@@ -375,10 +389,11 @@ class CQR(SingleObjectiveScheduler):
             searcher=SurrogateSearcher(
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
-                random_seed=random_seed
+                random_seed=random_seed,
             ),
             random_seed=random_seed,
         )
+
 
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
@@ -387,5 +402,5 @@ baselines_dict = {
     "BORE": BORE,
     "TPE": TPE,
     "REA": REA,
-    "BOTorch": BOTorch
+    "BOTorch": BOTorch,
 }
