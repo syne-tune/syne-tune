@@ -91,15 +91,14 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         self.pending_trials = set()
         self.trial_observations = dict()
         self._hp_ranges = make_hyperparameter_ranges(config_space)
-        
+
         # Set the random seed for botorch as well
         random.manual_seed(self.random_seed)
         self.random_state = np.random.RandomState(self.random_seed)
 
-    def on_trial_complete(self,
-                          trial_id: int,
-                          config: Dict[str, Any],
-                          metrics: List[float]):
+    def on_trial_complete(
+        self, trial_id: int, config: Dict[str, Any], metrics: List[float]
+    ):
 
         self.trial_observations[trial_id] = metrics
 
@@ -200,9 +199,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
 
             ref_point = torch.ones(Y.shape[1]) * 2
 
-            partitioning = NondominatedPartitioning(
-                ref_point=ref_point, Y=Y_tensor
-            )
+            partitioning = NondominatedPartitioning(ref_point=ref_point, Y=Y_tensor)
             acq_func = qExpectedHypervolumeImprovement(
                 model=gp,
                 ref_point=ref_point,  # use known reference point
