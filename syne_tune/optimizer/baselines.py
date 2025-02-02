@@ -1265,8 +1265,8 @@ except ImportError as e:
     logging.debug(e)
 
 try:
-    from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
-        ExpectedHyperVolumeImprovement,
+    from syne_tune.optimizer.schedulers.multiobjective.legacy_expected_hyper_volume_improvement import (
+        LegacyExpectedHyperVolumeImprovement,
     )
 
     class EHVI(FIFOScheduler):
@@ -1307,7 +1307,7 @@ try:
                 config_space=config_space,
                 metric=metric,
                 mode=mode,
-                searcher=ExpectedHyperVolumeImprovement(**searcher_kwargs),
+                searcher=LegacyExpectedHyperVolumeImprovement(**searcher_kwargs),
                 random_seed=random_seed,
                 **kwargs,
             )

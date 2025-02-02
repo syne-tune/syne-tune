@@ -25,10 +25,8 @@ try:
 except ImportError as e:
     logging.debug(e)
 
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-
-from syne_tune.optimizer.schedulers.searchers.utils import (
-    make_hyperparameter_ranges,
+from syne_tune.optimizer.schedulers.searchers import (
+    StochasticAndFilterDuplicatesSearcher,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +36,7 @@ NOISE_LEVEL = 1e-3
 MC_SAMPLES = 128
 
 
-class ExpectedHyperVolumeImprovement(BaseSearcher):
+class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
     """
     Implementation of expected hypervolume improvement [1] based on the BOTorch implementation.
 
@@ -69,17 +67,28 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     def __init__(
         self,
         config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str],
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: bool = False,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         num_init_random: int = 3,
         no_fantasizing: bool = False,
         max_num_observations: Optional[int] = 200,
         input_warping: bool = True,
-        random_seed: int = None,
+        **kwargs,
     ):
-        super(ExpectedHyperVolumeImprovement, self).__init__(
+        if isinstance(mode, str):
+            mode = [mode] * len(metric)
+
+        super(LegacyExpectedHyperVolumeImprovement, self).__init__(
             config_space,
+            metric=metric,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed,
+            allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
+            mode=mode,
+            **kwargs,
         )
         assert num_init_random >= 2
 
@@ -90,27 +99,36 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         self.trial_configs = dict()
         self.pending_trials = set()
         self.trial_observations = dict()
-        self._hp_ranges = make_hyperparameter_ranges(config_space)
-        
+        self.ref_point = torch.ones(len(metric)) * 2
+
         # Set the random seed for botorch as well
-        random.manual_seed(self.random_seed)
-        self.random_state = np.random.RandomState(self.random_seed)
+        if "random_seed" in kwargs:
+            random.manual_seed(kwargs["random_seed"])
 
-    def on_trial_complete(self,
-                          trial_id: int,
-                          config: Dict[str, Any],
-                          metrics: List[float]):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+        trial_id = int(trial_id)
 
-        self.trial_observations[trial_id] = metrics
+        observations = []
+        for mode, metric in zip(self._mode, self._metric):
+            value = result[metric]
+            if mode == "max":
+                value *= -1
+            observations.append(value)
+
+        self.trial_observations[trial_id] = observations
 
         if trial_id in self.pending_trials:
             self.pending_trials.remove(trial_id)
 
+    def clone_from_state(self, state: Dict[str, Any]):
+        raise NotImplementedError
+
     def num_suggestions(self):
         return len(self.trial_configs)
 
-    def suggest(self, **kwargs) -> Optional[dict]:
-        config_suggested = self._next_points_to_evaluate()
+    def _get_config(self, trial_id: str, **kwargs) -> Optional[dict]:
+        trial_id = int(trial_id)
+        config_suggested = self._next_initial_config()
 
         if config_suggested is None:
             if self.objectives().shape[0] < self.num_minimum_observations:
@@ -119,8 +137,6 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
                 config_suggested = self._sample_next_candidate()
 
         if config_suggested is not None:
-            trial_id = len(self.trial_configs)
-
             self.trial_configs[trial_id] = config_suggested
 
         return config_suggested
@@ -131,9 +147,11 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         config: Optional[dict] = None,
         milestone: Optional[int] = None,
     ):
+        super().register_pending(trial_id, config, milestone)
         self.pending_trials.add(int(trial_id))
 
     def evaluation_failed(self, trial_id: str):
+        super().evaluation_failed(trial_id)
         self.cleanup_pending(trial_id)
 
     def cleanup_pending(self, trial_id: str):
@@ -144,17 +162,21 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     def dataset_size(self):
         return len(self.trial_observations)
 
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
+
+        assert isinstance(
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
+        super().configure_scheduler(scheduler)
+
     def _get_gp_bounds(self):
         return Tensor(self._hp_ranges.get_ndarray_bounds()).T
 
     def _config_from_ndarray(self, candidate) -> dict:
         return self._hp_ranges.from_ndarray(candidate)
-
-    def _get_random_config(self):
-        return {
-            k: v.sample() if hasattr(v, "sample") else v
-            for k, v in self.config_space.items()
-        }
 
     def _sample_next_candidate(self) -> Optional[dict]:
         """
@@ -166,8 +188,9 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         try:
             X = np.array(self._config_to_feature_matrix(self._configs_with_results()))
             Y = Tensor(self.objectives())
-            # BoTorch only supports maximization
-            Y *= -1
+            if self._mode == "min":
+                # BoTorch only supports maximization
+                Y *= -1
 
             if (
                 self.max_num_observations is not None
@@ -198,38 +221,47 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
                 X_pending = None
             sampler = SobolQMCNormalSampler(torch.Size([MC_SAMPLES]))
 
-            ref_point = torch.ones(Y.shape[1]) * 2
-
             partitioning = NondominatedPartitioning(
-                ref_point=ref_point, Y=Y_tensor
+                ref_point=self.ref_point, Y=Y_tensor
             )
             acq_func = qExpectedHypervolumeImprovement(
                 model=gp,
-                ref_point=ref_point,  # use known reference point
+                ref_point=self.ref_point,  # use known reference point
                 partitioning=partitioning,
                 sampler=sampler,
             )
 
-            candidate, acq_value = optimize_acqf(
-                acq_func,
-                bounds=self._get_gp_bounds(),
-                q=1,
-                num_restarts=3,
-                raw_samples=100,
+            config = None
+            if self._restrict_configurations is None:
+                # Continuous optimization of acquisition function only if
+                # ``restrict_configurations`` not used
+                candidate, acq_value = optimize_acqf(
+                    acq_func,
+                    bounds=self._get_gp_bounds(),
+                    q=1,
+                    num_restarts=3,
+                    raw_samples=100,
+                )
+                candidate = candidate.detach().numpy()[0]
+                config = self._config_from_ndarray(candidate)
+                if self.should_not_suggest(config):
+                    logger.warning(
+                        "Optimization of the acquisition function yielded a config that was already seen."
+                    )
+                    config = None
+            return (
+                self._sample_and_pick_acq_best(acq_func) if config is None else config
             )
-            candidate = candidate.detach().numpy()[0]
-            return self._config_from_ndarray(candidate)
-
         except NotPSDError as _:
             logging.warning("Chlolesky inversion failed, sampling randomly.")
             return self._get_random_config()
         except ModelFittingError as _:
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
-        except:
-            # BoTorch can raise different errors, easier to not try to catch them individually
-            logging.warning("Botorch was unable to fit the model, sampling randomly.")
-            return self._get_random_config()
+        # except:
+        #     # BoTorch can raise different errors, easier to not try to catch them individually
+        #     logging.warning("Botorch was unable to fit the model, sampling randomly.")
+        #     return self._get_random_config()
 
     def _make_gp(self, X_tensor, Y_tensor):
         double_precision = False
@@ -251,6 +283,24 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     def objectives(self):
         return np.array(list(self.trial_observations.values()))
 
+    def _sample_and_pick_acq_best(self, acq, num_samples: int = 100) -> Optional[dict]:
+        """
+        :param acq:
+        :param num_samples:
+        :return: Samples ``num_samples`` candidates and return the one maximizing
+            the acquisitition function ``acq`` that was not seen earlier, if all
+            samples were seen, return a random sample instead.
+        """
+        configs_candidates = [self._get_random_config() for _ in range(num_samples)]
+        configs_candidates = [x for x in configs_candidates if x is not None]
+        logger.debug(f"Sampling among {len(configs_candidates)} unseen configs")
+        if configs_candidates:
+            X_tensor = self._config_to_feature_matrix(configs_candidates)
+            ei = acq(X_tensor.unsqueeze(dim=-2))
+            return configs_candidates[ei.argmax()]
+        else:
+            return self._get_random_config()
+
     def _configs_with_results(self) -> List[dict]:
         return [
             config
@@ -264,3 +314,9 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
             for trial, config in self.trial_configs.items()
             if trial in self.pending_trials
         ]
+
+    def metric_names(self) -> List[str]:
+        return [self._metric]
+
+    def metric_mode(self) -> str:
+        return self._mode
