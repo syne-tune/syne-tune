@@ -16,7 +16,7 @@ from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-
+from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 
@@ -106,9 +106,18 @@ list_schedulers_to_test = [
             config_space,
             searcher="random_search",
             metric=metric1,
+            random_seed=random_seed,
         ),
         resource_attr=resource_attr,
         metric=metric1,
+        random_seed=random_seed
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="random_search",
+        time_attr=resource_attr,
     ),
 ]
 

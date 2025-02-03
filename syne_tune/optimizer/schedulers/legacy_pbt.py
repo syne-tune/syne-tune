@@ -9,13 +9,16 @@ from typing import Callable, List, Optional, Tuple, Dict, Any
 
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import (
-    SchedulerDecision,
-    TrialSuggestion,
-    TrialScheduler,
+from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.config_space import cast_config_values
+from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
+    check_and_merge_defaults,
+    Integer as DA_Integer,
+    filter_by_key,
+    String as DA_String,
+    Float as DA_Float,
 )
-from syne_tune.config_space import cast_config_values, postprocess_config
-from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,32 @@ class PBTTrialState:
     stopped: bool = False
 
 
-class PopulationBasedTraining(TrialScheduler):
+_ARGUMENT_KEYS = {
+    "resource_attr",
+    "population_size",
+    "perturbation_interval",
+    "quantile_fraction",
+    "resample_probability",
+}
+
+_DEFAULT_OPTIONS = {
+    "resource_attr": "time_total_s",
+    "population_size": 4,
+    "perturbation_interval": 60.0,
+    "quantile_fraction": 0.25,
+    "resample_probability": 0.25,
+}
+
+_CONSTRAINTS = {
+    "resource_attr": DA_String(),
+    "population_size": DA_Integer(1, None),
+    "perturbation_interval": DA_Float(0.01, None),
+    "quantile_fraction": DA_Float(0.0, 0.5),
+    "resample_probability": DA_Float(0.0, 1.0),
+}
+
+
+class LegacyPopulationBasedTraining(FIFOScheduler):
     """
     Implements the Population Based Training (PBT) algorithm. This is an adapted
     version of the Ray Tune implementation:
@@ -96,51 +124,49 @@ class PopulationBasedTraining(TrialScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
-        resource_attr: str,
-        max_t: int = 100,
         custom_explore_fn: Optional[Callable[[dict], dict]] = None,
-        do_minimize: Optional[bool] = True,
-        random_seed: int = None,
-        population_size: int = 4,
-        perturbation_interval: int = 60,
-        quantile_fraction: float = 0.25,
-        resample_probability: float = 0.25,
-        searcher_kwargs: dict = None,
+        **kwargs,
     ):
-        super().__init__(random_seed=random_seed)
-
         # The current implementation only supports a random searcher
-        self.metric = metric
-        self.config_space = config_space
-
-        if searcher_kwargs is None:
-            self.searcher_kwargs = dict()
-        else:
-            self.searcher_kwargs = searcher_kwargs
-
-        self.searcher = RandomSearcher(
-            config_space=config_space,
-            random_seed=self.random_seed,
-            points_to_evaluate=self.searcher_kwargs.get("points_to_evaluate"),
+        searcher = kwargs.get("searcher")
+        if searcher is not None:
+            assert (
+                isinstance(searcher, str) and searcher == "random"
+            ), "PopulationBasedTraining only supports searcher='random' for now"
+        kwargs = check_and_merge_defaults(
+            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
-        self.resource_attr = resource_attr
-        self.population_size = population_size
-        self.perturbation_interval = perturbation_interval
-        self.quantile_fraction = quantile_fraction
-        self.resample_probability = resample_probability
-        self.custom_explore_fn = custom_explore_fn
-        self.max_t = max_t
-        self.metric_op = -1.0 if do_minimize else 1.0  # PBT assumes that we maximize
-        self.trial_state = dict()
-        self.next_perturbation_sync = self.perturbation_interval
-        self.trial_decisions_stack = deque()
-        self.num_checkpoints = 0
-        self.num_perturbations = 0
-        self.random_state = np.random.RandomState(self.random_seed)
+        self._resource_attr = kwargs["resource_attr"]
+        self._population_size = kwargs["population_size"]
+        self._perturbation_interval = kwargs["perturbation_interval"]
+        self._quantile_fraction = kwargs["quantile_fraction"]
+        self._resample_probability = kwargs["resample_probability"]
+        self._custom_explore_fn = custom_explore_fn
+        search_options = kwargs.get("search_options")
+        if search_options is not None:
+            k = "restrict_configurations"
+            if search_options.get(k) is not None:
+                logger.warning(f"{k} is not supported")
+                del search_options[k]
+        # Superclass constructor
+        super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
+        assert self.max_t is not None, (
+            "Either max_t must be specified, or it has to be specified as "
+            + "config_space['epochs'], config_space['max_t'], "
+            + "config_space['max_epochs']"
+        )
+
+        self._metric_op = 1.0 if self.mode == "max" else -1.0
+        self._trial_state = dict()
+        self._next_perturbation_sync = self._perturbation_interval
+        self._trial_decisions_stack = deque()
+        self._checkpointing_history = []
+        self._num_checkpoints = 0
+        self._num_perturbations = 0
+        self._random_state = np.random.RandomState(self.random_seed_generator())
 
     def on_trial_add(self, trial: Trial):
-        self.trial_state[trial.trial_id] = PBTTrialState(trial=trial)
+        self._trial_state[trial.trial_id] = PBTTrialState(trial=trial)
 
     def _get_trial_id_to_continue(self, trial: Trial) -> int:
         """Determine which trial to continue.
@@ -156,7 +182,7 @@ class PopulationBasedTraining(TrialScheduler):
         trial_id = trial.trial_id
         if trial_id in lower_quantile:
             # sample random trial from upper quantile
-            trial_id_to_clone = int(self.random_state.choice(upper_quantile))
+            trial_id_to_clone = int(self._random_state.choice(upper_quantile))
             assert trial_id != trial_id_to_clone
             logger.debug(
                 f"Trial {trial_id} is in lower quantile, replaced by {trial_id_to_clone}"
@@ -167,7 +193,7 @@ class PopulationBasedTraining(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         for name, value in [
-            ("resource_attr", self.resource_attr),
+            ("resource_attr", self._resource_attr),
             ("metric", self.metric),
         ]:
             if value not in result:
@@ -178,8 +204,8 @@ class PopulationBasedTraining(TrialScheduler):
                 raise RuntimeError(err_msg)
 
         trial_id = trial.trial_id
-        cost = result[self.resource_attr]
-        state = self.trial_state[trial_id]
+        cost = result[self._resource_attr]
+        state = self._trial_state[trial_id]
 
         # Stop if we reached the maximum budget of this configuration
         if cost >= self.max_t:
@@ -187,7 +213,7 @@ class PopulationBasedTraining(TrialScheduler):
             return SchedulerDecision.STOP
 
         # Continue training if perturbation interval has not been reached yet.
-        if cost - state.last_perturbation_time < self.perturbation_interval:
+        if cost - state.last_perturbation_time < self._perturbation_interval:
             return SchedulerDecision.CONTINUE
 
         self._save_trial_state(state, cost, result)
@@ -195,6 +221,11 @@ class PopulationBasedTraining(TrialScheduler):
         state.last_perturbation_time = cost
 
         trial_id_to_continue = self._get_trial_id_to_continue(trial)
+
+        # bookkeeping for debugging reasons
+        self._checkpointing_history.append(
+            (trial_id, trial_id_to_continue, self._elapsed_time())
+        )
 
         if trial_id_to_continue == trial_id:
             # continue current trial
@@ -206,11 +237,11 @@ class PopulationBasedTraining(TrialScheduler):
             # its checkpoint can be removed
             state.stopped = True
             # exploit step
-            trial_to_clone = self.trial_state[trial_id_to_continue].trial
+            trial_to_clone = self._trial_state[trial_id_to_continue].trial
 
             # explore step
             config = self._explore(trial_to_clone.config)
-            self.trial_decisions_stack.append((trial_id_to_continue, config))
+            self._trial_decisions_stack.append((trial_id_to_continue, config))
             return SchedulerDecision.STOP
 
     def _save_trial_state(
@@ -226,7 +257,7 @@ class PopulationBasedTraining(TrialScheduler):
 
         # This trial has reached its perturbation interval.
         # Record new state in the state object.
-        score = self.metric_op * result[self.metric]
+        score = self._metric_op * result[self.metric]
         state.last_score = score
         state.last_train_time = time
         state.last_result = result
@@ -240,33 +271,36 @@ class PopulationBasedTraining(TrialScheduler):
         :return ``(lower_quantile, upper_quantile)``
         """
         trials = []
-        for trial, state in self.trial_state.items():
+        for trial, state in self._trial_state.items():
             if not state.stopped and state.last_score is not None:
                 trials.append(trial)
 
-        trials.sort(key=lambda t: self.trial_state[t].last_score)
+        trials.sort(key=lambda t: self._trial_state[t].last_score)
 
         if len(trials) <= 1:
             return [], []
         else:
             num_trials_in_quantile = int(
-                math.ceil(len(trials) * self.quantile_fraction)
+                math.ceil(len(trials) * self._quantile_fraction)
             )
             if num_trials_in_quantile > len(trials) / 2:
                 num_trials_in_quantile = int(math.floor(len(trials) / 2))
             return trials[:num_trials_in_quantile], trials[-num_trials_in_quantile:]
 
-    def suggest(self) -> Optional[TrialSuggestion]:
-        if len(self.trial_decisions_stack) == 0:
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        # If no time keeper was provided at construction, we use a local
+        # one which is started here
+        if len(self._trial_decisions_stack) == 0:
             # If our stack is empty, we simply start a new random configuration.
-            config = self.searcher.suggest()
-            config = cast_config_values(config, self.config_space)
-            return TrialSuggestion.start_suggestion(
-                postprocess_config(config, self.config_space)
-            )
+            return super()._suggest(trial_id)
         else:
-            trial_id_to_continue, config = self.trial_decisions_stack.pop()
-            config = cast_config_values(config=config, config_space=self.config_space)
+            assert self.time_keeper is not None  # Sanity check
+            trial_id_to_continue, config = self._trial_decisions_stack.pop()
+            config["elapsed_time"] = self._elapsed_time()
+            config = cast_config_values(
+                config=config, config_space=self.searcher.config_space
+            )
+            config["trial_id"] = trial_id
             return TrialSuggestion.start_suggestion(
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
@@ -280,10 +314,10 @@ class PopulationBasedTraining(TrialScheduler):
 
         new_config = copy.deepcopy(config)
 
-        self.num_perturbations += 1
+        self._num_perturbations += 1
 
-        if self.custom_explore_fn:
-            new_config = self.custom_explore_fn(new_config)
+        if self._custom_explore_fn:
+            new_config = self._custom_explore_fn(new_config)
             assert (
                 new_config is not None
             ), "Custom explore fn failed to return new config"
@@ -300,12 +334,12 @@ class PopulationBasedTraining(TrialScheduler):
                 )
                 if (
                     not is_numerical
-                ) or self.random_state.rand() < self.resample_probability:
+                ) or self._random_state.rand() < self._resample_probability:
                     new_config[key] = hp_range.sample(
-                        size=1, random_state=self.random_state
+                        size=1, random_state=self._random_state
                     )
                 else:
-                    multiplier = 1.2 if self.random_state.rand() > 0.5 else 0.8
+                    multiplier = 1.2 if self._random_state.rand() > 0.5 else 0.8
                     new_config[key] = hp_range.cast(
                         np.clip(
                             config[key] * multiplier, hp_range.lower, hp_range.upper

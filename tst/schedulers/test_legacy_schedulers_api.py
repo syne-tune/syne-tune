@@ -49,9 +49,9 @@ from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
     LegacyMedianStoppingRule,
     HyperbandScheduler,
-    PopulationBasedTraining,
     RayTuneScheduler,
 )
+from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
@@ -186,7 +186,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    PopulationBasedTraining(
+    LegacyPopulationBasedTraining(
         config_space=config_space,
         metric=metric1,
         resource_attr=resource_attr,
