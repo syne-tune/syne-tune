@@ -77,8 +77,10 @@ class SingleFidelityScheduler(TrialScheduler):
             self.searcher = searcher
 
         if isinstance(self.searcher, SingleObjectiveBaseSearcher):
-            assert len(metrics) == 1, logging.error(f"Searcher {self.searcher} "
-                                                    f"only support single metric optimization but number of metrics is {len(metrics)}")
+            assert len(metrics) == 1, logging.error(
+                f"Searcher {self.searcher} "
+                f"only support single metric optimization but number of metrics is {len(metrics)}"
+            )
 
     def suggest(self) -> Optional[TrialSuggestion]:
 
