@@ -76,6 +76,10 @@ class SingleFidelityScheduler(TrialScheduler):
         else:
             self.searcher = searcher
 
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            assert len(metrics) == 1, logging.error(f"Searcher {self.searcher} "
+                                                    f"only support single metric optimization but number of metrics is {len(metrics)}")
+
     def suggest(self) -> Optional[TrialSuggestion]:
 
         config = self.searcher.suggest()
@@ -103,14 +107,14 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [
+        metrics = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
 
         if isinstance(self.searcher, SingleObjectiveBaseSearcher):
-            self.searcher.on_trial_result(trial.trial_id, config, metric[0])
+            self.searcher.on_trial_result(trial.trial_id, config, metrics[0])
         else:
-            self.searcher.on_trial_result(trial.trial_id, config, metric)
+            self.searcher.on_trial_result(trial.trial_id, config, metrics)
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
@@ -124,14 +128,14 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [
+        metrics = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
 
         if isinstance(self.searcher, SingleObjectiveBaseSearcher):
-            self.searcher.on_trial_complete(trial.trial_id, config, metric[0])
+            self.searcher.on_trial_complete(trial.trial_id, config, metrics[0])
         else:
-            self.searcher.on_trial_complete(trial.trial_id, config, metric)
+            self.searcher.on_trial_complete(trial.trial_id, config, metrics)
 
     def metadata(self) -> Dict[str, Any]:
         """
