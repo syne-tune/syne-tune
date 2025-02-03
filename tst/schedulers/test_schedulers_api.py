@@ -110,7 +110,7 @@ list_schedulers_to_test = [
         ),
         resource_attr=resource_attr,
         metric=metric1,
-        random_seed=random_seed
+        random_seed=random_seed,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
