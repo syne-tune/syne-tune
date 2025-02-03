@@ -1,8 +1,4 @@
 from datetime import datetime
-from functools import partial
-
-import pytest
-import numpy as np
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
