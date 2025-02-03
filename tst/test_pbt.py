@@ -22,7 +22,6 @@ pbt = PopulationBasedTraining(
     metric=metric,
     resource_attr=resource_attr,
     population_size=population_size,
-    mode="min",
     max_t=total_steps,
     perturbation_interval=1,
     random_seed=random_seed,
@@ -55,7 +54,7 @@ def test_ptb():
 
     state = {}
     for i in range(total_steps):
-        suggest = pbt.suggest(i)
+        suggest = pbt.suggest()
 
         if i < population_size:
             # first configs should be random
@@ -96,5 +95,5 @@ def test_ptb():
     assert s == "STOP"
 
     # we should now continue with config 10
-    suggest = pbt.suggest(total_steps)
+    suggest = pbt.suggest()
     assert suggest.checkpoint_trial_id == 10
