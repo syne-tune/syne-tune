@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, Any
 
 import numpy as np
 
@@ -10,8 +10,6 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.util import dump_json_with_numpy
 
 
 logger = logging.getLogger(__name__)
