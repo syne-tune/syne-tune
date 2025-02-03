@@ -7,7 +7,9 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
 from syne_tune.optimizer.baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
+from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (
+    LegacyMedianStoppingRule,
+)
 from syne_tune.optimizer.schedulers.transfer_learning import RUSHScheduler
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
@@ -79,7 +81,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         **_max_resource_attr_or_max_t(method_arguments),
     ),
-    Methods.MSR: lambda method_arguments: MedianStoppingRule(
+    Methods.MSR: lambda method_arguments: LegacyMedianStoppingRule(
         scheduler=FIFOScheduler(
             config_space=method_arguments.config_space,
             searcher="random",

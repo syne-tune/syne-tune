@@ -47,7 +47,7 @@ from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searche
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
-    MedianStoppingRule,
+    LegacyMedianStoppingRule,
     HyperbandScheduler,
     RayTuneScheduler,
 )
@@ -296,7 +296,7 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         mode=mode,
     ),
-    MedianStoppingRule(
+    LegacyMedianStoppingRule(
         scheduler=FIFOScheduler(
             config_space, searcher="random", metric=metric1, mode=mode
         ),
