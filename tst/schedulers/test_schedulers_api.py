@@ -64,14 +64,14 @@ list_schedulers_to_test = [
         random_seed=random_seed,
     ),
     SingleFidelityScheduler(
-            config_space,
-            searcher=RandomSearcher(
-                config_space=config_space,
-                random_seed=random_seed,
-            ),
-            metrics=[metric1, metric2],
-            do_minimize=False,
+        config_space,
+        searcher=RandomSearcher(
+            config_space=config_space,
             random_seed=random_seed,
+        ),
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
     ),
     SingleObjectiveScheduler(
         config_space,
