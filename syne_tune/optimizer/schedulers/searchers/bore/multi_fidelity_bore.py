@@ -29,35 +29,27 @@ class MultiFidelityBore(Bore):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`:
 
-    :param resource_attr: Name of resource attribute. Defaults to "epoch"
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
-        allow_duplicates: Optional[bool] = None,
-        mode: Optional[str] = None,
-        gamma: Optional[float] = None,
-        calibrate: Optional[bool] = None,
-        classifier: Optional[str] = None,
-        acq_optimizer: Optional[str] = None,
-        feval_acq: Optional[int] = None,
-        random_prob: Optional[float] = None,
-        init_random: Optional[int] = None,
+        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        random_seed: int = None,
+        gamma: Optional[float] = 0.25,
+        calibrate: Optional[bool] = False,
+        classifier: Optional[str] = "xgboost",
+        acq_optimizer: Optional[str] = "rs",
+        feval_acq: Optional[int] = 500,
+        random_prob: Optional[float] = 0.0,
+        init_random: Optional[int] = 6,
         classifier_kwargs: Optional[dict] = None,
-        resource_attr: str = "epoch",
-        **kwargs,
     ):
         if acq_optimizer is None:
             acq_optimizer = "rs_with_replacement"
         super().__init__(
             config_space,
-            metric=metric,
             points_to_evaluate=points_to_evaluate,
-            allow_duplicates=allow_duplicates,
-            mode=mode,
             gamma=gamma,
             calibrate=calibrate,
             classifier=classifier,
@@ -66,21 +58,9 @@ class MultiFidelityBore(Bore):
             random_prob=random_prob,
             init_random=init_random,
             classifier_kwargs=classifier_kwargs,
-            **kwargs,
+            random_seed=random_seed,
         )
-        self.resource_attr = resource_attr
         self.resource_levels = []
-
-    def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.multi_fidelity import (
-            MultiFidelitySchedulerMixin,
-        )
-
-        super().configure_scheduler(scheduler)
-        assert isinstance(
-            scheduler, MultiFidelitySchedulerMixin
-        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
-        self.resource_attr = scheduler.resource_attr
 
     def _train_model(self, train_data: np.ndarray, train_targets: np.ndarray) -> bool:
         # find the highest resource level we have at least one data points of the positive class
@@ -102,7 +82,13 @@ class MultiFidelityBore(Bore):
 
         return super()._train_model(train_data, train_targets)
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
-        super()._update(trial_id=trial_id, config=config, result=result)
-        resource_level = int(result[self.resource_attr])
+    def on_trial_result(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int = None,
+    ):
         self.resource_levels.append(resource_level)
+        self.inputs.append(self._hp_ranges.to_ndarray(config))
+        self.targets.append(metric)

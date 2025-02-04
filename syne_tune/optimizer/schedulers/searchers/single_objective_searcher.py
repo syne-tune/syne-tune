@@ -35,6 +35,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int = None,
     ):
         """Inform searcher about result
 
@@ -57,6 +58,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int = None,
     ):
         """Inform searcher about result
 
