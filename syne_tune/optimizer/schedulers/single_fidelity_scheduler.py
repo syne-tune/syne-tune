@@ -79,6 +79,8 @@ class SingleFidelityScheduler(TrialScheduler):
         if isinstance(self.searcher, SingleObjectiveBaseSearcher):
             assert len(self.metrics) == 1, (
                 f"Searcher {self.searcher} only support single metric optimization "
+                f"{issubclass(type(self.searcher), BaseSearcher)} "
+                f"{issubclass(type(self.searcher), SingleObjectiveBaseSearcher)} "
                 f"but number of metrics is {len(metrics)}"
             )
 
