@@ -62,13 +62,13 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
-#    SingleFidelityScheduler(
-#        config_space,
-#        searcher="random_search",
-#        metrics=[metric1, metric2],
-#        do_minimize=False,
-#        random_seed=random_seed,
-#    ),
+    #    SingleFidelityScheduler(
+    #        config_space,
+    #        searcher="random_search",
+    #        metrics=[metric1, metric2],
+    #        do_minimize=False,
+    #        random_seed=random_seed,
+    #    ),
     SingleObjectiveScheduler(
         config_space,
         searcher="botorch",
