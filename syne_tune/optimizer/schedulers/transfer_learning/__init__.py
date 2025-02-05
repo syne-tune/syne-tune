@@ -6,8 +6,8 @@ import pandas as pd
 
 __all__ = [
     "TransferLearningTaskEvaluations",
-    "TransferLearningMixin",
-    "BoundingBox",
+    "LegacyTransferLearningMixin",
+    "LegacyBoundingBox",
     "RUSHScheduler",
 ]
 
@@ -80,7 +80,7 @@ class TransferLearningTaskEvaluations:
         return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict("records")
 
 
-class TransferLearningMixin:
+class LegacyTransferLearningMixin:
     def __init__(
         self,
         config_space: Dict,
@@ -150,5 +150,5 @@ class TransferLearningMixin:
         return best_hps
 
 
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import LegacyBoundingBox
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler

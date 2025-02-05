@@ -9,13 +9,13 @@ from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
-    TransferLearningMixin,
+    LegacyTransferLearningMixin,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class ZeroShotTransfer(TransferLearningMixin, StochasticSearcher):
+class ZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata

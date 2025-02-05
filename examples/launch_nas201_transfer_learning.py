@@ -6,7 +6,7 @@ from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyBoundingBox,
 )
 from syne_tune import StoppingCriterion, Tuner
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         blackbox_name, test_task, metric
     )
 
-    scheduler = BoundingBox(
+    scheduler = LegacyBoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
             new_config_space,
             points_to_evaluate=[],

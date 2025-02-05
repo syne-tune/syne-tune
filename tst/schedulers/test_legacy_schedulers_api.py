@@ -64,7 +64,7 @@ from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyBoundingBox,
     RUSHScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
@@ -303,7 +303,7 @@ list_schedulers_to_test = [
         resource_attr=resource_attr,
         metric=metric1,
     ),
-    BoundingBox(
+    LegacyBoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
             new_config_space,
             points_to_evaluate=[],

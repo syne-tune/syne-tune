@@ -7,7 +7,7 @@ from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningMixin,
+    LegacyTransferLearningMixin,
     TransferLearningTaskEvaluations,
 )
 from syne_tune.config_space import (
@@ -20,7 +20,7 @@ from syne_tune.config_space import (
 logger = logging.getLogger(__name__)
 
 
-class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
+class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
     """
     Simple baseline that computes a bounding-box of the best candidate found in
     previous tasks to restrict the search space to only good candidates. The

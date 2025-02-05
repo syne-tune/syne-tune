@@ -11,7 +11,7 @@ from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (
     LegacyMedianStoppingRule,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import RUSHScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import LegacyBoundingBox
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
@@ -92,7 +92,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         running_average=False,
     ),
-    Methods.ASHA_BB: lambda method_arguments: BoundingBox(
+    Methods.ASHA_BB: lambda method_arguments: LegacyBoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: HyperbandScheduler(
             new_config_space,
             searcher="random",
