@@ -5,11 +5,15 @@ import pandas as pd
 
 from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import TransferLearningMixin
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import (
+    TransferLearningMixin,
+)
 from syne_tune.config_space import (
     Categorical,
     restrict_domain,
@@ -91,11 +95,7 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
         print(f"({config_space_size(config_space)} options)")
-        self.scheduler = scheduler_fun(config_space,
-                                       metric,
-                                       do_minimize,
-                                       random_seed
-                                       )
+        self.scheduler = scheduler_fun(config_space, metric, do_minimize, random_seed)
 
     def _compute_box(
         self,

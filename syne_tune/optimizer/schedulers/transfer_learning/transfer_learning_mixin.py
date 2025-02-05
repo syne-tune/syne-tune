@@ -1,8 +1,8 @@
 from typing import Any, Dict, List
 
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
-
-
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningTaskEvaluations,
+)
 
 
 class TransferLearningMixin:
@@ -20,7 +20,9 @@ class TransferLearningMixin:
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
         :param metric_names: name of the metric to be optimized.
         """
-        super().__init__(config_space=config_space, random_seed=random_seed, metric=metric)
+        super().__init__(
+            config_space=config_space, random_seed=random_seed, metric=metric
+        )
         self.metric = metric
         self._check_consistency(
             config_space=config_space,
