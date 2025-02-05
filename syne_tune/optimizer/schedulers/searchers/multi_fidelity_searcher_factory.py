@@ -1,6 +1,6 @@
 from typing import Dict, Any
 
-from syne_tune.optimizer.schedulers.searchers.bore import Bore, MultiFidelityBore
+from syne_tune.optimizer.schedulers.searchers.bore import MultiFidelityBore
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
     SurrogateSearcher,
 )
