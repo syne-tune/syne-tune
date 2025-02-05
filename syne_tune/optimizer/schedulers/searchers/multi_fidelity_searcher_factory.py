@@ -4,18 +4,11 @@ from syne_tune.optimizer.schedulers.searchers.bore import Bore, MultiFidelityBor
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
     SurrogateSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
-    BoTorchSearcher,
-)
 from syne_tune.optimizer.schedulers.searchers.kde import (
-    KernelDensityEstimator,
     MultiFidelityKernelDensityEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution,
-)
 
 multi_fidelity_searcher_cls_dict = {
     "random_search": RandomSearcher,
