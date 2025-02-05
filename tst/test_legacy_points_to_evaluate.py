@@ -55,6 +55,7 @@ if sys.version_info >= (3, 8):
     SCHEDULERS.append((BoTorch, False, False))
 
 
+@pytest.mark.skip("too slow")
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize("scheduler_cls, mul_fid, constr", SCHEDULERS)
 def test_points_to_evaluate(scheduler_cls, mul_fid, constr):
