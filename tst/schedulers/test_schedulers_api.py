@@ -171,7 +171,7 @@ list_schedulers_to_test = [
     BoundingBox(
         scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
             new_config_space,
-            searcher='random_search',
+            searcher="random_search",
             metric=metric,
             random_seed=random_seed,
             do_minimize=do_minimize,

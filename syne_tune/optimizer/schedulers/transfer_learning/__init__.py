@@ -150,5 +150,7 @@ class LegacyTransferLearningMixin:
         return best_hps
 
 
-from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import LegacyBoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import (
+    LegacyBoundingBox,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler

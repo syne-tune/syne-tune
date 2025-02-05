@@ -11,7 +11,9 @@ from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (
     LegacyMedianStoppingRule,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import RUSHScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import LegacyBoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import (
+    LegacyBoundingBox,
+)
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
