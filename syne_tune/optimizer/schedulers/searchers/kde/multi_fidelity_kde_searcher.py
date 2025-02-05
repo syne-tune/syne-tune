@@ -88,7 +88,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
-        resource_level: float,
+        resource_level: int = None,
     ):
         super().on_trial_result(trial_id=trial_id, config=config, metric=metric)
         resource_level = int(resource_level)
