@@ -91,7 +91,6 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
             transfer_learning_evaluations=transfer_learning_evaluations,
             mode=mode,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
-            metric=metric,
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
         print(f"({config_space_size(config_space)} options)")
@@ -103,7 +102,6 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: str,
         num_hyperparameters_per_task: int,
-        metric: str,
     ) -> Dict[str, Any]:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
