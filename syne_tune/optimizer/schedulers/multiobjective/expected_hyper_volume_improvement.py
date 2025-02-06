@@ -108,7 +108,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     def num_suggestions(self):
         return len(self.trial_configs)
 
-    def suggest(self, **kwargs) -> Optional[dict]:
+    def suggest(self) -> Optional[dict]:
         config_suggested = self._next_points_to_evaluate()
 
         if config_suggested is None:
