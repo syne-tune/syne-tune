@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune.optimizer.schedulers.transfer_learning import (
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.config_space import randint, uniform, choice
@@ -67,7 +67,7 @@ def test_bounding_box():
         config_space=config_space,
         transfer_learning_evaluations=data,
         num_hyperparameters_per_task=50,
-        mode="min",
+        do_minimize=True,
     )
 
     assert new_config_space["x"].lower >= 0

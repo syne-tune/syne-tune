@@ -8,7 +8,7 @@ from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
     LegacyTransferLearningMixin,
 )
 
@@ -46,7 +46,7 @@ class ZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
         use_surrogates: bool = False,
@@ -109,9 +109,9 @@ class ZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
     def _create_surrogate_transfer_learning_evaluations(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
-    ) -> Dict[str, TransferLearningTaskEvaluations]:
+    ) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
         """
         Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
         """
@@ -142,7 +142,7 @@ class ZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
             )
             surrogate_transfer_learning_evaluations[
                 task_name
-            ] = TransferLearningTaskEvaluations(
+            ] = LegacyTransferLearningTaskEvaluations(
                 configuration_space=config_space,
                 hyperparameters=hyperparameters_new,
                 objectives_names=[metric],

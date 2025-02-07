@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-from syne_tune.optimizer.schedulers.transfer_learning import (
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox

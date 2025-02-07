@@ -8,7 +8,7 @@ from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningMixin,
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.config_space import (
     Categorical,
@@ -69,7 +69,7 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
         scheduler_fun: Callable[[dict, str, str], LegacyTrialScheduler],
         config_space: Dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: Optional[str] = None,
         num_hyperparameters_per_task: int = 1,
     ):
@@ -97,7 +97,7 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
     def _compute_box(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str,
         num_hyperparameters_per_task: int,
         metric: str,

@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Any
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
     LegacyTransferLearningMixin,
 )
 
@@ -42,7 +42,7 @@ class RUSHScheduler(LegacyTransferLearningMixin, HyperbandScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
         type: str = "stopping",
         points_to_evaluate: Optional[List[dict]] = None,

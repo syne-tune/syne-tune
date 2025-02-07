@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.synchronous import (
     GeometricDifferentialEvolutionHyperbandScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 
@@ -1026,7 +1026,7 @@ class ZeroShotTransfer(FIFOScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
@@ -1090,7 +1090,7 @@ class ASHACTS(HyperbandScheduler):
         config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str = "min",
         random_seed: Optional[int] = None,
         **kwargs,

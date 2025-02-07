@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    "TransferLearningTaskEvaluations",
+    "LegacyTransferLearningTaskEvaluations",
     "LegacyTransferLearningMixin",
     "LegacyBoundingBox",
     "RUSHScheduler",
@@ -13,7 +13,7 @@ __all__ = [
 
 
 @dataclass
-class TransferLearningTaskEvaluations:
+class LegacyTransferLearningTaskEvaluations:
     """Class that contains offline evaluations for a task that can be used for transfer learning.
     Args:
         configuration_space: Dict the configuration space that was used when sampling evaluations.
@@ -84,7 +84,7 @@ class LegacyTransferLearningMixin:
     def __init__(
         self,
         config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric_names: List[str],
         **kwargs,
     ):
@@ -105,7 +105,7 @@ class LegacyTransferLearningMixin:
     def _check_consistency(
         self,
         config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric_names: List[str],
     ):
         for task, evals in transfer_learning_evaluations.items():
@@ -124,7 +124,7 @@ class LegacyTransferLearningMixin:
 
     def top_k_hyperparameter_configurations_per_task(
         self,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         num_hyperparameters_per_task: int,
         mode: str,
         metric: str,

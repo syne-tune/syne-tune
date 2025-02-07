@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 
-from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
+   TransferLearningTaskEvaluations
 )
 
 
@@ -49,23 +49,22 @@ class TransferLearningMixin:
         self,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         num_hyperparameters_per_task: int,
-        mode: str,
+        do_minimize: bool = False,
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Returns the best hyperparameter configurations for each task.
         :param transfer_learning_evaluations: Set of candidates to choose from.
         :param num_hyperparameters_per_task: The number of top hyperparameters per task to return.
-        :param mode: 'min' or 'max', indicating the type of optimization problem.
-        :param metric: The metric to consider for ranking hyperparameters.
+        :param do_minimize: indicating if the optimization problem is minimized.
         :returns: Dict which maps from task name to list of hyperparameters in order.
         """
         assert num_hyperparameters_per_task > 0 and isinstance(
             num_hyperparameters_per_task, int
         ), f"{num_hyperparameters_per_task} is no positive integer."
-        assert mode in ["min", "max"], f"Unknown mode {mode}, must be 'min' or 'max'."
+
         best_hps = dict()
         for task, evaluation in transfer_learning_evaluations.items():
             best_hps[task] = evaluation.top_k_hyperparameter_configurations(
-                num_hyperparameters_per_task, mode, self.metric
+                num_hyperparameters_per_task, self.metric, do_minimize
             )
         return best_hps

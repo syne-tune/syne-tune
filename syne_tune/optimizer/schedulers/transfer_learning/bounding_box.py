@@ -8,7 +8,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-from syne_tune.optimizer.schedulers.transfer_learning import (
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import (
@@ -51,7 +51,7 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
        bb_scheduler = BoundingBox(scheduler_fun, ...)
 
     Here, ``bb_scheduler`` represents random search, where the hyperparameter
-    ranges are restricted to contain the best evalutions of previous tasks,
+    ranges are restricted to contain the best evaluations of previous tasks,
     as provided by ``transfer_learning_evaluations``.
 
     :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
@@ -61,7 +61,7 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
         to the bounding of the best evaluations of previous tasks
     :param metric: Objective name to optimize, must be present in transfer
         learning evaluations.
-    :param mode: Mode to be considered, default to "min".
+    :param do_minimize: indicating if the optimization problem is minimized.
     :param transfer_learning_evaluations: Dictionary from task name to
         offline evaluations.
     :param num_hyperparameters_per_task: Number of the best configurations to
@@ -84,12 +84,11 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
             metric=metric,
             random_seed=random_seed,
         )
-        mode = "min" if do_minimize else "max"
 
         config_space = self._compute_box(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            mode=mode,
+            do_minimize=do_minimize,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
@@ -100,13 +99,13 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
         self,
         config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        mode: str,
+        do_minimize: bool,
         num_hyperparameters_per_task: int,
     ) -> Dict[str, Any]:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
-            mode=mode,
+            do_minimize=do_minimize,
         )
         hp_df = pd.DataFrame(
             [hp for _, top_k_hp in top_k_per_task.items() for hp in top_k_hp]
@@ -127,7 +126,7 @@ class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
                         upper=hp_df.loc[:, name].max(),
                     )
                 else:
-                    # no known way to compute bounding over non numerical domains such as functional
+                    # no known way to compute bounding over non-numerical domains such as functional
                     new_config_space[name] = domain
             else:
                 new_config_space[name] = domain
