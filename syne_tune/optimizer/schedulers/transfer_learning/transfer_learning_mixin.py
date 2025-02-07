@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 
 from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
-   TransferLearningTaskEvaluations
+    TransferLearningTaskEvaluations,
 )
 
 
