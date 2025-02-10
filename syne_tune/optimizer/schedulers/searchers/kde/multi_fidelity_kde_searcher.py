@@ -6,7 +6,9 @@ from collections import OrderedDict
 from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
     KernelDensityEstimator,
 )
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    MultiFidelityBaseSearcher,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,13 +60,13 @@ class MultiFidelityKernelDensityEstimator(MultiFidelityBaseSearcher):
     def initialize_model(self):
         return KernelDensityEstimator(
             config_space=self.config_space,
-            num_min_data_points = self.num_min_data_points,
-            min_bandwidth = self.min_bandwidth,
-            random_fraction = self.random_fraction,
-            num_candidates = self.num_candidates,
-            bandwidth_factor = self.bandwidth_factor,
-            top_n_percent = self.top_n_percent,
-            random_seed=self.random_seed
+            num_min_data_points=self.num_min_data_points,
+            min_bandwidth=self.min_bandwidth,
+            random_fraction=self.random_fraction,
+            num_candidates=self.num_candidates,
+            bandwidth_factor=self.bandwidth_factor,
+            top_n_percent=self.top_n_percent,
+            random_seed=self.random_seed,
         )
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
@@ -85,7 +87,7 @@ class MultiFidelityKernelDensityEstimator(MultiFidelityBaseSearcher):
         if suggestion is None:
             highest_observed_resource = next(reversed(self.models))
             return self.models[highest_observed_resource].suggest()
-    
+
     def on_trial_result(
         self,
         trial_id: int,
@@ -110,8 +112,9 @@ class MultiFidelityKernelDensityEstimator(MultiFidelityBaseSearcher):
         if resource_level not in self.models:
             self.models[resource_level] = self.initialize_model()
 
-        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)
-            
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )
 
     def on_trial_complete(
         self,
@@ -138,4 +141,6 @@ class MultiFidelityKernelDensityEstimator(MultiFidelityBaseSearcher):
         if resource_level not in self.models:
             self.models[resource_level] = self.initialize_model()
 
-        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )

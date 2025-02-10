@@ -1,7 +1,9 @@
 import logging
 from typing import Optional, List, Dict, Any
 
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    MultiFidelityBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,

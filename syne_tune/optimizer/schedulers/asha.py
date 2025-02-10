@@ -8,7 +8,9 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    MultiFidelityBaseSearcher,
+)
 
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.config_space import (

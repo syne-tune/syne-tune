@@ -4,7 +4,9 @@ from typing import Optional, List, Dict, Any
 from collections import OrderedDict
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    MultiFidelityBaseSearcher,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,16 +70,15 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
     def initialize_model(self):
         return Bore(
             config_space=self.config_space,
-            gamma = self.gamma,
-        calibrate = self.calibrate,
-        classifier = self.classifier,
-        acq_optimizer = self.acq_optimizer,
-        feval_acq = self.feval_acq,
-        random_prob = self.random_prob,
-        init_random = self.init_random,
-        classifier_kwargs = self.classifier_kwargs,
-
-            random_seed=self.random_seed
+            gamma=self.gamma,
+            calibrate=self.calibrate,
+            classifier=self.classifier,
+            acq_optimizer=self.acq_optimizer,
+            feval_acq=self.feval_acq,
+            random_prob=self.random_prob,
+            init_random=self.init_random,
+            classifier_kwargs=self.classifier_kwargs,
+            random_seed=self.random_seed,
         )
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
@@ -100,11 +101,11 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
             return self.models[highest_observed_resource].suggest()
 
     def on_trial_result(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
-            resource_level: int,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int,
     ):
         """Inform searcher about result
 
@@ -123,14 +124,16 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
         if resource_level not in self.models:
             self.models[resource_level] = self.initialize_model()
 
-        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )
 
     def on_trial_complete(
-            self,
-            trial_id: int,
-            config: Dict[str, Any],
-            metric: float,
-            resource_level: int,
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int,
     ):
         """Inform searcher about result
 
@@ -150,4 +153,6 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
         if resource_level not in self.models:
             self.models[resource_level] = self.initialize_model()
 
-        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )
