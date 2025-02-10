@@ -1,13 +1,17 @@
-from typing import Optional, List, Dict, Any
 import logging
-import numpy as np
+
+from typing import Optional, List, Dict, Any
+from collections import OrderedDict
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    MultiFidelityBaseSearcher,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class MultiFidelityBore(Bore):
+class MultiFidelityBore(MultiFidelityBaseSearcher):
     """
     Adapts BORE (Tiao et al.) for the multi-fidelity Hyperband setting following
     BOHB (Falkner et al.). Once we collected enough data points on the smallest
@@ -29,80 +33,133 @@ class MultiFidelityBore(Bore):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`:
 
-    :param resource_attr: Name of resource attribute. Defaults to "epoch"
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
-        allow_duplicates: Optional[bool] = None,
-        mode: Optional[str] = None,
-        gamma: Optional[float] = None,
-        calibrate: Optional[bool] = None,
-        classifier: Optional[str] = None,
-        acq_optimizer: Optional[str] = None,
-        feval_acq: Optional[int] = None,
-        random_prob: Optional[float] = None,
-        init_random: Optional[int] = None,
+        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        random_seed: int = None,
+        gamma: Optional[float] = 0.25,
+        calibrate: Optional[bool] = False,
+        classifier: Optional[str] = "xgboost",
+        acq_optimizer: Optional[str] = "rs",
+        feval_acq: Optional[int] = 500,
+        random_prob: Optional[float] = 0.0,
+        init_random: Optional[int] = 6,
         classifier_kwargs: Optional[dict] = None,
-        resource_attr: str = "epoch",
-        **kwargs,
     ):
-        if acq_optimizer is None:
-            acq_optimizer = "rs_with_replacement"
         super().__init__(
             config_space,
-            metric=metric,
             points_to_evaluate=points_to_evaluate,
-            allow_duplicates=allow_duplicates,
-            mode=mode,
-            gamma=gamma,
-            calibrate=calibrate,
-            classifier=classifier,
-            acq_optimizer=acq_optimizer,
-            feval_acq=feval_acq,
-            random_prob=random_prob,
-            init_random=init_random,
-            classifier_kwargs=classifier_kwargs,
-            **kwargs,
-        )
-        self.resource_attr = resource_attr
-        self.resource_levels = []
-
-    def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.multi_fidelity import (
-            MultiFidelitySchedulerMixin,
+            random_seed=random_seed,
         )
 
-        super().configure_scheduler(scheduler)
-        assert isinstance(
-            scheduler, MultiFidelitySchedulerMixin
-        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
-        self.resource_attr = scheduler.resource_attr
+        self.gamma = gamma
+        self.calibrate = calibrate
+        self.classifier = classifier
+        self.acq_optimizer = acq_optimizer
+        self.feval_acq = feval_acq
+        self.random_prob = random_prob
+        self.init_random = init_random
+        self.classifier_kwargs = classifier_kwargs
 
-    def _train_model(self, train_data: np.ndarray, train_targets: np.ndarray) -> bool:
-        # find the highest resource level we have at least one data points of the positive class
-        min_data_points = int(1 / self.gamma)
-        unique_resource_levels, counts = np.unique(
-            self.resource_levels, return_counts=True
+        self.models = OrderedDict()
+
+    def initialize_model(self):
+        return Bore(
+            config_space=self.config_space,
+            gamma=self.gamma,
+            calibrate=self.calibrate,
+            classifier=self.classifier,
+            acq_optimizer=self.acq_optimizer,
+            feval_acq=self.feval_acq,
+            random_prob=self.random_prob,
+            init_random=self.init_random,
+            classifier_kwargs=self.classifier_kwargs,
+            random_seed=self.random_seed,
         )
-        idx = np.where(counts >= min_data_points)[0]
 
-        if len(idx) == 0:
-            return False
+    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+        """Suggest a new configuration.
 
-        # collect data on the highest resource level
-        highest_resource_level = unique_resource_levels[idx[-1]]
-        indices = np.where(self.resource_levels == highest_resource_level)[0]
+        Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
+        first.
 
-        train_data = np.array([self.inputs[i] for i in indices])
-        train_targets = np.array([self.targets[i] for i in indices])
+        :param kwargs: Extra information may be passed from scheduler to
+            searcher
+        :return: New configuration. The searcher may return None if a new
+            configuration cannot be suggested. In this case, the tuning will
+            stop. This happens if searchers never suggest the same config more
+            than once, and all configs in the (finite) search space are
+            exhausted.
+        """
+        suggestion = self._next_points_to_evaluate()
+        if suggestion is not None:
+            return suggestion
 
-        return super()._train_model(train_data, train_targets)
+        if len(self.models) == 0:
+            return {
+                k: v.sample() if hasattr(v, "sample") else v
+                for k, v in self.config_space.items()
+            }
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
-        super()._update(trial_id=trial_id, config=config, result=result)
-        resource_level = int(result[self.resource_attr])
-        self.resource_levels.append(resource_level)
+        highest_observed_resource = next(reversed(self.models))
+        return self.models[highest_observed_resource].suggest()
+
+    def on_trial_result(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int,
+    ):
+        """Inform searcher about result
+
+        The scheduler passes every result. If ``update == True``, the searcher
+        should update its surrogate model (if any), otherwise ``result`` is an
+        intermediate result not modelled.
+
+        The default implementation calls :meth:`_update` if ``update == True``.
+        It can be overwritten by searchers which also react to intermediate
+        results.
+
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        """
+        if resource_level not in self.models:
+            self.models[resource_level] = self.initialize_model()
+
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )
+
+    def on_trial_complete(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int,
+    ):
+        """Inform searcher about result
+
+        The scheduler passes every result. If ``update == True``, the searcher
+        should update its surrogate model (if any), otherwise ``result`` is an
+        intermediate result not modelled.
+
+        The default implementation calls :meth:`_update` if ``update == True``.
+        It can be overwritten by searchers which also react to intermediate
+        results.
+
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        """
+
+        if resource_level not in self.models:
+            self.models[resource_level] = self.initialize_model()
+
+        self.models[resource_level].on_trial_complete(
+            trial_id=trial_id, config=config, metric=metric
+        )
