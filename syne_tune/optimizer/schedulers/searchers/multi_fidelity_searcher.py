@@ -1,6 +1,6 @@
 import logging
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
