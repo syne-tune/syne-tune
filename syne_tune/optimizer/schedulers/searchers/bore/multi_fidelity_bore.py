@@ -65,7 +65,6 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
         self.classifier_kwargs = classifier_kwargs
 
         self.models = OrderedDict()
-        self.models[0] = self.initialize_model()
 
     def initialize_model(self):
         return Bore(
@@ -96,9 +95,17 @@ class MultiFidelityBore(MultiFidelityBaseSearcher):
             exhausted.
         """
         suggestion = self._next_points_to_evaluate()
-        if suggestion is None:
-            highest_observed_resource = next(reversed(self.models))
-            return self.models[highest_observed_resource].suggest()
+        if suggestion is not None:
+            return suggestion
+
+        if len(self.models) == 0:
+            return {
+                k: v.sample() if hasattr(v, "sample") else v
+                for k, v in self.config_space.items()
+            }
+
+        highest_observed_resource = next(reversed(self.models))
+        return self.models[highest_observed_resource].suggest()
 
     def on_trial_result(
         self,

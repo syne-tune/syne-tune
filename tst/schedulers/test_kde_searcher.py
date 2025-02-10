@@ -86,9 +86,9 @@ def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
         )
     # Test n_good
     num_features = len(hp_cols)
-    assert searcher.num_min_data_points == num_features
-    assert searcher._highest_resource_model_can_fit(num_features) == resource_acq, (
-        resource_levels,
-        top_n_percent,
-        resource_acq,
-    )
+
+    for model in searcher.models.values():
+        assert model.num_min_data_points == num_features
+
+    # check that we have for each resource level one model
+    assert len(searcher.models) == np.unique(resource_levels).shape[0]
