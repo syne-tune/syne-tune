@@ -8,7 +8,7 @@ from syne_tune.optimizer.schedulers.hyperband_rush import (
     RUSHDecider,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
 from syne_tune.config_space import randint
@@ -103,7 +103,7 @@ def metadata(config_space, best_config):
 
     metrics_names = ["loss", "gain"]
     return {
-        "task": TransferLearningTaskEvaluations(
+        "task": LegacyTransferLearningTaskEvaluations(
             configuration_space=config_space,
             hyperparameters=hp,
             objectives_evaluations=np.array(metric),

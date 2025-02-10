@@ -1,6 +1,8 @@
 import tempfile
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import dill
 import pytest
 
@@ -19,6 +21,10 @@ from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
+    TransferLearningTaskEvaluations,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -43,6 +49,49 @@ resource_attr = "step"
 max_t = 10
 random_seed = 42
 mode = "max"
+
+
+def make_transfer_learning_evaluations(num_evals: int = 10):
+    num_seeds = 3
+    num_fidelity = 5
+    return {
+        "dummy-task-1": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [
+                    {
+                        k: v.sample() if hasattr(v, "sample") else v
+                        for k, v in config_space.items()
+                    }
+                    for _ in range(10)
+                ]
+            ),
+            objectives_evaluations=np.arange(
+                num_evals * num_seeds * num_fidelity * 2
+            ).reshape(num_evals, num_seeds, num_fidelity, 2),
+            objectives_names=[metric1, metric2],
+        ),
+        "dummy-task-2": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [
+                    {
+                        k: v.sample() if hasattr(v, "sample") else v
+                        for k, v in config_space.items()
+                    }
+                    for _ in range(10)
+                ]
+            ),
+            objectives_evaluations=-np.arange(
+                num_evals * num_seeds * num_fidelity * 2
+            ).reshape(num_evals, num_seeds, num_fidelity, 2),
+            objectives_names=[metric1, metric2],
+        ),
+    }
+
+
+transfer_learning_evaluations = make_transfer_learning_evaluations()
+
 
 list_schedulers_to_test = [
     SingleObjectiveScheduler(
@@ -132,6 +181,20 @@ list_schedulers_to_test = [
         random_seed=random_seed,
         searcher="random_search",
         time_attr=resource_attr,
+    ),
+    BoundingBox(
+        scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
+            new_config_space,
+            searcher="random_search",
+            metric=metric,
+            random_seed=random_seed,
+            do_minimize=do_minimize,
+        ),
+        do_minimize=False,
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        transfer_learning_evaluations=transfer_learning_evaluations,
     ),
 ]
 

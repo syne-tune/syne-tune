@@ -16,8 +16,8 @@ from syne_tune.optimizer.baselines import BayesianOptimization, ZeroShotTransfer
 from syne_tune.optimizer.schedulers import FIFOScheduler
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyTransferLearningTaskEvaluations,
+    LegacyBoundingBox,
 )
 
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
@@ -75,7 +75,7 @@ def extract_transferable_evaluations(df, metric, config_space):
     """
     filter_df = filter_completed(df)
 
-    return TransferLearningTaskEvaluations(
+    return LegacyTransferLearningTaskEvaluations(
         configuration_space=config_space,
         hyperparameters=filter_df[config_space.keys()],
         objectives_names=[metric],
@@ -139,7 +139,7 @@ def init_scheduler(
             **kwargs_sched_fun,
         )
         del kwargs_w_trans["random_seed"]
-        return BoundingBox(**kwargs_w_trans)
+        return LegacyBoundingBox(**kwargs_w_trans)
     raise ValueError("scheduler_str not recognised")
 
 

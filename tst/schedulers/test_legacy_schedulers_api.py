@@ -63,8 +63,8 @@ from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher
     SKLearnSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyTransferLearningTaskEvaluations,
+    LegacyBoundingBox,
     RUSHScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
@@ -110,7 +110,7 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
     num_seeds = 3
     num_fidelity = 5
     return {
-        "dummy-task-1": TransferLearningTaskEvaluations(
+        "dummy-task-1": LegacyTransferLearningTaskEvaluations(
             config_space,
             hyperparameters=pd.DataFrame(
                 [
@@ -126,7 +126,7 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
             ).reshape(num_evals, num_seeds, num_fidelity, 2),
             objectives_names=[metric1, metric2],
         ),
-        "dummy-task-2": TransferLearningTaskEvaluations(
+        "dummy-task-2": LegacyTransferLearningTaskEvaluations(
             config_space,
             hyperparameters=pd.DataFrame(
                 [
@@ -303,7 +303,7 @@ list_schedulers_to_test = [
         resource_attr=resource_attr,
         metric=metric1,
     ),
-    BoundingBox(
+    LegacyBoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
             new_config_space,
             points_to_evaluate=[],

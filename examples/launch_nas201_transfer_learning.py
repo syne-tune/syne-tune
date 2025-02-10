@@ -5,15 +5,15 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyTransferLearningTaskEvaluations,
+    LegacyBoundingBox,
 )
 from syne_tune import StoppingCriterion, Tuner
 
 
 def load_transfer_learning_evaluations(
     blackbox_name: str, test_task: str, metric: str
-) -> Dict[str, TransferLearningTaskEvaluations]:
+) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
     bb_dict = load_blackbox(blackbox_name)
     metric_index = [
         i
@@ -21,7 +21,7 @@ def load_transfer_learning_evaluations(
         if name == metric
     ][0]
     transfer_learning_evaluations = {
-        task: TransferLearningTaskEvaluations(
+        task: LegacyTransferLearningTaskEvaluations(
             hyperparameters=bb.hyperparameters,
             configuration_space=bb.configuration_space,
             objectives_evaluations=bb.objectives_evaluations[
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         blackbox_name, test_task, metric
     )
 
-    scheduler = BoundingBox(
+    scheduler = LegacyBoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
             new_config_space,
             points_to_evaluate=[],

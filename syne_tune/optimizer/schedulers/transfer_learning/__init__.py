@@ -5,15 +5,15 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    "TransferLearningTaskEvaluations",
-    "TransferLearningMixin",
-    "BoundingBox",
+    "LegacyTransferLearningTaskEvaluations",
+    "LegacyTransferLearningMixin",
+    "LegacyBoundingBox",
     "RUSHScheduler",
 ]
 
 
 @dataclass
-class TransferLearningTaskEvaluations:
+class LegacyTransferLearningTaskEvaluations:
     """Class that contains offline evaluations for a task that can be used for transfer learning.
     Args:
         configuration_space: Dict the configuration space that was used when sampling evaluations.
@@ -80,11 +80,11 @@ class TransferLearningTaskEvaluations:
         return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict("records")
 
 
-class TransferLearningMixin:
+class LegacyTransferLearningMixin:
     def __init__(
         self,
         config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric_names: List[str],
         **kwargs,
     ):
@@ -105,7 +105,7 @@ class TransferLearningMixin:
     def _check_consistency(
         self,
         config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric_names: List[str],
     ):
         for task, evals in transfer_learning_evaluations.items():
@@ -124,7 +124,7 @@ class TransferLearningMixin:
 
     def top_k_hyperparameter_configurations_per_task(
         self,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         num_hyperparameters_per_task: int,
         mode: str,
         metric: str,
@@ -150,5 +150,7 @@ class TransferLearningMixin:
         return best_hps
 
 
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import (
+    LegacyBoundingBox,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler

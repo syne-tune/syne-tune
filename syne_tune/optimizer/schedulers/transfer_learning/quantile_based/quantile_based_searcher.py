@@ -10,7 +10,7 @@ from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 import pandas as pd
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import (
     from_string,
@@ -136,7 +136,7 @@ class QuantileBasedSurrogateSearcher(StochasticSearcher):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: Optional[str] = None,
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
