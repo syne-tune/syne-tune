@@ -1,6 +1,5 @@
-from typing import Dict, Optional, List, Any, Tuple
+from typing import Dict, Optional, List, Any
 import logging
-import numpy as np
 from collections import OrderedDict
 
 from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
