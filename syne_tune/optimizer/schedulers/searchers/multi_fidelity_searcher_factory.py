@@ -7,11 +7,11 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher impor
 from syne_tune.optimizer.schedulers.searchers.kde import (
     MultiFidelityKernelDensityEstimator,
 )
-from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
+from syne_tune.optimizer.schedulers.searchers.random_searcher import MultiFidelityRandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
 multi_fidelity_searcher_cls_dict = {
-    "random_search": RandomSearcher,
+    "random_search": MultiFidelityRandomSearcher,
     "bore": MultiFidelityBore,
     "kde": MultiFidelityKernelDensityEstimator,
     "cqr": SurrogateSearcher,

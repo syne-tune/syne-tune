@@ -1,15 +1,17 @@
 from typing import Dict, Optional, List, Any, Tuple
 import logging
 import numpy as np
+from collections import OrderedDict
 
 from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
     KernelDensityEstimator,
 )
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
 
 logger = logging.getLogger(__name__)
 
 
-class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
+class MultiFidelityKernelDensityEstimator(MultiFidelityBaseSearcher):
     """
     Adapts :class:`KernelDensityEstimator` to the multi-fidelity setting as proposed
     by Falkner et al such that we can use it with Hyperband. Following Falkner
@@ -40,56 +42,100 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         super().__init__(
             config_space,
             points_to_evaluate=points_to_evaluate,
-            num_min_data_points=num_min_data_points,
-            top_n_percent=top_n_percent,
-            min_bandwidth=min_bandwidth,
-            num_candidates=num_candidates,
-            bandwidth_factor=bandwidth_factor,
-            random_fraction=random_fraction,
             random_seed=random_seed,
         )
-        self.resource_levels = []
 
-    def _highest_resource_model_can_fit(self, num_features: int) -> Optional[int]:
-        unique_resource_levels, counts = np.unique(
-            self.resource_levels, return_counts=True
+        self.num_min_data_points = num_min_data_points
+        self.min_bandwidth = min_bandwidth
+        self.random_fraction = random_fraction
+        self.num_candidates = num_candidates
+        self.bandwidth_factor = bandwidth_factor
+        self.top_n_percent = top_n_percent
+
+        self.models = OrderedDict()
+        self.models[0] = self.initialize_model()
+
+    def initialize_model(self):
+        return KernelDensityEstimator(
+            config_space=self.config_space,
+            num_min_data_points = self.num_min_data_points,
+            min_bandwidth = self.min_bandwidth,
+            random_fraction = self.random_fraction,
+            num_candidates = self.num_candidates,
+            bandwidth_factor = self.bandwidth_factor,
+            top_n_percent = self.top_n_percent,
+            random_seed=self.random_seed
         )
-        for resource, count in reversed(list(zip(unique_resource_levels, counts))):
-            if self._check_data_shape_and_good_size((count, num_features)) is not None:
-                return resource
-        return None
 
-    def _train_kde(
-        self, train_data: np.ndarray, train_targets: np.ndarray
-    ) -> Optional[Tuple[Any, Any]]:
+    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+        """Suggest a new configuration.
+
+        Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
+        first.
+
+        :param kwargs: Extra information may be passed from scheduler to
+            searcher
+        :return: New configuration. The searcher may return None if a new
+            configuration cannot be suggested. In this case, the tuning will
+            stop. This happens if searchers never suggest the same config more
+            than once, and all configs in the (finite) search space are
+            exhausted.
         """
-        Find the highest resource level so that the data only at that level is
-        large enough to train KDE models both on the good part and the rest.
-        If no such resource level exists, we return ``None``.
-
-        :param train_data: Training input features
-        :param train_targets: Training targets
-        :return: Tuple of good model, bad model; or ``None``
-        """
-        train_data = train_data.reshape((train_targets.size, -1))
-        num_features = train_data.shape[1]
-        resource = self._highest_resource_model_can_fit(num_features)
-        if resource is None:
-            return None
-        else:
-            # Models can be fit
-            indices = np.where(self.resource_levels == resource)
-            sub_data = train_data[indices]
-            sub_targets = train_targets[indices]
-            return super()._train_kde(sub_data, sub_targets)
-
+        suggestion = self._next_points_to_evaluate()
+        if suggestion is None:
+            highest_observed_resource = next(reversed(self.models))
+            return self.models[highest_observed_resource].suggest()
+    
     def on_trial_result(
         self,
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
-        resource_level: int = None,
+        resource_level: int,
     ):
-        super().on_trial_result(trial_id=trial_id, config=config, metric=metric)
-        resource_level = int(resource_level)
-        self.resource_levels.append(resource_level)
+        """Inform searcher about result
+
+        The scheduler passes every result. If ``update == True``, the searcher
+        should update its surrogate model (if any), otherwise ``result`` is an
+        intermediate result not modelled.
+
+        The default implementation calls :meth:`_update` if ``update == True``.
+        It can be overwritten by searchers which also react to intermediate
+        results.
+
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        """
+        if resource_level not in self.models:
+            self.models[resource_level] = self.initialize_model()
+
+        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)
+            
+
+    def on_trial_complete(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int,
+    ):
+        """Inform searcher about result
+
+        The scheduler passes every result. If ``update == True``, the searcher
+        should update its surrogate model (if any), otherwise ``result`` is an
+        intermediate result not modelled.
+
+        The default implementation calls :meth:`_update` if ``update == True``.
+        It can be overwritten by searchers which also react to intermediate
+        results.
+
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        """
+
+        if resource_level not in self.models:
+            self.models[resource_level] = self.initialize_model()
+
+        self.models[resource_level].on_trial_complete(trial_id=trial_id, config=config, metric=metric)

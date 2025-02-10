@@ -1,13 +1,13 @@
 import logging
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
 logger = logging.getLogger(__name__)
 
 
-class SingleObjectiveBaseSearcher(BaseSearcher):
+class MultiFidelityBaseSearcher(BaseSearcher):
     """
     Base class of searchers, which are components of schedulers responsible for
     implementing :meth:`get_config`.
@@ -35,6 +35,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int,
     ):
         """Inform searcher about result
 
@@ -57,6 +58,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int,
     ):
         """Inform searcher about result
 

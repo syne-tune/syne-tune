@@ -8,9 +8,8 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
-    SingleObjectiveBaseSearcher,
-)
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import MultiFidelityBaseSearcher
+
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.config_space import (
     cast_config_values,
@@ -64,7 +63,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
+        searcher: Optional[Union[str, MultiFidelityBaseSearcher]] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
