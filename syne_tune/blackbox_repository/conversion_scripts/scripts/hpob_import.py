@@ -356,7 +356,7 @@ def generate_hpob(search_space):
     indices_not_nan = df[df[search_space["name"]].notna()].index
     for dataset_name in indices_not_nan:
         bb_dict[dataset_name] = convert_dataset(
-            search_space, dataset_name, df[search_space["name"]][dataset_name]
+            search_space, df[search_space["name"]][dataset_name]
         )
     with catchtime("saving to disk"):
         serialize(
@@ -580,4 +580,4 @@ if __name__ == "__main__":
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=False)
+        instance.generate(upload_on_hub=True)
