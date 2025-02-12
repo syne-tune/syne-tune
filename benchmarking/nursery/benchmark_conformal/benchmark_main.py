@@ -3,7 +3,6 @@ import logging
 from argparse import ArgumentParser
 
 import numpy as np
-from coolname import generate_slug
 from tqdm import tqdm
 
 from benchmarking.nursery.benchmark_conformal.baselines import (
@@ -22,11 +21,9 @@ from syne_tune.tuner import Tuner
 
 
 def run(
-    experiment_tag: str,
     method_names,
     benchmark_names,
     seeds,
-    subtag: str = None,
     max_num_evaluations=None,
     n_workers: int = 4,
     **kwargs,
@@ -45,9 +42,7 @@ def run(
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
-        print(
-            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
-        )
+        print(f"Starting experiment ({method}/{benchmark_name}/{seed})")
 
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
@@ -100,14 +95,11 @@ def run(
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=30,
-            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}".replace(
-                "_", "-"
-            ),
+            tuner_name=f"{method}-{seed}-{benchmark_name}".replace("_", "-"),
+            save_tuner=False,
             metadata={
                 "seed": seed,
                 "algorithm": method,
-                "tag": experiment_tag,
-                "subtag": subtag if subtag is not None else "",
                 "benchmark": benchmark_name,
             },
         )
@@ -118,18 +110,6 @@ def run(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument(
-        "--experiment_tag",
-        type=str,
-        required=False,
-        default=generate_slug(2),
-        help="a name used to plot results later on with show_results.py",
-    )
-    parser.add_argument(
-        "--subtag",
-        type=str,
-        required=False,
-    )
     parser.add_argument(
         "--num_seeds",
         type=int,
@@ -163,7 +143,6 @@ if __name__ == "__main__":
     )
 
     args, _ = parser.parse_known_args()
-    experiment_tag = args.experiment_tag
     if args.run_all_seed == 1:
         seeds = list(range(args.num_seeds))
     else:
@@ -175,8 +154,6 @@ if __name__ == "__main__":
         else list(benchmark_definitions.keys())
     )
     run(
-        experiment_tag=experiment_tag,
-        subtag=args.subtag,
         method_names=method_names,
         benchmark_names=benchmark_names,
         seeds=seeds,
