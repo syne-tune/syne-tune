@@ -14,7 +14,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
     """
     Note: This is the multi objective random scalarization scoring function based on the work of Biswajit et al. [1].
     This scoring function uses Lower Confidence Bound as the acquisition for the scalarized objective
-    :math:`h(\mu, \sigma) = \mu - \kappa * \sigma`
+    :math:`h(mu, sigma) = mu - kappa * sigma`
 
         | [1] Paria, Biswajit, Kirthevasan Kandasamy and Barnabás Póczos.
         | A Flexible Framework for Multi-Objective Bayesian Optimization using Random Scalarizations.

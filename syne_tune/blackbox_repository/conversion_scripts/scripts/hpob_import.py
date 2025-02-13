@@ -412,11 +412,11 @@ def load_data():
         urllib.request.urlretrieve(data_src, hpob_data_file)
 
         with zipfile.ZipFile(hpob_data_file, "r") as zip_ref:
-            zip_ref.extractall()
+            zip_ref.extractall(path=repository_path)
 
-    meta_test_file = "hpob-data/meta-test-dataset.json"
-    meta_train_file = "hpob-data/meta-train-dataset.json"
-    meta_validation_file = "hpob-data/meta-validation-dataset.json"
+    meta_test_file = repository_path / "hpob-data/meta-test-dataset.json"
+    meta_train_file = repository_path / "hpob-data/meta-train-dataset.json"
+    meta_validation_file = repository_path / "hpob-data/meta-validation-dataset.json"
 
     with (
         open(meta_test_file, mode="r", encoding="utf-8") as test_file,
