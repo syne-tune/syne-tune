@@ -1096,8 +1096,8 @@ class ASHACTS(HyperbandScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-                QuantileBasedSurrogateSearcher,
+            from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+                LegacyQuantileBasedSurrogateSearcher,
             )
         except ImportError:
             raise
@@ -1115,7 +1115,7 @@ class ASHACTS(HyperbandScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=QuantileBasedSurrogateSearcher(**searcher_kwargs),
+            searcher=LegacyQuantileBasedSurrogateSearcher(**searcher_kwargs),
             resource_attr=resource_attr,
             random_seed=random_seed,
             **kwargs,
