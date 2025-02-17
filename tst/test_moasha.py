@@ -6,7 +6,7 @@ import numpy as np
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
+from syne_tune.optimizer.schedulers.multiobjective.legacy_moasha import LegacyMOASHA, _Bracket
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
     FixedObjectivePriority,
     LinearScalarizationPriority,
@@ -42,7 +42,7 @@ def make_trial(trial_id: int):
 
 
 scheduler_fun = partial(
-    MOASHA,
+    LegacyMOASHA,
     max_t=max_steps,
     brackets=1,
     reduction_factor=2.0,
