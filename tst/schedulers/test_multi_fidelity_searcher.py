@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
     IndependentMultiFidelitySearcher,
 )
@@ -11,7 +10,7 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 
 
 @pytest.mark.parametrize("searcher_cls", searcher_cls_dict)
-def test_train_kde_multifidelity(searcher_cls):
+def test_independent_multi_fidelity_searcher(searcher_cls):
     random_seed = 31415927
     resource_levels = [3] * 20 + [1] * 25 + [9] * 9
     random_state = np.random.RandomState(random_seed)
