@@ -62,7 +62,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, IndependentMultiFidelitySearcher]] = "random_search",
+        searcher: Optional[
+            Union[str, IndependentMultiFidelitySearcher]
+        ] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -87,7 +89,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
                 searcher_kwargs = {}
 
             self.searcher = IndependentMultiFidelitySearcher(
-                searcher_cls=searcher, config_space=config_space, random_seed=random_seed, **searcher_kwargs
+                searcher_cls=searcher,
+                config_space=config_space,
+                random_seed=random_seed,
+                **searcher_kwargs,
             )
         else:
             self.searcher = searcher

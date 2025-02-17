@@ -4,7 +4,9 @@ from collections import OrderedDict
 from typing import Dict, Any, Optional, List, Union
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls_dict
 
 logger = logging.getLogger(__name__)
@@ -31,14 +33,13 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         configurations are specified.
     """
 
-
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
-            points_to_evaluate: Optional[List[dict]] = None,
-            random_seed: Optional[int] = None,
-            searcher_kwargs: dict[str, Any] = None
+        self,
+        config_space: Dict[str, Any],
+        searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
+        points_to_evaluate: Optional[List[dict]] = None,
+        random_seed: Optional[int] = None,
+        searcher_kwargs: dict[str, Any] = None,
     ):
         super().__init__(
             config_space,
@@ -57,7 +58,6 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         else:
             self.searcher_cls = searcher_cls
         self.models = OrderedDict()
-
 
     def initialize_model(self):
         return self.searcher_cls(
