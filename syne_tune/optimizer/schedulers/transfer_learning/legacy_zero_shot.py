@@ -1,19 +1,21 @@
 import logging
 from typing import Dict, Optional, Any
 
-import numpy as np
 import pandas as pd
 import xgboost
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import TransferLearningMixin, TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    LegacyTransferLearningTaskEvaluations,
+    LegacyTransferLearningMixin,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
+class LegacyZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata
@@ -44,20 +46,22 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        do_minimize: Optional[bool] = True,
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
         use_surrogates: bool = False,
-        random_seed: int = None,
+        **kwargs,
     ) -> None:
-
-        self.do_minimize = do_minimize
+        if "points_to_evaluate" in kwargs:
+            kwargs["points_to_evaluate"] = []
         super().__init__(
             config_space=config_space,
             metric=metric,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            random_seed=random_seed
+            metric_names=[metric],
+            **kwargs,
         )
+        self._mode = mode
         if use_surrogates and len(transfer_learning_evaluations) <= 1:
             use_surrogates = False
             sort_transfer_learning_evaluations = False
@@ -83,11 +87,10 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
                 )
             idx = hyperparameters.index.values
             avg_scores = task_data.objective_values(metric).mean(axis=1)
-            if self.do_minimize:
-                avg_scores = avg_scores.min(axis=1)[idx]
-            else:
+            if self._mode == "max":
                 avg_scores = avg_scores.max(axis=1)[idx]
-
+            else:
+                avg_scores = avg_scores.min(axis=1)[idx]
             scores.append(avg_scores)
         if not use_surrogates:
             if len(transfer_learning_evaluations) > 1:
@@ -99,17 +102,16 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
                 hyperparameters = hyperparameters.copy()
         hyperparameters.reset_index(drop=True, inplace=True)
         self._hyperparameters = hyperparameters
-        sign = 1 if self.do_minimize else -1
+        sign = 1 if self._mode == "min" else -1
         self._scores = sign * pd.DataFrame(scores)
         self._ranks = self._update_ranks()
-        self.random_state = np.random.RandomState(self.random_seed)
 
     def _create_surrogate_transfer_learning_evaluations(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
-    ) -> Dict[str, TransferLearningTaskEvaluations]:
+    ) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
         """
         Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
         """
@@ -122,10 +124,10 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
             )
             X_train = task_data.hyperparameters
             y_train = task_data.objective_values(metric).mean(axis=1)
-            if self.do_minimize:
-                y_train = y_train.min(axis=1)
-            else:
+            if self._mode == "max":
                 y_train = y_train.max(axis=1)
+            else:
+                y_train = y_train.min(axis=1)
             estimator.fit(X_train, y_train)
 
             num_candidates = 10000 if len(config_space) >= 6 else 5 ** len(config_space)
@@ -140,7 +142,7 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
             )
             surrogate_transfer_learning_evaluations[
                 task_name
-            ] = TransferLearningTaskEvaluations(
+            ] = LegacyTransferLearningTaskEvaluations(
                 configuration_space=config_space,
                 hyperparameters=hyperparameters_new,
                 objectives_names=[metric],
