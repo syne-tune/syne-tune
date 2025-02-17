@@ -1,60 +1,19 @@
 import pytest
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.kde import (
-    MultiFidelityKernelDensityEstimator,
-)
+from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import IndependentMultiFidelitySearcher
 from syne_tune.config_space import choice
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls_dict
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 
 
 @pytest.mark.parametrize(
-    "resource_levels, top_n_percent, resource_acq",
-    [
-        (
-            [],
-            15,
-            None,
-        ),
-        (
-            [1, 1, 1, 3, 3, 1, 1],
-            15,
-            None,
-        ),
-        (
-            [1] * 6 + [3] * 2,
-            15,
-            None,
-        ),
-        (
-            [3] * 3 + [1] * 19,
-            20,
-            None,
-        ),
-        (
-            [3] * 3 + [1] * 20,
-            20,
-            1,
-        ),
-        (
-            [3] * 20 + [1] * 25 + [9] * 9,
-            20,
-            3,
-        ),
-        (
-            [3] * 3 + [1] * 20,
-            80,
-            1,
-        ),
-        (
-            [3] * 3 + [1] * 20,
-            85,
-            None,
-        ),
-    ],
+    "searcher_cls", searcher_cls_dict
 )
-def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
+def test_train_kde_multifidelity(searcher_cls):
     random_seed = 31415927
+    resource_levels = [3] * 20 + [1] * 25 + [9] * 9
     random_state = np.random.RandomState(random_seed)
     hp_cols = ("hp_x0", "hp_x1", "hp_x2")
     config_space = {
@@ -63,10 +22,10 @@ def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
         )
         for node in hp_cols
     }
-    searcher = MultiFidelityKernelDensityEstimator(
+    searcher = IndependentMultiFidelitySearcher(
         config_space=config_space,
         points_to_evaluate=[],
-        top_n_percent=top_n_percent,
+        searcher_cls=searcher_cls,
     )
     # Sample data at random (except for ``resource_levels``)
     hp_ranges = make_hyperparameter_ranges(config_space)
@@ -84,11 +43,6 @@ def test_train_kde_multifidelity(resource_levels, top_n_percent, resource_acq):
             metric=metric_val,
             resource_level=resource,
         )
-    # Test n_good
-    num_features = len(hp_cols)
-
-    for model in searcher.models.values():
-        assert model.num_min_data_points == num_features
 
     # check that we have for each resource level one model
-    assert len(searcher.models) == np.unique(resource_levels).shape[0]
+    assert len(searcher.models) == 3

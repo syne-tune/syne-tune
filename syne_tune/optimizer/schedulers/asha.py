@@ -9,7 +9,7 @@ from syne_tune.optimizer.scheduler import (
     TrialSuggestion,
 )
 from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
-    MultiFidelityBaseSearcher,
+    IndependentMultiFidelitySearcher,
 )
 
 from syne_tune.util import dump_json_with_numpy
@@ -18,9 +18,6 @@ from syne_tune.config_space import (
     config_space_to_json_dict,
     remove_constant_and_cast,
     postprocess_config,
-)
-from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher_factory import (
-    multi_fidelity_searcher_factory,
 )
 
 
@@ -65,7 +62,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, MultiFidelityBaseSearcher]] = "random_search",
+        searcher: Optional[Union[str, IndependentMultiFidelitySearcher]] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -89,8 +86,8 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
 
-            self.searcher = multi_fidelity_searcher_factory(
-                searcher, config_space, **searcher_kwargs
+            self.searcher = IndependentMultiFidelitySearcher(
+                searcher_cls=searcher, config_space=config_space, random_seed=random_seed, **searcher_kwargs
             )
         else:
             self.searcher = searcher
