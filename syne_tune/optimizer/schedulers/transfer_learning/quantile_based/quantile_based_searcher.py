@@ -8,8 +8,12 @@ from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 
 import pandas as pd
 
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
+    TransferLearningTaskEvaluations,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import (
     from_string,
 )
@@ -139,9 +143,7 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
         random_seed: int = None,
     ):
         super(QuantileBasedSurrogateSearcher, self).__init__(
-            config_space=config_space,
-            points_to_evaluate=[],
-            random_seed=random_seed
+            config_space=config_space, points_to_evaluate=[], random_seed=random_seed
         )
 
         self.random_state = np.random.RandomState(self.random_seed)
