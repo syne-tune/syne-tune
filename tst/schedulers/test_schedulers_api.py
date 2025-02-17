@@ -203,7 +203,7 @@ list_schedulers_to_test = [
         metric=metric1,
         random_seed=random_seed,
         transfer_learning_evaluations=transfer_learning_evaluations,
-    )
+    ),
 ]
 
 

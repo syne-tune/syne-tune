@@ -7,8 +7,13 @@ import xgboost
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import TransferLearningMixin, TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import (
+    TransferLearningMixin,
+    TransferLearningTaskEvaluations,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +61,7 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
             config_space=config_space,
             metric=metric,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
         if use_surrogates and len(transfer_learning_evaluations) <= 1:
             use_surrogates = False

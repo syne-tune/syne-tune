@@ -1035,7 +1035,9 @@ class ZeroShotTransfer(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.transfer_learning import legacy_zero_shot
+            from syne_tune.optimizer.schedulers.transfer_learning import (
+                legacy_zero_shot,
+            )
         except ImportError:
             raise
 
