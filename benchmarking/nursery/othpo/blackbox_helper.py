@@ -14,8 +14,8 @@ from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
-    BoundingBox,
+    LegacyTransferLearningTaskEvaluations,
+    LegacyBoundingBox,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
     QuantileBasedSurrogateSearcher,
@@ -157,7 +157,7 @@ def get_transfer_points_active(
     hps = df[[key for key in conf_space]]
     evals[:, 0, 0, 0] = list(df[metric][:n_points])
 
-    tasks[pp] = TransferLearningTaskEvaluations(
+    tasks[pp] = LegacyTransferLearningTaskEvaluations(
         configuration_space=conf_space,
         hyperparameters=hps,
         objectives_evaluations=evals,
@@ -384,7 +384,7 @@ def initialise_scheduler_stopping_criterion(
     elif optimiser == "BoundingBox" and check_enough_tasks:
         del transfer_kwargs["random_seed"]
         del base_kwargs["config_space"]
-        scheduler = BoundingBox(
+        scheduler = LegacyBoundingBox(
             scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
                 new_config_space,
                 points_to_evaluate=[],

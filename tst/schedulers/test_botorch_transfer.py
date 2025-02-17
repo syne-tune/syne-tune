@@ -6,7 +6,7 @@ import sys
 import syne_tune.config_space as sp
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 
 config_space = {
@@ -65,10 +65,10 @@ def test_transfer_samples_added_and_encoding(encode_tasks_ordinal, task_id_list)
         metric="WhoKnows",
         new_task_id=task_id_list[2],
         transfer_learning_evaluations={
-            task_id_list[0]: TransferLearningTaskEvaluations(
+            task_id_list[0]: LegacyTransferLearningTaskEvaluations(
                 config_space, df_task_2, ["WhoKnows"], evals_task_2
             ),
-            task_id_list[1]: TransferLearningTaskEvaluations(
+            task_id_list[1]: LegacyTransferLearningTaskEvaluations(
                 config_space, df_task_1, ["WhoKnows"], evals_task_1
             ),
         },

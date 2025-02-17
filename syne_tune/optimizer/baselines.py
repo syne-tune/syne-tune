@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.synchronous import (
     GeometricDifferentialEvolutionHyperbandScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 
@@ -1026,7 +1026,7 @@ class ZeroShotTransfer(FIFOScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
@@ -1090,7 +1090,7 @@ class ASHACTS(HyperbandScheduler):
         config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str = "min",
         random_seed: Optional[int] = None,
         **kwargs,
@@ -1265,8 +1265,8 @@ except ImportError as e:
     logging.debug(e)
 
 try:
-    from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
-        ExpectedHyperVolumeImprovement,
+    from syne_tune.optimizer.schedulers.multiobjective.legacy_expected_hyper_volume_improvement import (
+        LegacyExpectedHyperVolumeImprovement,
     )
 
     class EHVI(FIFOScheduler):
@@ -1307,7 +1307,7 @@ try:
                 config_space=config_space,
                 metric=metric,
                 mode=mode,
-                searcher=ExpectedHyperVolumeImprovement(**searcher_kwargs),
+                searcher=LegacyExpectedHyperVolumeImprovement(**searcher_kwargs),
                 random_seed=random_seed,
                 **kwargs,
             )

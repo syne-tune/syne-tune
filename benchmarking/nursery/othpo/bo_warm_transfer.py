@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from syne_tune.optimizer.baselines import BoTorch
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 
 
@@ -33,7 +33,7 @@ def get_optima_but_nn_idx(opt_mode, values, nn):
 
 
 def return_optima_from_task(
-    task: TransferLearningTaskEvaluations,
+    task: LegacyTransferLearningTaskEvaluations,
     opt_mode: str,
     keys_to_use: list,
     metric: str,
@@ -170,7 +170,7 @@ class WarmStartBayesianOptimization(BoTorch):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[Any, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[Any, LegacyTransferLearningTaskEvaluations],
         num_warm_points: int,
         points_to_evaluate=[],
         sort_by_task_id=None,

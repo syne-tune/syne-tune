@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.botorch.legacy_botorch_searcher im
 from syne_tune.optimizer.baselines import _create_searcher_kwargs
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningTaskEvaluations,
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
@@ -45,7 +45,7 @@ class BoTorchTransfer(BoTorch):
         self,
         config_space: dict,
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         new_task_id: Any,
         random_seed: Optional[int] = None,
         encode_tasks_ordinal: bool = False,
@@ -72,7 +72,7 @@ class BoTorchTransferSearcher(LegacyBoTorchSearcher):
         self,
         config_space: dict,
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
         new_task_id: Any,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
