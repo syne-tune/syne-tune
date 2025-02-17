@@ -1056,7 +1056,7 @@ class ZeroShotTransfer(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=zero_shot.LegacyZeroShotTransfer(**searcher_kwargs),
+            searcher=legacy_zero_shot.LegacyZeroShotTransfer(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
