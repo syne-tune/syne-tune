@@ -6,7 +6,10 @@ import numpy as np
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.multiobjective.legacy_moasha import LegacyMOASHA, _Bracket
+from syne_tune.optimizer.schedulers.multiobjective.legacy_moasha import (
+    LegacyMOASHA,
+    _Bracket,
+)
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
     FixedObjectivePriority,
     LinearScalarizationPriority,
