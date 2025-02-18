@@ -57,7 +57,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
             self.searcher_cls = searcher_cls_dict.get(searcher_cls)
         else:
             self.searcher_cls = searcher_cls
-        self.models = OrderedDict()
+        self.searchers = OrderedDict()
 
     def initialize_model(self):
         return self.searcher_cls(
