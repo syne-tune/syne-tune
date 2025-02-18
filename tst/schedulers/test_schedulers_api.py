@@ -199,10 +199,16 @@ list_schedulers_to_test = [
         random_seed=random_seed,
         transfer_learning_evaluations=transfer_learning_evaluations,
     ),
-    QuantileBasedSurrogateSearcher(
-        config_space=config_space,
+    SingleObjectiveScheduler(
+        config_space,
+        metric=metric1,
+        searcher=QuantileBasedSurrogateSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            ),
+        do_minimize=False,
         random_seed=random_seed,
-        transfer_learning_evaluations=transfer_learning_evaluations,
     ),
 ]
 
