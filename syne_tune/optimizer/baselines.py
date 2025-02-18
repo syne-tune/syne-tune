@@ -1229,9 +1229,9 @@ class ASHACQR(HyperbandScheduler):
 
 
 try:
-    from syne_tune.optimizer.schedulers.smac_scheduler import SMACScheduler
+    from syne_tune.optimizer.schedulers.legacy_smac_scheduler import LegacySMACScheduler
 
-    class SMAC(SMACScheduler):
+    class SMAC(LegacySMACScheduler):
         """
         Wrapper to SMAC3. Requires SMAC3 to be installed, see https://github.com/automl/SMAC3 for instructions.
         """
