@@ -206,7 +206,7 @@ list_schedulers_to_test = [
             config_space=config_space,
             random_seed=random_seed,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            ),
+        ),
         do_minimize=False,
         random_seed=random_seed,
     ),
