@@ -107,9 +107,6 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param resource_level: Resource level where the metric was observed from.
         """
-        if resource_level not in self.searchers:
-            self.searchers[resource_level]
-
         self.searchers[resource_level].on_trial_complete(
             trial_id=trial_id, config=config, metric=metric
         )
@@ -129,10 +126,6 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         :param metric: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param resource_level: Resource level where the metric was observed from.
         """
-
-        if resource_level not in self.searchers:
-            self.searchers[resource_level]
-
         self.searchers[resource_level].on_trial_complete(
             trial_id=trial_id, config=config, metric=metric
         )
