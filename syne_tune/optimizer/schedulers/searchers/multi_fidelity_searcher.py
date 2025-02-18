@@ -56,11 +56,13 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         else:
             self.searcher_cls = searcher_cls
 
-        self.searchers = defaultdict(lambda: self.searcher_cls(
-            config_space=self.config_space,
-            random_seed=self.random_seed,
-            **self.searcher_kwargs,
-        ))
+        self.searchers = defaultdict(
+            lambda: self.searcher_cls(
+                config_space=self.config_space,
+                random_seed=self.random_seed,
+                **self.searcher_kwargs,
+            )
+        )
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         """Suggest a new configuration.
