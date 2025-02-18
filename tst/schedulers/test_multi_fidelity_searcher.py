@@ -44,4 +44,4 @@ def test_independent_multi_fidelity_searcher(searcher_cls):
         )
 
     # check that we have for each resource level one model
-    assert len(searcher.models) == 3
+    assert len(searcher.searchers) == 3
