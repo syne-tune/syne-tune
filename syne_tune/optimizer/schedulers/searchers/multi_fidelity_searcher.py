@@ -1,5 +1,5 @@
 import logging
-from collections import OrderedDict
+from collections import defaultdict
 
 from typing import Dict, Any, Optional, List, Union
 
@@ -55,14 +55,12 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
             self.searcher_cls = searcher_cls_dict.get(searcher_cls)
         else:
             self.searcher_cls = searcher_cls
-        self.searchers = OrderedDict()
 
-    def initialize_model(self):
-        return self.searcher_cls(
+        self.searchers = defaultdict(lambda: self.searcher_cls(
             config_space=self.config_space,
             random_seed=self.random_seed,
             **self.searcher_kwargs,
-        )
+        ))
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         """Suggest a new configuration.
@@ -108,7 +106,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         :param resource_level: Resource level where the metric was observed from.
         """
         if resource_level not in self.searchers:
-            self.searchers[resource_level] = self.initialize_model()
+            self.searchers[resource_level]
 
         self.searchers[resource_level].on_trial_complete(
             trial_id=trial_id, config=config, metric=metric
@@ -131,7 +129,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         """
 
         if resource_level not in self.searchers:
-            self.searchers[resource_level] = self.initialize_model()
+            self.searchers[resource_level]
 
         self.searchers[resource_level].on_trial_complete(
             trial_id=trial_id, config=config, metric=metric
