@@ -67,8 +67,8 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyBoundingBox,
     RUSHScheduler,
 )
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+    LegacyQuantileBasedSurrogateSearcher,
 )
 from syne_tune.config_space import randint, uniform, choice
 from tst.util_test import TestEstimator
@@ -316,7 +316,7 @@ list_schedulers_to_test = [
         transfer_learning_evaluations=transfer_learning_evaluations,
     ),
     FIFOScheduler(
-        searcher=QuantileBasedSurrogateSearcher(
+        searcher=LegacyQuantileBasedSurrogateSearcher(
             mode=mode,
             config_space=config_space,
             metric=metric1,
