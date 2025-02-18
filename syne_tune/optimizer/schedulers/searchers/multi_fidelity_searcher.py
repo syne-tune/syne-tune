@@ -84,6 +84,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         if suggestion is not None:
             return suggestion
 
+        # in case we have not seen observations, we have no searcher and sample at random
         if len(self.models) == 0:
             return {
                 k: v.sample() if hasattr(v, "sample") else v
