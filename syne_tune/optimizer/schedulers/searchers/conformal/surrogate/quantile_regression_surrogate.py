@@ -15,7 +15,7 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.symmetric_conf
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
 
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
     subsample,
 )
 

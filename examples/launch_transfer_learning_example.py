@@ -20,8 +20,8 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyBoundingBox,
 )
 
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+    LegacyQuantileBasedSurrogateSearcher,
 )
 
 import argparse
@@ -126,7 +126,7 @@ def init_scheduler(
 
     if scheduler_str == "Quantiles":
         return FIFOScheduler(
-            searcher=QuantileBasedSurrogateSearcher(**kwargs_w_trans),
+            searcher=LegacyQuantileBasedSurrogateSearcher(**kwargs_w_trans),
             **kwargs,
         )
 
