@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     experiment_tag = args.experiment_tag
 
-    num_seeds = args.num_seeds
+    num_seeds = 1
     cluster = args.cluster
     partition = args.partition
     sbatch_arguments = args.sbatch_arguments
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     config = load_config()
     #    cluster, partition = 'scule', 'paul'
 
-    slurm = SlurmWrapper(config=config, clusters=[cluster], ssh_engine="ssh")
+    slurm = SlurmWrapper(config=config, clusters=[cluster], ssh_engine="paramiko")
     max_runtime_minutes = 60 * 4
     python_args = []
     for method in tqdm(methods_selected):
@@ -83,8 +83,7 @@ if __name__ == "__main__":
                     "n_workers": args.n_workers,
                     # TODO this runs only a given seed, the API of benchmark_main is quite ugly
                     #  we could simplify this by only supporting `--seed N` as argument to benchmark_main.py
-                    "num_seeds": seed,
-                    "run_all_seed": 1,
+                    "seed": seed,
                 }
             )
 
@@ -109,11 +108,10 @@ if __name__ == "__main__":
         max_runtime_minutes=max_runtime_minutes,
         bash_setup_command="source ~/.bashrc; conda activate syne_tune",
         env={
-            "WANDB_API_KEY": os.environ.get("WANDB_API_KEY", ""),
             # write tuner files in Slurmpilot folder corresponding to `jobname`
             "SYNETUNE_FOLDER": f"{slurmpilot_folder}/{jobname}",
         },
-        n_concurrent_jobs=100,  # max number of jobs to run at the same time
+        n_concurrent_jobs=128,  # max number of jobs to run at the same time
     )
     if not args.dry_run:
         jobid = slurm.schedule_job(jobinfo)

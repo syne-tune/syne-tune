@@ -26,7 +26,6 @@ def run(
     seeds,
     max_num_evaluations=None,
     n_workers: int = 4,
-    **kwargs,
 ):
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
@@ -97,6 +96,7 @@ def run(
             print_update_interval=30,
             tuner_name=f"results/{method}-{seed}-{benchmark_name}".replace("_", "-"),
             save_tuner=False,
+            suffix_tuner_name=False,
             metadata={
                 "seed": seed,
                 "algorithm": method,
@@ -111,17 +111,11 @@ def run(
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-        "--num_seeds",
+        "--seed",
         type=int,
         required=False,
-        default=3,
-        help="number of seeds to run",
-    )
-    parser.add_argument(
-        "--run_all_seed",
-        type=int,
-        default=1,
-        help="if 1 run only `seed=num_seeds`, otherwise runs all the seeds [0, `num_seeds`-1]",
+        default=0,
+        help="seed to run",
     )
     parser.add_argument(
         "--method",
@@ -143,10 +137,7 @@ if __name__ == "__main__":
     )
 
     args, _ = parser.parse_known_args()
-    if args.run_all_seed == 1:
-        seeds = list(range(args.num_seeds))
-    else:
-        seeds = [args.num_seeds]
+    seeds = [args.seed]
     method_names = [args.method] if args.method is not None else list(methods.keys())
     benchmark_names = (
         [args.benchmark]

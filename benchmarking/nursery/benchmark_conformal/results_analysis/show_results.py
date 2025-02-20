@@ -28,8 +28,13 @@ from syne_tune.util import catchtime
 
 
 def figure_folder(path):
-    path.mkdir(exist_ok=True, parents=True)
-    return path
+    import syne_tune
+
+    root = Path(syne_tune.__path__[0]).parent
+    figure_path = root / path
+    figure_path.mkdir(exist_ok=True, parents=True)
+    print(figure_path)
+    return figure_path
 
 
 lw = 2.5
@@ -435,7 +440,7 @@ if __name__ == "__main__":
 
     for group_name, methods in groups.items():
         folder_name = Path(args.path).parent.name
-        result_folder = figure_folder(Path("tabular") / folder_name / group_name)
+        result_folder = figure_folder(Path("figures") / folder_name / group_name)
         result_folder.mkdir(parents=True, exist_ok=True)
 
         stacked_benchmark_results = stack_benchmark_results(
