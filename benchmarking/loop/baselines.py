@@ -334,7 +334,7 @@ methods = {
 
 if __name__ == "__main__":
     # Run a loop that initializes all schedulers on all benchmark to see if they all work
-    from benchmarking.nursery.benchmark_conformal.benchmark_definitions import (
+    from benchmarking.loop.benchmark_definitions import (
         benchmark_definitions,
     )
 

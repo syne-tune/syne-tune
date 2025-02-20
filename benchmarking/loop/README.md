@@ -20,10 +20,16 @@ which will evaluate all methods on all blackboxes for 3 seeds.
 Then you can do:
 
 ```bash
-python benchmarking/nursery/benchmark_conformal/launch_slurmpilot.py --cluster YOURCLUSTER --partition YOURPARTITION --num_seeds 3
+python benchmarking/nursery/loop/launch_slurmpilot.py --cluster YOURCLUSTER --partition YOURPARTITION --num_seeds 3
 ```
 
 After your results are done, you can download your results with
 ```bash
 sp --download YOURJOBNAME
 ```
+
+Note the path where the data is downloaded, you can then plot results with: 
+```
+python benchmarking/loop/results_analysis/show_results.py --path "~/slurmpilot/jobs/synetune/bench-2025-02-20-16-00-38/results" 
+```
+after adapting `path` to where the slurmpilot data was downloaded.
