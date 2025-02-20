@@ -1,18 +1,19 @@
 import json
 import logging
+from json import JSONDecodeError
 from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
 
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.experiments import get_metadata
 from tqdm import tqdm
 from collections import defaultdict
 from syne_tune.util import catchtime
 from pathlib import Path
 import os
 from joblib import Parallel, delayed
+
 
 def load_result(name, metadata, path):
     usecols = [metadata["metric_names"][0], "st_tuner_time", "trial_id", "st_decision"]
@@ -129,7 +130,12 @@ def get_metadata(root: Path):
     for metadata_path in root.rglob(f"*metadata.json"):
         with open(metadata_path, "r") as f:
             folder = metadata_path.parent.name
-            metadatas[folder] = json.load(f)
+            try:
+                metadatas[folder] = json.load(f)
+            except JSONDecodeError as e:
+                print(metadata_path)
+                raise e
+
     return metadatas
 
 
