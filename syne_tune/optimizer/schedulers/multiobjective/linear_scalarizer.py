@@ -11,7 +11,9 @@ from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
 
 logger = logging.getLogger(__name__)
 MAX_NAME_LENGTH = 64
@@ -78,7 +80,6 @@ class LinearScalarizedScheduler(TrialScheduler):
             )
             self.single_objective_metric = f"scalarized_objective_{rstring}"
 
-
         self.base_scheduler = SingleObjectiveScheduler(
             config_space=config_space,
             metric=self.single_objective_metric,
@@ -144,5 +145,5 @@ class LinearScalarizedScheduler(TrialScheduler):
             config_space_to_json_dict(self.config_space)
         )
         metadata["config_space"] = config_space_json
-        metadata["scalarized_metric"] =  self.single_objective_metric
+        metadata["scalarized_metric"] = self.single_objective_metric
         return metadata
