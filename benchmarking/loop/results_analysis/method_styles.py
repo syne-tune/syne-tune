@@ -12,7 +12,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmarking.nursery.benchmark_conformal.baselines import (
+from benchmarking.loop.baselines import (
     Methods,
 )
 from syne_tune.constants import ST_TUNER_TIME

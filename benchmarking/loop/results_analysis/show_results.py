@@ -14,13 +14,13 @@ import dill
 import numpy as np
 from matplotlib import pyplot as plt
 
-from benchmarking.nursery.benchmark_conformal.baselines import (
+from benchmarking.loop.baselines import (
     Methods,
 )
-from benchmarking.nursery.benchmark_conformal.results_analysis.load_experiments_parallel import (
+from benchmarking.loop.results_analysis.load_experiments_parallel import (
     load_benchmark_results,
 )
-from benchmarking.nursery.benchmark_conformal.results_analysis.method_styles import (
+from benchmarking.loop.results_analysis.method_styles import (
     method_styles,
     plot_range,
 )
