@@ -26,7 +26,7 @@ def _all_equal(iterable: Iterable) -> bool:
     return next(g, True) and not next(g, False)
 
 
-class LinearScalarizedScheduler(LegacyTrialScheduler):
+class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
     """Scheduler with linear scalarization of multiple objectives
 
     This method optimizes a single objective equal to the linear scalarization
@@ -58,7 +58,7 @@ class LinearScalarizedScheduler(LegacyTrialScheduler):
         base_scheduler_factory: Callable[[Any], LegacyTrialScheduler] = None,
         **base_scheduler_kwargs,
     ):
-        super(LinearScalarizedScheduler, self).__init__(config_space)
+        super(LegacyLinearScalarizedScheduler, self).__init__(config_space)
         if scalarization_weights is None:
             scalarization_weights = np.ones(shape=len(metric))
         self.scalarization_weights = np.asarray(scalarization_weights)
@@ -173,7 +173,7 @@ class LinearScalarizedScheduler(LegacyTrialScheduler):
         :return: Metadata of the scheduler
         """
         return {
-            **super(LinearScalarizedScheduler, self).metadata(),
+            **super(LegacyLinearScalarizedScheduler, self).metadata(),
             "scalarized_metric": self.single_objective_metric,
         }
 
