@@ -185,6 +185,27 @@ list_schedulers_to_test = [
         searcher="random_search",
         time_attr=resource_attr,
     ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="bore",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="kde",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="cqr",
+        time_attr=resource_attr,
+    ),
     BoundingBox(
         scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
             new_config_space,
