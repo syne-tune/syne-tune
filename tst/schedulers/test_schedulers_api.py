@@ -27,7 +27,9 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
 from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import LinearScalarizedScheduler
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice

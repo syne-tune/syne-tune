@@ -63,13 +63,17 @@ def scheduler(config_space, metric1, metric2, mode):
     )
 
 
-def test_scalarization(scheduler: LegacyLinearScalarizedScheduler, make_metric: Callable):
+def test_scalarization(
+    scheduler: LegacyLinearScalarizedScheduler, make_metric: Callable
+):
     results = make_metric(321)
     scalarized = scheduler._scalarized_metric(results)
     assert scalarized == 321 - 321
 
 
-def test_results_gathering(scheduler: LegacyLinearScalarizedScheduler, make_metric: Callable):
+def test_results_gathering(
+    scheduler: LegacyLinearScalarizedScheduler, make_metric: Callable
+):
     trialid = 123
     trial = Trial(
         trial_id=trialid,
