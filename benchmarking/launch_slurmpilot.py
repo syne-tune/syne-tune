@@ -43,7 +43,7 @@ if __name__ == "__main__":
     methods_selected = [
         Methods.LegacyRS,
         Methods.LegacyREA,
-        # Methods.LegacyTPE,
+        Methods.LegacyTPE,
         Methods.LegacyBORE,
         Methods.LegacyBOTorch,
         Methods.LegacyCQR,

@@ -5,11 +5,11 @@ from argparse import ArgumentParser
 import numpy as np
 from tqdm import tqdm
 
-from benchmarking.loop.baselines import (
+from benchmarking.baselines import (
     MethodArguments,
     methods,
 )
-from benchmarking.loop.benchmark_definitions import (
+from benchmarking.benchmarks import (
     benchmark_definitions,
 )
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         "--benchmark",
         type=str,
         required=False,
-        help="a benchmark to run from benchmark_definitions.py, run all by default.",
+        help="a benchmark to run from benchmarks.py, run all by default.",
     )
     parser.add_argument(
         "--n_workers",
