@@ -34,6 +34,7 @@ class SingleObjectiveScheduler(SingleFidelityScheduler):
     :param metric: Name of metric to optimize, key in results obtained via
         ``on_trial_result``.
     :type metric: str
+    :param do_minimize: True if we minimize the objective function
     :param random_seed: Master random seed. Generators used in the
         scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.

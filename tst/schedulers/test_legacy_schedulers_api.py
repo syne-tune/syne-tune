@@ -53,8 +53,8 @@ from syne_tune.optimizer.schedulers import (
 )
 from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
-    LinearScalarizedScheduler,
+from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import (
+    LegacyLinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     LCBAcquisitionFunction,
@@ -396,7 +396,7 @@ list_schedulers_to_test = [
         mode=[mode, mode],
         scalarization_weights=[1, 1],
     ),
-    LinearScalarizedScheduler(
+    LegacyLinearScalarizedScheduler(
         config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
