@@ -5,7 +5,6 @@ import matplotlib
 # matplotlib.rcParams["pdf.fonttype"] = 42
 
 import pandas as pd
-import traceback
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Dict, Tuple, Optional, List
