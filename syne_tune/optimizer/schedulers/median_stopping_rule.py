@@ -74,7 +74,7 @@ class MedianStoppingRule(TrialScheduler):
         self.running_average = running_average
 
         self.metric_multiplier = 1 if do_minimize else -1
-
+        self.do_minimize = do_minimize
         if running_average:
             self.trial_to_results = defaultdict(list)
 
@@ -133,3 +133,9 @@ class MedianStoppingRule(TrialScheduler):
         metadata_scheduler = self.scheduler.metadata()
 
         return metadata_scheduler | metadata
+
+    def metric_names(self) -> list[str]:
+        return self.metric
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"
