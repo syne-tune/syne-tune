@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     experiment_tag = args.experiment_tag
 
-    num_seeds = 1
+    num_seeds = args.num_seeds
     cluster = args.cluster
     partition = args.partition
     sbatch_arguments = args.sbatch_arguments
@@ -42,36 +42,28 @@ if __name__ == "__main__":
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
         Methods.LegacyRS,
-        Methods.LegacyREA,
+        # Methods.LegacyREA,
         Methods.LegacyTPE,
         Methods.LegacyBORE,
-        Methods.LegacyBOTorch,
         Methods.LegacyCQR,
+        # Methods.LegacyBOTorch,
         Methods.LegacyASHA,
         Methods.LegacyASHABORE,
         Methods.LegacyASHACQR,
-        Methods.LegacyBOHB,
-        # Methods.RS,
-        # Methods.REA,
-        # Methods.TPE,
-        # Methods.GP,
-        # Methods.BORE,
-        # Methods.BOTorch,
-        # Methods.CQR,
-        # # MF
-        # Methods.ASHA,
-        # Methods.ASHABORE,
-        # Methods.ASHACQR,
-        # Methods.BOHB,
-        # Methods.MOBSTER,
-        # Methods.HYPERTUNE,
+        # Methods.LegacyBOHB,
+        Methods.BORE,
+        Methods.TPE,
+        Methods.CQR,
+        Methods.ASHACQR,
+        Methods.ASHABORE,
+        Methods.BOHB,
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
     config = load_config()
     #    cluster, partition = 'scule', 'paul'
 
-    slurm = SlurmWrapper(config=config, clusters=[cluster], ssh_engine="paramiko")
+    slurm = SlurmWrapper(config=config, clusters=[cluster], ssh_engine="ssh")
     max_runtime_minutes = 60 * 4
     python_args = []
     for method in tqdm(methods_selected):
@@ -100,8 +92,7 @@ if __name__ == "__main__":
         src_dir=str(Path(__file__).parent),
         python_binary="python",
         python_libraries=[
-            str(Path(__file__).parent.parent.parent),
-            str(Path(__file__).parent.parent.parent.parent / "syne_tune"),
+            str(Path(__file__).parent.parent / "syne_tune"),
         ],
         n_cpus=8,
         mem=1024 * 8,

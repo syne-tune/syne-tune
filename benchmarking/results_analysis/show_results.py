@@ -59,7 +59,6 @@ def plot_result_benchmark(
     method_dict: Dict[str, np.array],
     title: str,
     rename_dict: dict,
-    method_styles: Optional[Dict] = None,
     ax=None,
     methods_to_show: list = None,
     plot_regret: bool = True,
@@ -113,7 +112,6 @@ def plot_task_performance_over_time(
     benchmark_results: Dict[str, Tuple[np.array, Dict[str, np.array]]],
     rename_dict: dict,
     result_folder: Path,
-    method_styles: Optional[Dict] = None,
     title: str = None,
     ax=None,
     methods_to_show: list = None,
@@ -125,7 +123,6 @@ def plot_task_performance_over_time(
             t_range=t_range,
             method_dict=method_dict,
             title=benchmark,
-            method_styles=method_styles,
             ax=ax,
             methods_to_show=methods_to_show,
             rename_dict=rename_dict,
@@ -399,20 +396,27 @@ if __name__ == "__main__":
         required=False,
     )
 
-    single_fidelity = [
+    methods_selected = [
         Methods.LegacyRS,
-        Methods.LegacyREA,
-        # Methods.LegacyTPE,
+        # Methods.LegacyREA,
+        Methods.LegacyTPE,
         Methods.LegacyBORE,
-        Methods.LegacyBOTorch,
         Methods.LegacyCQR,
-    ]
-    multi_fidelity = [
+        # Methods.LegacyBOTorch,
         Methods.LegacyASHA,
         Methods.LegacyASHABORE,
         Methods.LegacyASHACQR,
-        Methods.LegacyBOHB,
+        # Methods.LegacyBOHB,
+        Methods.BORE,
+        Methods.TPE,
+        Methods.CQR,
+        # Methods.ASHACQR,
+        Methods.ASHABORE,
+        Methods.BOHB,
     ]
+
+    single_fidelity = [x for x in methods_selected if "ASHA" in x or "BOHB" in x]
+    multi_fidelity = [x for x in methods_selected if x not in single_fidelity]
 
     methods_to_show = single_fidelity + multi_fidelity
 
@@ -461,7 +465,6 @@ if __name__ == "__main__":
         with catchtime("generating plots per task"):
             plot_task_performance_over_time(
                 benchmark_results=benchmark_results,
-                method_styles=method_styles,
                 methods_to_show=methods,
                 rename_dict=rename_dict,
                 result_folder=result_folder,
