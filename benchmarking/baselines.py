@@ -5,6 +5,8 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
 from syne_tune.optimizer import baselines
+from syne_tune.optimizer.scheduler import TrialScheduler
+from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
@@ -15,6 +17,10 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
 import syne_tune.optimizer.baselines as legacy_baselines
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
+
 
 # import syne_tune.optimizer.baselines as baselines
 
@@ -83,50 +89,6 @@ def _max_resource_attr_or_max_t(
 
 
 methods = {
-    # New method
-    Methods.RS: lambda method_arguments: baselines.RandomSearch(
-        config_space=method_arguments.config_space,
-        metrics=[method_arguments.metric],
-        do_minimize=True if method_arguments.mode == "min" else False,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.BORE: lambda method_arguments: baselines.BORE(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        do_minimize=True if method_arguments.mode == "min" else False,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.TPE: lambda method_arguments: baselines.KDE(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        do_minimize=True if method_arguments.mode == "min" else False,
-        random_seed=method_arguments.random_seed,
-        min_bandwidth=0.1,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.REA: lambda method_arguments: baselines.REA(
-        config_space=method_arguments.config_space,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        metric=method_arguments.metric,
-        do_minimize=True if method_arguments.mode == "min" else False,
-    ),
-    Methods.CQR: lambda method_arguments: baselines.CQR(
-        config_space=method_arguments.config_space,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        metric=method_arguments.metric,
-        do_minimize=True if method_arguments.mode == "min" else False,
-    ),
-    Methods.BOTorch: lambda method_arguments: baselines.BoTorch(
-        config_space=method_arguments.config_space,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        metric=method_arguments.metric,
-        do_minimize=True if method_arguments.mode == "min" else False,
-    ),
     # Legacy Methods
     Methods.LegacyRS: lambda method_arguments: legacy_baselines.RandomSearch(
         config_space=method_arguments.config_space,
@@ -219,43 +181,52 @@ methods = {
         points_to_evaluate=method_arguments.points_to_evaluate,
         **_max_resource_attr_or_max_t(method_arguments),
     ),
-    # Methods.ASHA: lambda method_arguments: baselines.ASHA(
-    #     config_space=method_arguments.config_space,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    #     metric=method_arguments.metric,
-    #     do_minimize=True if method_arguments.mode == "min" else False,
-    #     time_attr=method_arguments.resource_attr,
-    #     max_t=method_arguments.max_t,
-    # ),
-    # Methods.ASHABORE: lambda method_arguments: baselines.ASHABORE(
-    #     config_space=method_arguments.config_space,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    #     metric=method_arguments.metric,
-    #     do_minimize=True if method_arguments.mode == "min" else False,
-    #     time_attr=method_arguments.resource_attr,
-    #     max_t=method_arguments.max_t,
-    # ),
-    # Methods.ASHACQR: lambda method_arguments: baselines.ASHACQR(
-    #     config_space=method_arguments.config_space,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    #     metric=method_arguments.metric,
-    #     do_minimize=True if method_arguments.mode == "min" else False,
-    #     time_attr=method_arguments.resource_attr,
-    #     max_t=method_arguments.max_t,
-    # ),
-    # Methods.BOHB: lambda method_arguments: baselines.BOHB(
-    #     config_space=method_arguments.config_space,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    #     metric=method_arguments.metric,
-    #     do_minimize=True if method_arguments.mode == "min" else False,
-    #     time_attr=method_arguments.resource_attr,
-    #     min_bandwidth=0.1,
-    #     max_t=method_arguments.max_t,
-    # ),
+    # New methods
+    Methods.BORE: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="bore",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.TPE: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="kde",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.CQR: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="cqr",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.ASHACQR: lambda method_arguments: AsynchronousSuccessiveHalving(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher="cqr",
+        time_attr=method_arguments.resource_attr,
+    ),
+    Methods.ASHABORE: lambda method_arguments: AsynchronousSuccessiveHalving(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher="bore",
+        time_attr=method_arguments.resource_attr,
+    ),
+    Methods.BOHB: lambda method_arguments: AsynchronousSuccessiveHalving(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher="kde",
+        time_attr=method_arguments.resource_attr,
+    ),
 }
 
 
@@ -297,5 +268,9 @@ if __name__ == "__main__":
                     points_to_evaluate=points_to_evaluate,
                 )
             )
-            print(scheduler.suggest(0))
-            print(scheduler.suggest(1))
+            if isinstance(scheduler, TrialScheduler):
+                print(scheduler.suggest())
+                print(scheduler.suggest())
+            else:
+                print(scheduler.suggest(0))
+                print(scheduler.suggest(1))

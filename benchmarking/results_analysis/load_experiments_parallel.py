@@ -173,9 +173,12 @@ def load_benchmark_results(
     with catchtime("Load results dataframes"):
         # load results in parallel
         num_cores = max(1, os.cpu_count() // 2)
-        dfs = Parallel(num_cores)(
-            delayed(load_result)(name, metadata, path)
-            for name, metadata in list(metadatas.items())
+        from pyparfor import parfor
+
+        dfs = parfor(
+            lambda name, metadata: load_result(name, metadata, path),
+            inputs=list(metadatas.items()),
+            engine="joblib",
         )
     with catchtime("Compute best result over time"):
         benchmark_dfs = compute_best(dfs, metadatas)
