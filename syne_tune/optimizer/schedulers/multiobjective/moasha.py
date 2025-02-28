@@ -75,7 +75,6 @@ class MOASHA(TrialScheduler):
         assert reduction_factor > 1, "reduction factor not valid!"
         assert brackets > 0, "brackets must be positive!"
 
-
         if multiobjective_priority is None:
             self._multiobjective_priority = NonDominatedPriority()
         else:

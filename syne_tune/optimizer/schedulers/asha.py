@@ -11,7 +11,9 @@ from syne_tune.optimizer.scheduler import (
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
-from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import MOPriority
+from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
+    MOPriority,
+)
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.config_space import (
     cast_config_values,
@@ -141,7 +143,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             action = bracket.on_result(
                 trial_id=trial.trial_id,
                 cur_iter=result[self.time_attr],
-                metrics={self.metric: metric}
+                metrics={self.metric: metric},
             )
         if action == SchedulerDecision.STOP:
             self.num_stopped += 1
@@ -158,7 +160,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         bracket.on_result(
             trial_id=trial.trial_id,
             cur_iter=result[self.time_attr],
-            metrics={self.metric: metric}
+            metrics={self.metric: metric},
         )
         del self.trial_info[trial.trial_id]
 
@@ -233,9 +235,9 @@ class Bracket:
                         priorities = self.priority(metric_recorded)
                     else:
                         priorities = metric_recorded
-                    ranks = np.searchsorted(
-                        sorted(priorities), priorities
-                    ) / len(priorities)
+                    ranks = np.searchsorted(sorted(priorities), priorities) / len(
+                        priorities
+                    )
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
                         action = SchedulerDecision.STOP

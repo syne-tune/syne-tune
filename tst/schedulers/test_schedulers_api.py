@@ -170,9 +170,8 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
-        time_attr=resource_attr
+        time_attr=resource_attr,
     ),
-
     MedianStoppingRule(
         scheduler=SingleObjectiveScheduler(
             config_space,
