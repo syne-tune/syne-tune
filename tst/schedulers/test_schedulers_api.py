@@ -15,6 +15,7 @@ from syne_tune.optimizer.schedulers.multiobjective import (
 from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
     ExpectedHyperVolumeImprovement,
 )
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
@@ -164,6 +165,14 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    MOASHA(
+        config_space,
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
+        time_attr=resource_attr
+    ),
+
     MedianStoppingRule(
         scheduler=SingleObjectiveScheduler(
             config_space,
