@@ -197,7 +197,7 @@ def convert_dataset(
                 objective_evaluations[pos, seed_idx, 0, :] = metrics
 
     # rename time_train_s to metric_elapsed_time, as this is the default naming for SyneTune
-    objective_names[2] = "metric_elapsed_time"
+    objective_names[2] = METRIC_ELAPSED_TIME
 
     # TabRepo does not have multi-fidelity evaluations. We initialize the fidelity space as a constant.
     fidelity_space = {
