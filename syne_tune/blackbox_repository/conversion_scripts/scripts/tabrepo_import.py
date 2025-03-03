@@ -16,7 +16,6 @@ from syne_tune.config_space import (
     loguniform,
     randint,
 )
-from tabrepo import load_repository, EvaluationRepository
 from syne_tune.util import catchtime
 
 BLACKBOX_NAME = "tabrepo_"
@@ -95,6 +94,8 @@ CONFIGURATION_SPACE_CatBoost = {
 
 
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
+    from tabrepo import load_repository, EvaluationRepository
+
     print(f"generating {bb_name}")
 
     bb_dict = {}
