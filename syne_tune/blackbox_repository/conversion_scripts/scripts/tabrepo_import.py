@@ -1,7 +1,7 @@
 # To re-generate this benchmark you need to install tabrepo from https://github.com/autogluon/tabrepo.git
 # The import currently resides in the generate tabrepo function
-import pandas as pd
 import numpy as np
+import pandas as pd
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
@@ -10,9 +10,14 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
-from syne_tune.config_space import uniform, loguniform, randint, choice
+from syne_tune.config_space import (
+    uniform,
+    choice,
+    loguniform,
+    randint,
+)
+from tabrepo import load_repository, EvaluationRepository
 from syne_tune.util import catchtime
-
 
 BLACKBOX_NAME = "tabrepo_"
 RESOURCE_ATTR = "hp_epoch"
@@ -20,7 +25,7 @@ MAX_RESOURCE_LEVEL = 100
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 # D244_F3_C1530 for full datasets
-CONTEXT_NAME = "D244_F3_C1530_3"
+CONTEXT_NAME = "D244_F3_C1530"
 
 CONFIGURATION_SPACE_KNeighbors = {
     "n_neighbors": choice([3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 20, 30, 40, 50]),
@@ -93,39 +98,30 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     print(f"generating {bb_name}")
 
     bb_dict = {}
-
-    from tabrepo import load_repository, EvaluationRepository
-
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
     )
-
     # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
-    # We select the metrics for the current blackbox method
-    metrics = metrics[
+    # Choose the desired method from bb_name and filter out _c configurations.
+    desired_method = bb_name.split("_")[1]
+    filtered_metrics = metrics[
         metrics.index.get_level_values("framework").str.split("_").str[0]
-        == bb_name.split("_")[1]
+        == desired_method
     ]
-    # We exclude configurations containing _c suffix
-    # The _c configs are configurations that were default configurations of AG at the time of TabRepo
-    # and have now been replaced by portfolio _r configurations
-    metrics = metrics[
-        metrics.index.get_level_values("framework").str.contains("_c") == False
+    filtered_metrics = filtered_metrics[
+        ~filtered_metrics.index.get_level_values("framework").str.contains("_c")
     ]
-    # We iterate over each dataset and pass the metrics for the corresponding hyperparameter configurations and
-    # search space to the convert_dataset() function
-    for dataset_name, group in metrics.groupby("dataset"):
-        print(f"Processing dataset: {dataset_name}")
-        hyperparameters_configurations = {}
-        for framework in group.index.to_frame(index=False)["framework"].values:
-            hyperparameters_configurations[framework] = repo.config_hyperparameters(
-                config=framework
-            )
 
-        bb_dict[dataset_name] = convert_dataset(
-            config_space, group, hyperparameters_configurations
-        )
+    # Precompute configurations for every unique framework.
+    unique_frameworks = filtered_metrics.index.get_level_values("framework").unique()
+    all_configurations = repo.configs_hyperparameters(configs=unique_frameworks)
+
+    # Process each dataset.
+    for dataset_name, group in filtered_metrics.groupby("dataset"):
+        print(f"Processing dataset: {dataset_name}")
+        # For the dataset, get the configurations for the frameworks used.
+        bb_dict[dataset_name] = convert_dataset(config_space, group, all_configurations)
 
     with catchtime("saving to disk"):
         serialize(
@@ -136,69 +132,76 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
 
 
 def convert_dataset(
-    config_space: dict, evaluations: pd.DataFrame, configurations: dict
+    config_space: dict,
+    evaluations: pd.DataFrame,
+    all_configurations: dict,
 ):
-    print(f"type is: {type(evaluations)})")
-    # names of hyperparameters
+    # Storing configuration keys to build a consistent ordering of configurations
+    all_config_keys = list(all_configurations.keys())
     hp_cols = list(config_space.keys())
-    # number of hyperparameters
     n_hps = len(hp_cols)
-    # number of evaluations
-    n_evals = len(evaluations.xs(0, level="fold"))
-    # initialize hyperparameter array with shape(n_evals, n_hps)
-    hps = np.zeros((n_evals, n_hps), dtype=object)
+    n_evals = len(all_config_keys)
 
-    n_seeds = 3
-
-    for i, config in enumerate(configurations):
+    # Create hyperparameters array using the complete configurations.
+    # This avoids to rewrite the serialize() function,
+    # as BlackBoxTabular allows only same-sized Blackboxes
+    # Missing Evaluations are set to np.nan
+    hps = np.empty((n_evals, n_hps), dtype=object)
+    for i, config in enumerate(all_config_keys):
+        config_dict = all_configurations[config]
         arr = []
-        for key in config_space.keys():
-            # this avoids type errors in fastparquet conversion, applies only to RandomForrest and ExtraTrees
+        for key in hp_cols:
+            # Convert to string for key that causes type issues
             if key == "max_features":
-                arr.append(str(configurations[config][key]))
+                arr.append(str(config_dict[key]))
             else:
-                arr.append(configurations[config][key])
+                arr.append(config_dict[key])
         hps[i] = arr
-
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
+
+    # Objective evaluations provided by TabRepo.
     objective_names = [
         "metric_error",
         "metric_error_val",
-        "metric_elapsed_time",
-        "metric_time_infer_s",
-        "metric_rank",
+        "time_train_s",
+        "time_infer_s",
+        "rank",
     ]
     n_objectives = len(objective_names)
-
-    objective_evaluations = []
-
-    for i, fold in enumerate([0, 1, 2]):
-        fold_data = evaluations.xs(fold, level="fold")
-        for j, (_, row) in enumerate(fold_data.iterrows()):
-            metrics = row[
-                [
-                    "metric_error",
-                    "metric_error_val",
-                    "time_train_s",
-                    "time_infer_s",
-                    "rank",
-                ]
-            ].values
-
-            if len(objective_evaluations) <= j:
-                objective_evaluations.append([[], [], []])
-
-            objective_evaluations[j][i] = metrics
-    objective_evaluations = np.array(objective_evaluations)
-    objective_evaluations = objective_evaluations.reshape(
-        n_evals, n_seeds, 1, n_objectives
+    n_seeds = (
+        3  # We use seeds as folds here, corresponding to folds 0, 1, and 2 from TabRepo
     )
-    # Tabrepo does not provide performance across different fidelities.
-    # We initialize the fidelity space as a constant value, since it is required as an argument
+
+    # Initialize evaluations array with np.nan for missing evaluations
+    objective_evaluations = np.full(
+        (n_evals, n_seeds, 1, n_objectives), np.nan, dtype=float
+    )
+
+    # Loop over each fold (seed) and insert the available evaluations
+    for seed_idx, fold in enumerate([0, 1, 2]):
+        try:
+            fold_data = evaluations.xs(fold, level="fold")
+        except KeyError:
+            # If a fold is missing entirely, we store its entries as np.nan
+            continue
+
+        # Iterate over each row in the fold
+        for idx, row in fold_data.iterrows():
+            # Get config_id, i.e. the current framework.
+            config_id = idx[-1]
+            if config_id in all_config_keys:
+                pos = all_config_keys.index(config_id)
+                metrics = row[objective_names].values.astype(float)
+                # matches the right framework with the right position in the objective evaluations array
+                objective_evaluations[pos, seed_idx, 0, :] = metrics
+
+    # rename time_train_s to metric_elapsed_time, as this is the default naming for SyneTune
+    objective_names[2] = "metric_elapsed_time"
+
+    # TabRepo does not have multi-fidelity evaluations. We initialize the fidelity space as a constant.
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
-
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=config_space,
