@@ -1,5 +1,5 @@
 # To re-generate this benchmark you need to install tabrepo from https://github.com/autogluon/tabrepo.git
-# The import currently resides in the generate tabrepo function
+# The import currently resides in the generate tabrepo function.
 import numpy as np
 import pandas as pd
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
