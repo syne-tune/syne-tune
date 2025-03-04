@@ -5,7 +5,6 @@ import pandas as pd
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
-    default_metric,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
@@ -20,7 +19,6 @@ from syne_tune.config_space import (
     randint,
 )
 from syne_tune.util import catchtime
-from tabrepo import load_repository, EvaluationRepository
 
 BLACKBOX_NAME = "tabrepo_"
 RESOURCE_ATTR = "hp_epoch"
@@ -98,7 +96,7 @@ CONFIGURATION_SPACE_CatBoost = {
 
 
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
-
+    from tabrepo import load_repository, EvaluationRepository
     print(f"generating {bb_name}")
 
     bb_dict = {}
@@ -108,6 +106,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     default_metrics = repo.metrics(
         datasets=repo.datasets(), configs=["ExtraTrees_c1_BAG_L1"]
     )
+    print(repo.datasets())
     # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
     # Choose the desired method from bb_name and filter out _c configurations.
