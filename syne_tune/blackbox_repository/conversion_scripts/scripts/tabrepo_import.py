@@ -94,6 +94,7 @@ CONFIGURATION_SPACE_CatBoost = {
     "grow_policy": choice(["SymmetricTree", "Depthwise"]),
 }
 
+
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     from tabrepo import load_repository, EvaluationRepository
 
