@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
+from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time, default_metric
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
 )
@@ -17,6 +17,7 @@ from syne_tune.config_space import (
     randint,
 )
 from syne_tune.util import catchtime
+from tabrepo import load_repository, EvaluationRepository
 
 BLACKBOX_NAME = "tabrepo_"
 RESOURCE_ATTR = "hp_epoch"
@@ -94,7 +95,6 @@ CONFIGURATION_SPACE_CatBoost = {
 
 
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
-    from tabrepo import load_repository, EvaluationRepository
 
     print(f"generating {bb_name}")
 
@@ -102,6 +102,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
     )
+    default_metrics = repo.metrics(datasets=repo.datasets(), configs=["ExtraTrees_c1_BAG_L1"])
     # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
     # Choose the desired method from bb_name and filter out _c configurations.
@@ -122,7 +123,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     for dataset_name, group in filtered_metrics.groupby("dataset"):
         print(f"Processing dataset: {dataset_name}")
         # For the dataset, get the configurations for the frameworks used.
-        bb_dict[dataset_name] = convert_dataset(config_space, group, all_configurations)
+        bb_dict[dataset_name] = convert_dataset(config_space, group, all_configurations, default_metrics, dataset_name)
 
     with catchtime("saving to disk"):
         serialize(
@@ -136,6 +137,8 @@ def convert_dataset(
     config_space: dict,
     evaluations: pd.DataFrame,
     all_configurations: dict,
+    default_metrics: pd.DataFrame,
+    dataset_name: str,
 ):
     # Storing configuration keys to build a consistent ordering of configurations
     all_config_keys = list(all_configurations.keys())
@@ -146,7 +149,8 @@ def convert_dataset(
     # Create hyperparameters array using the complete configurations.
     # This avoids to rewrite the serialize() function,
     # as BlackBoxTabular allows only same-sized Blackboxes
-    # Missing Evaluations are set to np.nan
+    # Missing Evaluations are set to the metrics of "ExtraTrees_c1_BAG_L1" config on the same dataset and fold
+    # if it does not exist, it is set to np.nan
     hps = np.empty((n_evals, n_hps), dtype=object)
     for i, config in enumerate(all_config_keys):
         config_dict = all_configurations[config]
@@ -178,12 +182,33 @@ def convert_dataset(
         (n_evals, n_seeds, 1, n_objectives), np.nan, dtype=float
     )
 
-    # Loop over each fold (seed) and insert the available evaluations
+    # Loop over each fold (seed) and insert the default evaluation
     for seed_idx, fold in enumerate([0, 1, 2]):
         try:
             fold_data = evaluations.xs(fold, level="fold")
         except KeyError:
-            # If a fold is missing entirely, we store its entries as np.nan
+            continue
+
+        # Iterate over each row in the fold
+        for idx, row in fold_data.iterrows():
+            # Get config_id, i.e. the current framework.
+            config_id = idx[-1]
+            if config_id in all_config_keys:
+                pos = all_config_keys.index(config_id)
+                # fills all metrics with the performance of the ExtraTrees_c1_BAG_L1 model
+                try:
+                    # fill the framework evaluation with the default performance of the "ExtraTrees_c1_BAG_L1" model
+                    objective_evaluations[pos, seed_idx, 0, :] = default_metrics.loc[(dataset_name, fold, "ExtraTrees_c1_BAG_L1")].values.astype(float)
+                except KeyError:
+                    print(f"Got KeyError for {dataset_name}/{fold}, using np.nan instead")
+                    continue
+
+
+    # Loop over each fold (seed) and insert the actual model evaluations
+    for seed_idx, fold in enumerate([0, 1, 2]):
+        try:
+            fold_data = evaluations.xs(fold, level="fold")
+        except KeyError:
             continue
 
         # Iterate over each row in the fold
@@ -203,6 +228,8 @@ def convert_dataset(
     fidelity_space = {
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
+
+    print(objective_evaluations)
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=config_space,
