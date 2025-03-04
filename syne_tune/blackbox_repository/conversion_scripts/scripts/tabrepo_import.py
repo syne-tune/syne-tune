@@ -94,7 +94,6 @@ CONFIGURATION_SPACE_CatBoost = {
     "grow_policy": choice(["SymmetricTree", "Depthwise"]),
 }
 
-
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     from tabrepo import load_repository, EvaluationRepository
 
@@ -107,7 +106,6 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     default_metrics = repo.metrics(
         datasets=repo.datasets(), configs=["ExtraTrees_c1_BAG_L1"]
     )
-    print(repo.datasets())
     # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
     # Choose the desired method from bb_name and filter out _c configurations.
@@ -239,7 +237,6 @@ def convert_dataset(
         RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
 
-    print(objective_evaluations)
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=config_space,
