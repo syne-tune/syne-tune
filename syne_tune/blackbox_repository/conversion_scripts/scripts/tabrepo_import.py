@@ -3,7 +3,10 @@
 import numpy as np
 import pandas as pd
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time, default_metric
+from syne_tune.blackbox_repository.conversion_scripts.scripts import (
+    metric_elapsed_time,
+    default_metric,
+)
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
 )
@@ -102,7 +105,9 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     repo: EvaluationRepository = load_repository(
         context_name, cache=True, load_predictions=False
     )
-    default_metrics = repo.metrics(datasets=repo.datasets(), configs=["ExtraTrees_c1_BAG_L1"])
+    default_metrics = repo.metrics(
+        datasets=repo.datasets(), configs=["ExtraTrees_c1_BAG_L1"]
+    )
     # We collect metrics for all frameworks from tabrepo
     metrics = repo.metrics(datasets=repo.datasets(), configs=repo.configs())
     # Choose the desired method from bb_name and filter out _c configurations.
@@ -123,7 +128,9 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     for dataset_name, group in filtered_metrics.groupby("dataset"):
         print(f"Processing dataset: {dataset_name}")
         # For the dataset, get the configurations for the frameworks used.
-        bb_dict[dataset_name] = convert_dataset(config_space, group, all_configurations, default_metrics, dataset_name)
+        bb_dict[dataset_name] = convert_dataset(
+            config_space, group, all_configurations, default_metrics, dataset_name
+        )
 
     with catchtime("saving to disk"):
         serialize(
@@ -198,11 +205,14 @@ def convert_dataset(
                 # fills all metrics with the performance of the ExtraTrees_c1_BAG_L1 model
                 try:
                     # fill the framework evaluation with the default performance of the "ExtraTrees_c1_BAG_L1" model
-                    objective_evaluations[pos, seed_idx, 0, :] = default_metrics.loc[(dataset_name, fold, "ExtraTrees_c1_BAG_L1")].values.astype(float)
+                    objective_evaluations[pos, seed_idx, 0, :] = default_metrics.loc[
+                        (dataset_name, fold, "ExtraTrees_c1_BAG_L1")
+                    ].values.astype(float)
                 except KeyError:
-                    print(f"Got KeyError for {dataset_name}/{fold}, using np.nan instead")
+                    print(
+                        f"Got KeyError for {dataset_name}/{fold}, using np.nan instead"
+                    )
                     continue
-
 
     # Loop over each fold (seed) and insert the actual model evaluations
     for seed_idx, fold in enumerate([0, 1, 2]):
