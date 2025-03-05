@@ -234,7 +234,8 @@ class Bracket:
                     if self.priority is not None:
                         priorities = self.priority(metric_recorded)
                     else:
-                        priorities = metric_recorded
+                        # single objective case
+                        priorities = metric_recorded.flatten()
                     ranks = np.searchsorted(sorted(priorities), priorities) / len(
                         priorities
                     )

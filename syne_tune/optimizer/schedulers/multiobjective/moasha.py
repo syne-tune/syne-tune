@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, List, Dict, Any
+from typing import Optional, List, Dict, Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -12,6 +12,8 @@ from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority impor
     MOPriority,
     NonDominatedPriority,
 )
+from syne_tune.config_space import config_space_to_json_dict
+from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.schedulers.asha import Bracket
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,7 @@ class MOASHA(TrialScheduler):
         is simply a unit-less scalar. Defaults to 3
     :param brackets: Number of brackets. Each bracket has a different
         ``grace_period`` and number of rung levels. Defaults to 1
+    :param random_seed: Seed for the random number generator
     """
 
     def __init__(
@@ -76,27 +79,27 @@ class MOASHA(TrialScheduler):
         assert brackets > 0, "brackets must be positive!"
 
         if multiobjective_priority is None:
-            self._multiobjective_priority = NonDominatedPriority()
+            self.multiobjective_priority = NonDominatedPriority()
         else:
-            self._multiobjective_priority = multiobjective_priority
+            self.multiobjective_priority = multiobjective_priority
 
         self.config_space = config_space
         self.do_minimize = do_minimize
-        self._reduction_factor = reduction_factor
-        self._max_t = max_t
-        self._trial_info = {}  # Stores Trial -> Bracket
+        self.reduction_factor = reduction_factor
+        self.max_t = max_t
+        self.trial_info = {}  # Stores Trial -> Bracket
 
         # Tracks state for new trial add
-        self._brackets = [
+        self.brackets = [
             Bracket(
-                grace_period, max_t, reduction_factor, s, self._multiobjective_priority
+                grace_period, max_t, reduction_factor, s, self.multiobjective_priority
             )
             for s in range(brackets)
         ]
-        self._num_stopped = 0
+        self.num_stopped = 0
         self.metrics = metrics
         self.metric_multiplier = 1 if self.do_minimize else -1
-        self._time_attr = time_attr
+        self.time_attr = time_attr
 
     def metric_names(self) -> List[str]:
         return self.metrics
@@ -112,49 +115,62 @@ class MOASHA(TrialScheduler):
         return TrialSuggestion.start_suggestion(config)
 
     def on_trial_add(self, trial: Trial):
-        sizes = np.array([len(b.rungs) for b in self._brackets])
+        sizes = np.array([len(b.rungs) for b in self.brackets])
         probs = np.e ** (sizes - sizes.max())
         normalized = probs / probs.sum()
-        idx = np.random.choice(len(self._brackets), p=normalized)
-        print(f"adding trial {trial.trial_id}")
-        self._trial_info[trial.trial_id] = self._brackets[idx]
+        idx = np.random.choice(len(self.brackets), p=normalized)
+        self.trial_info[trial.trial_id] = self.brackets[idx]
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
-        self._check_metrics_are_present(result)
-        if result[self._time_attr] >= self._max_t:
+        self.check_metrics_are_present(result)
+        if result[self.time_attr] >= self.max_t:
             action = SchedulerDecision.STOP
         else:
-            bracket = self._trial_info[trial.trial_id]
-            metrics = self._metric_dict(result)
+            bracket = self.trial_info[trial.trial_id]
+            metrics = self.metric_dict(result)
             action = bracket.on_result(
                 trial_id=trial.trial_id,
-                cur_iter=result[self._time_attr],
+                cur_iter=result[self.time_attr],
                 metrics=metrics,
             )
         if action == SchedulerDecision.STOP:
-            self._num_stopped += 1
+            self.num_stopped += 1
         return action
 
-    def _metric_dict(self, reported_results: Dict[str, Any]) -> Dict[str, Any]:
+    def metric_dict(self, reported_results: Dict[str, Any]) -> Dict[str, Any]:
         return {
             metric: reported_results[metric] * self.metric_multiplier
             for metric in self.metrics
         }
 
-    def _check_metrics_are_present(self, result: Dict[str, Any]):
-        for key in [self._time_attr] + self.metrics:
+    def check_metrics_are_present(self, result: Dict[str, Any]):
+        for key in [self.time_attr] + self.metrics:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
-        self._check_metrics_are_present(result)
-        bracket = self._trial_info[trial.trial_id]
+        self.check_metrics_are_present(result)
+        bracket = self.trial_info[trial.trial_id]
         bracket.on_result(
             trial_id=trial.trial_id,
-            cur_iter=result[self._time_attr],
-            metrics=self._metric_dict(result),
+            cur_iter=result[self.time_attr],
+            metrics=self.metric_dict(result),
         )
-        del self._trial_info[trial.trial_id]
+        del self.trial_info[trial.trial_id]
 
     def on_trial_remove(self, trial: Trial):
-        del self._trial_info[trial.trial_id]
+        del self.trial_info[trial.trial_id]
+
+    def metadata(self) -> Dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        metadata = super().metadata()
+        config_space_json = dump_json_with_numpy(
+            config_space_to_json_dict(self.config_space)
+        )
+        metadata["config_space"] = config_space_json
+        metadata["metrics"] = self.metrics
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
+        return metadata
