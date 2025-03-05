@@ -22,6 +22,9 @@ from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+    QuantileBasedSurrogateSearcher,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
@@ -190,6 +193,27 @@ list_schedulers_to_test = [
         searcher="random_search",
         time_attr=resource_attr,
     ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="bore",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="kde",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="cqr",
+        time_attr=resource_attr,
+    ),
     BoundingBox(
         scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
             new_config_space,
@@ -203,6 +227,17 @@ list_schedulers_to_test = [
         metric=metric1,
         random_seed=random_seed,
         transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    SingleObjectiveScheduler(
+        config_space,
+        metric=metric1,
+        searcher=QuantileBasedSurrogateSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+        ),
+        do_minimize=False,
+        random_seed=random_seed,
     ),
 ]
 

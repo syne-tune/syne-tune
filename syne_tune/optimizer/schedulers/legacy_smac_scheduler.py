@@ -57,12 +57,12 @@ def to_smac_configspace(
     return cs
 
 
-class SMACScheduler(TrialScheduler):
+class LegacySMACScheduler(TrialScheduler):
     def __init__(
         self,
         config_space: Dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
+        mode: Optional[str] = None,
         points_to_evaluate=None,
         random_seed: Optional[int] = None,
     ):
@@ -70,11 +70,11 @@ class SMACScheduler(TrialScheduler):
         Wrapper to SMAC3. Requires SMAC3 to be installed, see https://github.com/automl/SMAC3 for instructions.
         :param config_space:
         :param metric: metric to be optimized, should be present in reported results dictionary
-        :param do_minimize: True if we minimize the objective function
+        :param mode: "min" or "max", default to "min"
         :param points_to_evaluate: list of points to consider before calling the optimizer
         :param random_seed: to fix the behavior of smac
         """
-        super(SMACScheduler, self).__init__(random_seed=random_seed)
+        super(LegacySMACScheduler, self).__init__(config_space=config_space)
 
         # compute part of the config space that are constants to add those when calling the blackbox
         self.config_space_constants = {
@@ -87,7 +87,7 @@ class SMACScheduler(TrialScheduler):
             config_space_non_constants, random_seed=random_seed
         )
         self.metric = metric
-        self.do_minimize = do_minimize
+        self.mode = mode if mode is not None else "min"
         self.points_to_evaluate = points_to_evaluate if points_to_evaluate else []
 
         scenario = Scenario(
@@ -110,10 +110,10 @@ class SMACScheduler(TrialScheduler):
         )
         self.trial_info = {}
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]) -> str:
         info = self.trial_info[trial.trial_id]
         cost = result[self.metric]
-        if not self.do_minimize:
+        if self.mode == "max":
             cost *= -1
         self.smac.tell(
             info,
@@ -123,7 +123,7 @@ class SMACScheduler(TrialScheduler):
             ),
         )
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         if self.points_to_evaluate:
             config = self.points_to_evaluate.pop()
             info = TrialInfo(
@@ -137,7 +137,6 @@ class SMACScheduler(TrialScheduler):
             config = dict(info.config)
             config.update(self.config_space_constants)
 
-        trial_id = len(self.trial_info)
         self.trial_info[trial_id] = info
         return TrialSuggestion.start_suggestion(config)
 

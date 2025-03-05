@@ -5,14 +5,12 @@ import xgboost
 from sklearn.model_selection import train_test_split
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 
 import pandas as pd
 
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
-    SingleObjectiveBaseSearcher,
-)
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
-    TransferLearningTaskEvaluations,
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    LegacyTransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import (
     from_string,
@@ -107,7 +105,7 @@ def subsample(
     return X, y
 
 
-class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
+class LegacyQuantileBasedSurrogateSearcher(StochasticSearcher):
     """
     Implements the transfer-learning method:
 
@@ -123,6 +121,7 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
+    :param mode: Whether to minimize or maximize, default to "min".
     :param transfer_learning_evaluations: Dictionary from task name to offline
         evaluations.
     :param max_fit_samples: Maximum number to use when fitting the method.
@@ -131,22 +130,25 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
         and then applies Gaussian inverse CDF. "standard" applies just
         standard normalization (remove mean and divide by variance) but can
         perform significantly worse.
-    :param random_seed: Seed for the random number generator.
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric: str,
+        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        mode: Optional[str] = None,
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
-        random_seed: int = None,
+        **kwargs,
     ):
-        super(QuantileBasedSurrogateSearcher, self).__init__(
-            config_space=config_space, points_to_evaluate=[], random_seed=random_seed
+        super(LegacyQuantileBasedSurrogateSearcher, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            points_to_evaluate=[],
+            **kwargs,
         )
-
-        self.random_state = np.random.RandomState(self.random_seed)
+        self.mode = mode
         self.model_pipeline, sigma_train, sigma_val = fit_model(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
@@ -175,8 +177,10 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
     def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def get_config(self, **kwargs) -> Optional[dict]:
         samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
+        if self.mode == "max":
+            samples *= -1
         candidate = self.X_candidates.loc[np.argmin(samples)]
         return dict(candidate)
 

@@ -17,8 +17,8 @@ from syne_tune.optimizer.schedulers.transfer_learning.legacy_bounding_box import
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+    LegacyQuantileBasedSurrogateSearcher,
 )
 
 
@@ -113,7 +113,7 @@ methods = {
     ),
     Methods.ASHA_CTS: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
-        searcher=QuantileBasedSurrogateSearcher(
+        searcher=LegacyQuantileBasedSurrogateSearcher(
             mode=method_arguments.mode,
             config_space=method_arguments.config_space,
             metric=method_arguments.metric,

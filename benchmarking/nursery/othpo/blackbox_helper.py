@@ -17,8 +17,8 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningTaskEvaluations,
     LegacyBoundingBox,
 )
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+    LegacyQuantileBasedSurrogateSearcher,
 )
 from syne_tune.backend import LocalBackend
 
@@ -397,7 +397,7 @@ def initialise_scheduler_stopping_criterion(
     elif optimiser == "Quantiles" and check_enough_tasks:
         scheduler = FIFOScheduler(
             points_to_evaluate=[],
-            searcher=QuantileBasedSurrogateSearcher(**transfer_kwargs),
+            searcher=LegacyQuantileBasedSurrogateSearcher(**transfer_kwargs),
             **base_kwargs,
         )
 

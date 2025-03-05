@@ -246,6 +246,7 @@ class Bore(SingleObjectiveBaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int = None,
     ):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(metric)
