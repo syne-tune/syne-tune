@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
 
@@ -43,7 +43,7 @@ def test_constrained_bayesopt(scheduler, searcher, constraint_offset):
     }
     stop_criterion = StoppingCriterion(max_wallclock_time=28)
 
-    myscheduler = FIFOScheduler(
+    myscheduler = LegacyFIFOScheduler(
         config_space,
         searcher=searcher,
         search_options=search_options,

@@ -10,7 +10,7 @@ from syne_tune.blackbox_repository import (
     UserBlackboxBackend,
 )
 from syne_tune.optimizer.baselines import BoTorch, RandomSearch, ZeroShotTransfer
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -330,7 +330,7 @@ def initialise_scheduler_stopping_criterion(
     stop_criterion = StoppingCriterion(max_num_trials_completed=points_per_task)
 
     if optimiser == "ZeroShot" and check_enough_tasks:
-        # Needs a constrained config_space in scheduler and blackbox
+        # Needs a legacy_constrained config_space in scheduler and blackbox
         scheduler = ZeroShotTransfer(
             sort_transfer_learning_evaluations=True,
             use_surrogates=True,
@@ -385,7 +385,7 @@ def initialise_scheduler_stopping_criterion(
         del transfer_kwargs["random_seed"]
         del base_kwargs["config_space"]
         scheduler = LegacyBoundingBox(
-            scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
+            scheduler_fun=lambda new_config_space, mode, metric: LegacyFIFOScheduler(
                 new_config_space,
                 points_to_evaluate=[],
                 searcher="botorch",
@@ -395,7 +395,7 @@ def initialise_scheduler_stopping_criterion(
         )
 
     elif optimiser == "Quantiles" and check_enough_tasks:
-        scheduler = FIFOScheduler(
+        scheduler = LegacyFIFOScheduler(
             points_to_evaluate=[],
             searcher=LegacyQuantileBasedSurrogateSearcher(**transfer_kwargs),
             **base_kwargs,

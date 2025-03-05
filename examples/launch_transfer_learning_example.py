@@ -13,7 +13,7 @@ from examples.training_scripts.height_example.train_height import (
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.baselines import BayesianOptimization, ZeroShotTransfer
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningTaskEvaluations,
@@ -125,7 +125,7 @@ def init_scheduler(
         return ZeroShotTransfer(use_surrogates=True, **kwargs_w_trans)
 
     if scheduler_str == "Quantiles":
-        return FIFOScheduler(
+        return LegacyFIFOScheduler(
             searcher=LegacyQuantileBasedSurrogateSearcher(**kwargs_w_trans),
             **kwargs,
         )

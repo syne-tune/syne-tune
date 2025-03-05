@@ -3,10 +3,10 @@ __all__ = []
 import logging
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.cost_aware_gp_fifo_searcher import (  # noqa: F401
         CostAwareGPFIFOSearcher,
     )
-    from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_multifidelity_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.cost_aware_gp_multifidelity_searcher import (  # noqa: F401
         CostAwareGPMultiFidelitySearcher,
     )
 

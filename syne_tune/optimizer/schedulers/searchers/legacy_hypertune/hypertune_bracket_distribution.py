@@ -8,7 +8,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_m
     HyperTuneIndependentGPModel,
     HyperTuneJointGPModel,
 )
-from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
+from syne_tune.optimizer.schedulers.searchers.legacy_bracket_distribution import (
     DefaultHyperbandBracketDistribution,
 )
 from syne_tune.optimizer.scheduler import TrialScheduler
@@ -27,7 +27,7 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
         self._searcher = None
 
     def configure(self, scheduler: TrialScheduler):
-        from syne_tune.optimizer.schedulers import HyperbandScheduler
+        from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
         from syne_tune.optimizer.schedulers.synchronous.hyperband import (
             SynchronousHyperbandScheduler,
         )
@@ -35,7 +35,7 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
 
         super().configure(scheduler)
         assert isinstance(
-            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
+            scheduler, (LegacyHyperbandScheduler, SynchronousHyperbandScheduler)
         ), (
             "This searcher requires HyperbandScheduler or "
             + "SynchronousHyperbandScheduler scheduler"
@@ -49,7 +49,7 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
         err_msg = (
             "Hyper-Tune requires GaussProcEstimator estimator with "
             "HyperTuneIndependentGPModel or HyperTuneJointGPModel model. Use "
-            "searcher = 'hypertune'"
+            "searcher = 'legacy_hypertune'"
         )
         assert isinstance(estimator, GaussProcEstimator), err_msg
         gpmodel = estimator.gpmodel

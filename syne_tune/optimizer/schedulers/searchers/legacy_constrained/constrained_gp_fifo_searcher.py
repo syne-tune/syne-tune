@@ -1,14 +1,16 @@
 from typing import List, Optional, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.cost_aware_gp_fifo_searcher import (
     MultiModelGPFIFOSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     constrained_gp_fifo_searcher_defaults,
     constrained_gp_fifo_searcher_factory,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import decode_state
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
+    decode_state,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )
@@ -22,11 +24,11 @@ logger = logging.getLogger(__name__)
 
 class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
-    Gaussian process-based constrained hyperparameter optimization (to be used
+    Gaussian process-based legacy_constrained hyperparameter optimization (to be used
     with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
 
     :param constraint_attr: Name of constraint metric in ``report`` passed to
         :meth:`_update`.

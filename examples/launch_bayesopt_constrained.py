@@ -1,11 +1,11 @@
 """
-Example for running constrained Bayesian optimization on a toy example
+Example for running legacy_constrained Bayesian optimization on a toy example
 """
 import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune.config_space import uniform
 from syne_tune import StoppingCriterion, Tuner
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
-    # Bayesian constrained optimization:
+    # Bayesian legacy_constrained optimization:
     #   :math:`max_x f(x),   \mathrm{s.t.} c(x) <= 0`
     # Here, ``metric`` represents :math:`f(x)`, ``constraint_attr`` represents
     # :math:`c(x)`.
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         "num_init_random": n_workers,
         "constraint_attr": constraint_attr,
     }
-    scheduler = FIFOScheduler(
+    scheduler = LegacyFIFOScheduler(
         config_space,
         searcher="bayesopt_constrained",
         search_options=search_options,

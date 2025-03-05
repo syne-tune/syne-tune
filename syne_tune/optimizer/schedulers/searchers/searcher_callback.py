@@ -4,7 +4,7 @@ import logging
 from syne_tune.backend.trial_status import Trial
 from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
     ModelStateTransformer,
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def _get_model_based_searcher(tuner):
     searcher = None
     scheduler = tuner.scheduler
-    if isinstance(scheduler, FIFOScheduler):
+    if isinstance(scheduler, LegacyFIFOScheduler):
         if isinstance(scheduler.searcher, ModelBasedSearcher):
             searcher = scheduler.searcher
             state_transformer = searcher.state_transformer

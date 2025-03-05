@@ -30,8 +30,8 @@ SUPPORTED_SEARCHERS_HYPERBAND = {
     "cqr",
     "bayesopt",
     "bayesopt_cost",
-    "hypertune",
-    "dyhpo",
+    "legacy_hypertune",
+    "legacy_dyhpo",
 }
 
 
@@ -104,8 +104,8 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
             "bayesopt",
             "bayesopt_constrained",
             "bayesopt_cost",
-            "hypertune",
-            "dyhpo",
+            "legacy_hypertune",
+            "legacy_dyhpo",
         }
         assert (
             searcher_name in gp_searchers
@@ -115,17 +115,17 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
                 GPFIFOSearcher,
                 GPMultiFidelitySearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.constrained import (
+            from syne_tune.optimizer.schedulers.searchers.legacy_constrained import (
                 ConstrainedGPFIFOSearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.cost_aware import (
+            from syne_tune.optimizer.schedulers.searchers.legacy_cost_aware import (
                 CostAwareGPFIFOSearcher,
                 CostAwareGPMultiFidelitySearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.hypertune import (
+            from syne_tune.optimizer.schedulers.searchers.legacy_hypertune import (
                 HyperTuneSearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.dyhpo import (
+            from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo import (
                 DynamicHPOSearcher,
             )
         except ImportError:
@@ -148,14 +148,14 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
                         "are faster then."
                     )
                 searcher_cls = GPMultiFidelitySearcher
-        elif searcher_name == "hypertune":
+        elif searcher_name == "legacy_hypertune":
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = HyperTuneSearcher
         elif searcher_name == "bayesopt_constrained":
             supported_schedulers = {"fifo"}
             searcher_cls = ConstrainedGPFIFOSearcher
-        elif searcher_name == "dyhpo":
-            supported_schedulers = {"hyperband_dyhpo"}
+        elif searcher_name == "legacy_dyhpo":
+            supported_schedulers = {"hyperband_dyhpo", "hyperband_legacy_dyhpo"}
             searcher_cls = DynamicHPOSearcher
         else:  # bayesopt_cost
             if scheduler == "fifo":

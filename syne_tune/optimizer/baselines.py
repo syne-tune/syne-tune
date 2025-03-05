@@ -4,8 +4,8 @@ import copy
 from functools import partial
 
 from syne_tune.optimizer.schedulers import (
-    FIFOScheduler,
-    HyperbandScheduler,
+    LegacyFIFOScheduler,
+    LegacyHyperbandScheduler,
 )
 from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
 from syne_tune.optimizer.schedulers.multiobjective import (
@@ -51,7 +51,7 @@ def _assert_searcher_must_be(kwargs: Dict[str, Any], name: str):
     assert searcher is None or searcher == name, f"Must have searcher='{name}'"
 
 
-class RandomSearch(FIFOScheduler):
+class RandomSearch(LegacyFIFOScheduler):
     """Random search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
@@ -74,7 +74,7 @@ class RandomSearch(FIFOScheduler):
         )
 
 
-class GridSearch(FIFOScheduler):
+class GridSearch(LegacyFIFOScheduler):
     """Grid search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GridSearcher`
@@ -97,7 +97,7 @@ class GridSearch(FIFOScheduler):
         )
 
 
-class BayesianOptimization(FIFOScheduler):
+class BayesianOptimization(LegacyFIFOScheduler):
     """Gaussian process based Bayesian optimization.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
@@ -126,7 +126,7 @@ def _assert_need_one(kwargs: Dict[str, Any], need_one: Optional[set] = None):
     assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
 
 
-class ASHA(HyperbandScheduler):
+class ASHA(LegacyHyperbandScheduler):
     """Asynchronous Sucessive Halving (ASHA).
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
@@ -156,7 +156,7 @@ class ASHA(HyperbandScheduler):
         )
 
 
-class MOBSTER(HyperbandScheduler):
+class MOBSTER(LegacyHyperbandScheduler):
     """Model-based Asynchronous Multi-fidelity Optimizer (MOBSTER).
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
@@ -197,7 +197,7 @@ class MOBSTER(HyperbandScheduler):
         )
 
 
-class HyperTune(HyperbandScheduler):
+class HyperTune(LegacyHyperbandScheduler):
     """
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
     ``type="promotion"``, the latter is more useful, see also
@@ -219,9 +219,9 @@ class HyperTune(HyperbandScheduler):
 
     * :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for ``kwargs``
       parameters
-    * :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
+    * :class:`~syne_tune.optimizer.schedulers.searchers.legacy_hypertune.HyperTuneSearcher`
       for ``kwargs["search_options"]`` parameters
-    * :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
+    * :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.legacy_hypertune.gp_model.HyperTuneIndependentGPModel`
       for implementation
 
     :param config_space: Configuration space for evaluation function
@@ -232,7 +232,7 @@ class HyperTune(HyperbandScheduler):
 
     def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
         _assert_need_one(kwargs)
-        searcher_name = "hypertune"
+        searcher_name = "legacy_hypertune"
         _assert_searcher_must_be(kwargs, searcher_name)
         kwargs = copy.deepcopy(kwargs)
         search_options = dict_get(kwargs, "search_options", dict())
@@ -253,7 +253,7 @@ class HyperTune(HyperbandScheduler):
         )
 
 
-class DyHPO(HyperbandScheduler):
+class DyHPO(LegacyHyperbandScheduler):
     """Dynamic Gray-Box Hyperparameter Optimization (DyHPO)
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. The latter
@@ -299,7 +299,7 @@ class DyHPO(HyperbandScheduler):
       the method is to the published original, which tends to start many more
       trials than promote paused ones. On the other hand, if this probability is
       close to 1, you may as well run MOBSTER. The default is
-      :const:`~syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo.DEFAULT_SH_PROBABILITY`.
+      :const:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo.DEFAULT_SH_PROBABILITY`.
     * ``search_options["opt_skip_period"]``: DyHPO can be quite a bit slower
       than MOBSTER, because the GP surrogate model is used more frequently. It
       can be sped up a bit by changing ``opt_skip_period`` (general default is
@@ -321,13 +321,13 @@ class DyHPO(HyperbandScheduler):
         **kwargs,
     ):
         _assert_need_one(kwargs)
-        searcher_name = "dyhpo"
+        searcher_name = "legacy_dyhpo"
         _assert_searcher_must_be(kwargs, searcher_name)
         scheduler_type = kwargs.get("type")
         assert (
-            scheduler_type is None or scheduler_type == "dyhpo"
-        ), "Must have type='dyhpo'"
-        kwargs["type"] = "dyhpo"
+            scheduler_type is None or scheduler_type == "legacy_dyhpo"
+        ), "Must have type='legacy_dyhpo'"
+        kwargs["type"] = "legacy_dyhpo"
         if probability_sh is not None:
             rung_system_kwargs = dict_get(kwargs, "rung_system_kwargs", dict())
             rung_system_kwargs["probability_sh"] = probability_sh
@@ -351,7 +351,7 @@ class DyHPO(HyperbandScheduler):
         )
 
 
-class PASHA(HyperbandScheduler):
+class PASHA(LegacyHyperbandScheduler):
     """Progressive ASHA.
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. The latter is
@@ -377,7 +377,7 @@ class PASHA(HyperbandScheduler):
         )
 
 
-class BOHB(HyperbandScheduler):
+class BOHB(LegacyHyperbandScheduler):
     """Asynchronous BOHB
 
     Combines :class:`ASHA` with TPE-like Bayesian optimization, using kernel
@@ -583,7 +583,7 @@ def _create_searcher_kwargs(
     return searcher_kwargs
 
 
-class BORE(FIFOScheduler):
+class BORE(LegacyFIFOScheduler):
     """Bayesian Optimization by Density-Ratio Estimation (BORE).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`
@@ -622,7 +622,7 @@ class BORE(FIFOScheduler):
         )
 
 
-class ASHABORE(HyperbandScheduler):
+class ASHABORE(LegacyHyperbandScheduler):
     """Model-based ASHA with BORE searcher
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.bore.MultiFidelityBore`
@@ -666,7 +666,7 @@ class ASHABORE(HyperbandScheduler):
         )
 
 
-class BoTorch(FIFOScheduler):
+class BoTorch(LegacyFIFOScheduler):
     """Bayesian Optimization using BoTorch
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`
@@ -705,7 +705,7 @@ class BoTorch(FIFOScheduler):
         )
 
 
-class REA(FIFOScheduler):
+class REA(LegacyFIFOScheduler):
     """Regularized Evolution (REA).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
@@ -768,7 +768,7 @@ def create_gaussian_process_estimator(
     return estimator
 
 
-class MORandomScalarizationBayesOpt(FIFOScheduler):
+class MORandomScalarizationBayesOpt(LegacyFIFOScheduler):
     """
     Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.MultiObjectiveMultiSurrogateSearcher`
     with one standard GP surrogate model per metric (same as in
@@ -852,7 +852,7 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         )
 
 
-class NSGA2(FIFOScheduler):
+class NSGA2(LegacyFIFOScheduler):
     """
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
     for ``kwargs["search_options"]`` parameters.
@@ -889,7 +889,7 @@ class NSGA2(FIFOScheduler):
         )
 
 
-class MOREA(FIFOScheduler):
+class MOREA(LegacyFIFOScheduler):
     """
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
@@ -968,10 +968,10 @@ class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
         )
 
 
-class ConstrainedBayesianOptimization(FIFOScheduler):
+class ConstrainedBayesianOptimization(LegacyFIFOScheduler):
     """Constrained Bayesian Optimization.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.legacy_constrained.ConstrainedGPFIFOSearcher`
     for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
@@ -996,7 +996,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
         )
 
 
-class ZeroShotTransfer(FIFOScheduler):
+class ZeroShotTransfer(LegacyFIFOScheduler):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
     average rank obtained on historic metadata (transfer_learning_evaluations).
@@ -1060,7 +1060,7 @@ class ZeroShotTransfer(FIFOScheduler):
         )
 
 
-class ASHACTS(HyperbandScheduler):
+class ASHACTS(LegacyHyperbandScheduler):
     """
     Runs ASHA where the searcher is done with the transfer-learning method:
 
@@ -1122,7 +1122,7 @@ class ASHACTS(HyperbandScheduler):
         )
 
 
-class KDE(FIFOScheduler):
+class KDE(LegacyFIFOScheduler):
     """Single-fidelity variant of BOHB
 
     Combines :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` with TPE-like
@@ -1148,7 +1148,7 @@ class KDE(FIFOScheduler):
         )
 
 
-class CQR(FIFOScheduler):
+class CQR(LegacyFIFOScheduler):
     """
     Single-fidelity Conformal Quantile Regression approach proposed in:
         | Optimizing Hyperparameters with Conformal Quantile Regression.
@@ -1187,7 +1187,7 @@ class CQR(FIFOScheduler):
         )
 
 
-class ASHACQR(HyperbandScheduler):
+class ASHACQR(LegacyHyperbandScheduler):
     """
     Multi-fidelity Conformal Quantile Regression approach proposed in:
         | Optimizing Hyperparameters with Conformal Quantile Regression.
@@ -1269,7 +1269,7 @@ try:
         LegacyExpectedHyperVolumeImprovement,
     )
 
-    class EHVI(FIFOScheduler):
+    class EHVI(LegacyFIFOScheduler):
         """
         Implements the Expected Hypervolume Improvement method.
 

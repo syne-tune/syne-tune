@@ -10,7 +10,7 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
     ELAPSED_TIME_ATTR,
 )
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
     # Cost-aware variant of ASHA, using a random searcher
-    scheduler = HyperbandScheduler(
+    scheduler = LegacyHyperbandScheduler(
         config_space,
         searcher="random",
         max_resource_attr=benchmark.max_resource_attr,

@@ -7,28 +7,30 @@ import numpy as np
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
-from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_cost_promotion import (
     CostPromotionRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_rush import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
+    PromotionRungSystem,
+)
+from syne_tune.optimizer.schedulers.legacy_hyperband_rush import (
     RUSHPromotionRungSystem,
     RUSHStoppingRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_stopping import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import (
     StoppingRungSystem,
     PausedTrialsResult,
 )
-from syne_tune.optimizer.schedulers.hyperband_checkpoint_removal import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_checkpoint_removal import (
     create_callback_for_checkpoint_removal,
 )
 from syne_tune.optimizer.schedulers.remove_checkpoints import (
     RemoveCheckpointsSchedulerMixin,
 )
-from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
     DEFAULT_SH_PROBABILITY,
 )
@@ -42,7 +44,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Dictionary,
     Float,
 )
-from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
+from syne_tune.optimizer.schedulers.searchers.legacy_bracket_distribution import (
     DefaultHyperbandBracketDistribution,
 )
 from syne_tune.optimizer.schedulers.utils.successive_halving import (
@@ -61,7 +63,7 @@ RUNG_SYSTEMS = {
     "rush_promotion": RUSHPromotionRungSystem,
     "rush_stopping": RUSHStoppingRungSystem,
     "cost_promotion": CostPromotionRungSystem,
-    "dyhpo": DyHPORungSystem,
+    "legacy_dyhpo": DyHPORungSystem,
 }
 
 
@@ -146,8 +148,8 @@ class TrialInformation:
         self.trial_decision = SchedulerDecision.CONTINUE
 
 
-class HyperbandScheduler(
-    FIFOScheduler, MultiFidelitySchedulerMixin, RemoveCheckpointsSchedulerMixin
+class LegacyHyperbandScheduler(
+    LegacyFIFOScheduler, MultiFidelitySchedulerMixin, RemoveCheckpointsSchedulerMixin
 ):
     r"""Implements different variants of asynchronous Hyperband
 
@@ -309,9 +311,9 @@ class HyperbandScheduler(
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
         * rush_promotion: Same as ``rush_stopping`` but for promotion, see
           :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
-        * dyhpo: A model-based scheduler, which can be seen as extension of
+        * legacy_dyhpo: A model-based scheduler, which can be seen as extension of
           "promotion" with ``rung_increment`` rather than ``reduction_factor``, see
-          :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DynamicHPOSearcher`
+          :class:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.DynamicHPOSearcher`
 
     :type type: str, optional
     :param cost_attr: Required if the scheduler itself uses a cost metric
@@ -368,7 +370,7 @@ class HyperbandScheduler(
           ``points_to_evaluate`` enforce stricter requirements to the
           continuation of training tasks. See
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
-        * probability_sh: Used if ``type == "dyhpo"``. In DyHPO, we typically
+        * probability_sh: Used if ``type == "legacy_dyhpo"``. In DyHPO, we typically
           all paused trials against a number of new configurations, and the
           winner is either resumed or started (new trial). However, with the
           probability given here, we instead try to promote a trial as if
@@ -413,7 +415,7 @@ class HyperbandScheduler(
         # Default: May be modified by searcher (via ``configure_scheduler``)
         self.bracket_distribution = DefaultHyperbandBracketDistribution()
         # See :meth:`_extend_search_options` for why this is needed:
-        if kwargs.get("searcher") == "hypertune":
+        if kwargs.get("searcher") == "legacy_hypertune":
             self._num_brackets_info = {
                 "num_brackets": kwargs["brackets"],
                 "rung_levels": kwargs.get("rung_levels"),
@@ -1056,7 +1058,7 @@ class HyperbandBracketManager:
         cost_attr: str,
         random_seed: int,
         rung_system_kwargs: Dict[str, Any],
-        scheduler: HyperbandScheduler,
+        scheduler: LegacyHyperbandScheduler,
     ):
         assert (
             rung_levels[-1] < max_t
@@ -1088,7 +1090,7 @@ class HyperbandBracketManager:
             )
         elif scheduler_type == "cost_promotion":
             kwargs["cost_attr"] = cost_attr
-        elif scheduler_type == "dyhpo":
+        elif scheduler_type == "legacy_dyhpo":
             kwargs["searcher"] = scheduler.searcher
             kwargs["probability_sh"] = rung_system_kwargs["probability_sh"]
             kwargs["random_state"] = self.random_state

@@ -1,13 +1,13 @@
 from typing import Dict, List, Optional, Any
 
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningTaskEvaluations,
     LegacyTransferLearningMixin,
 )
 
 
-class RUSHScheduler(LegacyTransferLearningMixin, HyperbandScheduler):
+class RUSHScheduler(LegacyTransferLearningMixin, LegacyHyperbandScheduler):
     """
     A transfer learning variation of Hyperband which uses previously
     well-performing hyperparameter configurations as an initialization. The best

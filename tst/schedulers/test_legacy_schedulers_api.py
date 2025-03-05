@@ -46,9 +46,9 @@ from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searche
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
-    FIFOScheduler,
+    LegacyFIFOScheduler,
     LegacyMedianStoppingRule,
-    HyperbandScheduler,
+    LegacyHyperbandScheduler,
     RayTuneScheduler,
 )
 from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
@@ -149,11 +149,13 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
 
 
 list_schedulers_to_test = [
-    FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
-    FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
-    FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
-    HyperbandScheduler(
+    LegacyFIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
+    LegacyFIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
+    LegacyFIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
+    LegacyFIFOScheduler(
+        categorical_config_space, searcher="grid", metric=metric1, mode=mode
+    ),
+    LegacyHyperbandScheduler(
         config_space,
         searcher="random",
         resource_attr=resource_attr,
@@ -161,7 +163,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    HyperbandScheduler(
+    LegacyHyperbandScheduler(
         config_space,
         searcher="bayesopt",
         resource_attr=resource_attr,
@@ -169,7 +171,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    HyperbandScheduler(
+    LegacyHyperbandScheduler(
         config_space,
         searcher="kde",
         resource_attr=resource_attr,
@@ -177,7 +179,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    HyperbandScheduler(
+    LegacyHyperbandScheduler(
         config_space,
         searcher="random",
         type="pasha",
@@ -211,7 +213,7 @@ list_schedulers_to_test = [
     RandomSearch(config_space=config_space, metric=metric1, mode=mode),
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         searcher=LegacySurrogateSearcher(
             mode=mode,
             config_space=config_space,
@@ -221,7 +223,7 @@ list_schedulers_to_test = [
         config_space=config_space,
         metric=metric1,
     ),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         searcher="cqr",
         mode=mode,
         config_space=config_space,
@@ -297,7 +299,7 @@ list_schedulers_to_test = [
         mode=mode,
     ),
     LegacyMedianStoppingRule(
-        scheduler=FIFOScheduler(
+        scheduler=LegacyFIFOScheduler(
             config_space, searcher="random", metric=metric1, mode=mode
         ),
         resource_attr=resource_attr,
@@ -315,7 +317,7 @@ list_schedulers_to_test = [
         metric=metric1,
         transfer_learning_evaluations=transfer_learning_evaluations,
     ),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         searcher=LegacyQuantileBasedSurrogateSearcher(
             mode=mode,
             config_space=config_space,
@@ -401,10 +403,10 @@ list_schedulers_to_test = [
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
-        base_scheduler_factory=FIFOScheduler,
+        base_scheduler_factory=LegacyFIFOScheduler,
         searcher="random",
     ),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         config_space,
         searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
@@ -415,7 +417,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         config_space,
         searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
@@ -425,7 +427,7 @@ list_schedulers_to_test = [
         metric=metric1,
         mode=mode,
     ),
-    FIFOScheduler(
+    LegacyFIFOScheduler(
         config_space,
         searcher=MultiObjectiveMultiSurrogateSearcher(
             config_space=config_space,

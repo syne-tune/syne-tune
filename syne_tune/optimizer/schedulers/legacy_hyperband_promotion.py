@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any, Tuple
 
-from syne_tune.optimizer.schedulers.hyperband_stopping import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import (
     RungEntry,
     Rung,
     RungSystem,

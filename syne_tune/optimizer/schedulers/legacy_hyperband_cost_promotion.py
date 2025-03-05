@@ -1,8 +1,8 @@
 from typing import List, Optional, Tuple, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.hyperband_stopping import Rung
-from syne_tune.optimizer.schedulers.hyperband_promotion import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import Rung
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
     PromotionRungEntry,
     PromotionRungSystem,
 )

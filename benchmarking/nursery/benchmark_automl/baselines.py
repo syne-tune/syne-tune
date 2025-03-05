@@ -5,8 +5,8 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
 from syne_tune.optimizer.baselines import ZeroShotTransfer
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (
     LegacyMedianStoppingRule,
 )
@@ -66,14 +66,14 @@ def search_options(args: MethodArguments) -> Dict[str, Any]:
 
 
 methods = {
-    Methods.RS: lambda method_arguments: FIFOScheduler(
+    Methods.RS: lambda method_arguments: LegacyFIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    Methods.ASHA: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA: lambda method_arguments: LegacyHyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
         search_options=search_options(method_arguments),
@@ -84,7 +84,7 @@ methods = {
         **_max_resource_attr_or_max_t(method_arguments),
     ),
     Methods.MSR: lambda method_arguments: LegacyMedianStoppingRule(
-        scheduler=FIFOScheduler(
+        scheduler=LegacyFIFOScheduler(
             config_space=method_arguments.config_space,
             searcher="random",
             metric=method_arguments.metric,
@@ -95,7 +95,7 @@ methods = {
         running_average=False,
     ),
     Methods.ASHA_BB: lambda method_arguments: LegacyBoundingBox(
-        scheduler_fun=lambda new_config_space, mode, metric: HyperbandScheduler(
+        scheduler_fun=lambda new_config_space, mode, metric: LegacyHyperbandScheduler(
             new_config_space,
             searcher="random",
             metric=metric,
@@ -111,7 +111,7 @@ methods = {
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
         num_hyperparameters_per_task=10,
     ),
-    Methods.ASHA_CTS: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA_CTS: lambda method_arguments: LegacyHyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher=LegacyQuantileBasedSurrogateSearcher(
             mode=method_arguments.mode,
@@ -125,7 +125,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         **_max_resource_attr_or_max_t(method_arguments),
     ),
-    Methods.GP: lambda method_arguments: FIFOScheduler(
+    Methods.GP: lambda method_arguments: LegacyFIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
         search_options=search_options(method_arguments),
@@ -133,7 +133,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    Methods.REA: lambda method_arguments: FIFOScheduler(
+    Methods.REA: lambda method_arguments: LegacyFIFOScheduler(
         config_space=method_arguments.config_space,
         searcher=RegularizedEvolution(
             config_space=method_arguments.config_space,
@@ -147,7 +147,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    Methods.BOHB: lambda method_arguments: HyperbandScheduler(
+    Methods.BOHB: lambda method_arguments: LegacyHyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
         search_options={"debug_log": False, "min_bandwidth": 0.1},
@@ -157,7 +157,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         **_max_resource_attr_or_max_t(method_arguments),
     ),
-    Methods.TPE: lambda method_arguments: FIFOScheduler(
+    Methods.TPE: lambda method_arguments: LegacyFIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
         search_options={"debug_log": False, "min_bandwidth": 0.1},
@@ -165,7 +165,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    Methods.BORE: lambda method_arguments: FIFOScheduler(
+    Methods.BORE: lambda method_arguments: LegacyFIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="bore",
         search_options={"classifier": "mlp"},
@@ -173,7 +173,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
+    Methods.MOBSTER: lambda method_arguments: LegacyHyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
         search_options=search_options(method_arguments),

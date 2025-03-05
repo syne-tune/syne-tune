@@ -166,7 +166,7 @@ class Predictor:
 
 
 # Useful type that allows for a dictionary mapping each output name to a Predictor.
-# This is needed for multi-output BO methods such as constrained BO, where each output
+# This is needed for multi-output BO methods such as legacy_constrained BO, where each output
 # is associated to a predictor. This type includes the Union with the standard
 # Predictor type for backward compatibility.
 OutputPredictor = Union[Predictor, Dict[str, Predictor]]

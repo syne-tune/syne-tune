@@ -42,10 +42,10 @@ class DefaultHyperbandBracketDistribution(BracketDistribution):
         self._distribution = None
 
     def configure(self, scheduler: TrialScheduler):
-        from syne_tune.optimizer.schedulers import HyperbandScheduler
+        from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 
         assert isinstance(
-            scheduler, HyperbandScheduler
+            scheduler, LegacyHyperbandScheduler
         ), "Scheduler must be HyperbandScheduler"
         self.num_brackets = scheduler.terminator.num_brackets
         self.rung_levels = scheduler.rung_levels + [scheduler.max_t]

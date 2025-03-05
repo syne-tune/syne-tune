@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.schedulers.hyperband_rush import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_rush import (
     RUSHStoppingRungSystem,
     RUSHDecider,
 )

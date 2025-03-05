@@ -5,7 +5,7 @@ import time
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune import Tuner
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher
 
 
@@ -32,7 +32,7 @@ class StoreSearcherStatesCallback(TunerCallback):
 
     def on_tuning_start(self, tuner: Tuner):
         scheduler = tuner.scheduler
-        if isinstance(scheduler, FIFOScheduler):
+        if isinstance(scheduler, LegacyFIFOScheduler):
             searcher = scheduler.searcher
             if isinstance(searcher, ModelBasedSearcher):
                 self._searcher = searcher

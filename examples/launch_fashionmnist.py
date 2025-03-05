@@ -4,7 +4,7 @@ Example for how to tune one of the benchmarks.
 import logging
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
 from benchmarking.benchmark_definitions.mlp_on_fashionmnist import (
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # Hyperband (or successive halving) scheduler of the stopping type.
     # Together with 'bayesopt', this selects the MOBSTER algorithm.
     # If you don't like the defaults suggested, just change them:
-    scheduler = HyperbandScheduler(
+    scheduler = LegacyHyperbandScheduler(
         config_space,
         searcher=searcher,
         search_options=search_options,

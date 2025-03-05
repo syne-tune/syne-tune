@@ -2,7 +2,7 @@ from typing import Set, Optional, Dict, Any
 import logging
 from functools import partial
 
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     map_reward_const_minus_x,
     MapReward,
     DEFAULT_INITIAL_SCORING,
@@ -594,6 +594,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
         "hyperband_synchronous",
         "hyperband_pasha",
         "hyperband_dyhpo",
+        "hyperband_legacy_dyhpo",
     }
     assert (
         kwargs["scheduler"] in supp_schedulers
@@ -619,12 +620,12 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
 def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
-    :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_hypertune.HyperTuneSearcher._create_internal`,
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`).
 
     :param kwargs: ``search_options`` coming from scheduler
-    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`
+    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_hypertune.HyperTuneSearcher._create_internal`
     """
     if kwargs.get("model") is None:
         kwargs["model"] = "gp_independent"
@@ -632,7 +633,7 @@ def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
         supported_models = {"gp_multitask", "gp_independent"}
         assert kwargs["model"] in supported_models, (
             "Hyper-Tune only supports search_options['model'] in "
-            f"{supported_models} along with searcher = 'hypertune'"
+            f"{supported_models} along with searcher = 'legacy_hypertune'"
         )
     return gp_multifidelity_searcher_factory(**kwargs, is_hypertune=True)
 
@@ -640,12 +641,12 @@ def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
 def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
-    :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_constrained.ConstrainedGPFIFOSearcher._create_internal`,
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     :param kwargs: ``search_options`` coming from scheduler
-    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`
+    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_constrained.ConstrainedGPFIFOSearcher._create_internal`
     """
     assert (
         kwargs["scheduler"] == "fifo"
@@ -691,7 +692,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
-    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
@@ -699,7 +700,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     together with metric values and are given a GP surrogate model.
 
     :param kwargs: ``search_options`` coming from scheduler
-    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
+    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`
     """
     assert (
         kwargs["scheduler"] == "fifo"
@@ -747,7 +748,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
-    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
@@ -757,7 +758,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     surrogate model.
 
     :param kwargs: ``search_options`` coming from scheduler
-    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
+    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`
     """
     assert kwargs["scheduler"] in [
         "fifo"
@@ -811,12 +812,12 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
-    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`).
 
     :param kwargs: ``search_options`` coming from scheduler
-    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`
+    :return: ``kwargs`` for :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`
     """
     supp_schedulers = {
         "hyperband_stopping",
@@ -1021,7 +1022,7 @@ def hypertune_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
     to be applied to ``search_options`` for
-    :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_hypertune.HyperTuneSearcher`.
 
     :return: ``(mandatory, default_options, config_space)``
 
@@ -1040,7 +1041,7 @@ def constrained_gp_fifo_searcher_defaults(
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults` to be applied to ``search_options`` for
-    :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_constrained.ConstrainedGPFIFOSearcher`.
 
     :return: ``(mandatory, default_options, config_space)``
 
@@ -1060,7 +1061,7 @@ def cost_aware_gp_fifo_searcher_defaults(
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
     to be applied to ``search_options`` for
-    :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher`.
 
     :return: ``(mandatory, default_options, config_space)``
 
@@ -1080,7 +1081,7 @@ def cost_aware_gp_multifidelity_searcher_defaults(
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
     to be applied to ``search_options`` for
-    :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPMultiFidelitySearcher`.
 
     :return: ``(mandatory, default_options, config_space)``
 

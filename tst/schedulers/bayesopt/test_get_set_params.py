@@ -1,9 +1,9 @@
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     gp_multifidelity_searcher_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_multifidelity_searcher import (
     GPMultiFidelitySearcher,
 )
 

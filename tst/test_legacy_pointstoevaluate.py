@@ -11,7 +11,7 @@ from syne_tune.config_space import (
     finrange,
     logfinrange,
 )
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import LegacyRandomSearcher
 
 
@@ -152,7 +152,7 @@ def test_points_to_evaluate():
     search_options = {"debug_log": False}
     for tc_src, tc_trg in testcases:
         err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
-        scheduler = FIFOScheduler(
+        scheduler = LegacyFIFOScheduler(
             config_space,
             searcher="random",
             search_options=search_options,
@@ -179,7 +179,7 @@ def test_points_to_evaluate_raytune():
 
     config_space, configs, testcases = _prepare_test(is_ray_tune=True)
     # This is just to get hp_ranges, which is needed for comparisons below
-    _myscheduler = FIFOScheduler(
+    _myscheduler = LegacyFIFOScheduler(
         config_space, searcher="random", mode="min", metric="bogus"
     )
     _mysearcher: LegacyRandomSearcher = _myscheduler.searcher

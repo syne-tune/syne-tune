@@ -336,7 +336,7 @@ class ConstraintCurrentBestProvider(CurrentBestProvider):
 
 class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     """
-    Minus constrained expected improvement acquisition function.
+    Minus legacy_constrained expected improvement acquisition function.
     (minus because the convention is to always minimize the acquisition function)
 
     This is defined as ``CEI(x) = EI(x) * P(c(x) <= 0)``, where ``EI`` is the
@@ -394,7 +394,7 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
         current_best: Optional[np.ndarray],
     ) -> np.ndarray:
         """
-        Returns minus the constrained expected improvement (- CEI).
+        Returns minus the legacy_constrained expected improvement (- CEI).
         """
         assert current_best is not None
         means, stds = self._extract_mean_and_std(output_to_predictions)
