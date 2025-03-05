@@ -216,7 +216,7 @@ class Bracket:
         max_t: int,
         reduction_factor: float,
         s: int,
-        priority: MOPriority | None = None,
+        priority: Optional[MOPriority] = None,
     ):
         self.rf = reduction_factor
         MAX_RUNGS = int(np.log(max_t / min_t) / np.log(self.rf) - s + 1)
