@@ -56,7 +56,7 @@ def _to_list(x) -> list:
     return x if isinstance(x, list) else [x]
 
 
-class FIFOScheduler(TrialSchedulerWithSearcher):
+class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
     """Scheduler which executes trials in submission order.
 
     This is the most basic scheduler template. It can be configured to many use

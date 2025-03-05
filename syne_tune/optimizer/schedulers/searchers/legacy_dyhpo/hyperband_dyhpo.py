@@ -3,7 +3,7 @@ from numpy.random import RandomState
 import logging
 from collections import Counter
 
-from syne_tune.optimizer.schedulers.hyperband_promotion import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
     PromotionRungSystem,
 )
 from syne_tune.optimizer.schedulers.searchers import LegacyBaseSearcher
@@ -62,7 +62,7 @@ class DyHPORungSystem(PromotionRungSystem):
       :meth:`_promote_trial` to ``self.searcher.get_config`` via ``extra_kwargs``.
       Namely, :meth:``HyperbandScheduler._promote_trial` calls
       :meth:`on_task_schedule` here, which calls
-      :meth:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DynamicHPOSearcher.score_paused_trials_and_new_configs`,
+      :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.DynamicHPOSearcher.score_paused_trials_and_new_configs`,
       where everything happens.
     * First, all paused trials are scored w.r.t. the value of running them for one
       more unit of resource. Also, a number of random configs are scored w.r.t.
@@ -71,7 +71,7 @@ class DyHPORungSystem(PromotionRungSystem):
       winning config is a new one, :meth:`on_task_schedule` returns this
       config using a special key :const:`KEY_NEW_CONFIGURATION`. This dict
       becomes part of ``extra_kwargs`` and is passed to ``self.searcher.get_config``
-    * :meth:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DynamicHPOSearcher.get_config`
+    * :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.DynamicHPOSearcher.get_config`
       is trivial. It obtains an argument of name :const:`KEY_NEW_CONFIGURATION`
       returns its value, which is the winning config to be started as new trial
 

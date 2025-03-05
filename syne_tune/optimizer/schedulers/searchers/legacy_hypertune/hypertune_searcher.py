@@ -2,14 +2,14 @@ from typing import Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     hypertune_searcher_factory,
     hypertune_searcher_defaults,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.hypertune.hypertune_bracket_distribution import (
+from syne_tune.optimizer.schedulers.searchers.legacy_hypertune.hypertune_bracket_distribution import (
     HyperTuneBracketDistribution,
 )
 
@@ -21,7 +21,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
     Implements Hyper-Tune as extension of
     :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
     see
-    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.legacy_hypertune.gp_model.HyperTuneIndependentGPModel`
     for references. Two modifications:
 
     * New brackets are sampled from a model-based distribution :math:`[w_k]`
@@ -31,7 +31,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
     It is *not* recommended to create :class:`HyperTuneSearcher` searcher
     objects directly, but rather to create
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
-    ``searcher="hypertune"``, and passing arguments here in ``search_options``.
+    ``searcher="legacy_hypertune"``, and passing arguments here in ``search_options``.
     This will use the appropriate functions from
     :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.

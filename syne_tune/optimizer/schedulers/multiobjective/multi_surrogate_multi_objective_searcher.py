@@ -16,10 +16,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.default
     DEFAULT_NUM_INITIAL_CANDIDATES,
     DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     decode_state,
 )
-from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_model_based_searcher import (
     BayesianOptimizationSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import extract_random_seed

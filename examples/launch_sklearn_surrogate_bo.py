@@ -14,7 +14,7 @@ from examples.training_scripts.height_example.train_height import (
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
 )
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         estimator=BayesianRidgeEstimator(),
         scoring_class=EIAcquisitionFunction,
     )
-    scheduler = FIFOScheduler(
+    scheduler = LegacyFIFOScheduler(
         config_space,
         metric=METRIC_ATTR,
         mode=METRIC_MODE,

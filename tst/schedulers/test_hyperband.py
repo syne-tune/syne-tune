@@ -3,23 +3,23 @@ from typing import Optional, Dict, Tuple, Any
 import pytest
 import numpy as np
 
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
 from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.searchers import LegacyRandomSearcher
-from syne_tune.optimizer.schedulers.hyperband_stopping import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import (
     RungEntry,
     Rung,
     StoppingRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
-from syne_tune.optimizer.schedulers.hyperband_rush import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_rush import (
     RUSHPromotionRungSystem,
     RUSHStoppingRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_cost_promotion import (
     CostPromotionRungSystem,
 )
 
@@ -64,7 +64,7 @@ def test_register_pending():
 
     for searcher_data in ("rungs", "all"):
         # We need to plug in a searcher which logs calls to ``register_pending``
-        scheduler = HyperbandScheduler(
+        scheduler = LegacyHyperbandScheduler(
             config_space,
             searcher="random",
             metric="metric",
@@ -172,7 +172,7 @@ def test_hyperband_max_t_inference():
 
     for max_t, config_space, final_max_t in cases:
         if final_max_t is not None:
-            myscheduler = HyperbandScheduler(
+            myscheduler = LegacyHyperbandScheduler(
                 config_space,
                 searcher="random",
                 max_t=max_t,
@@ -183,7 +183,7 @@ def test_hyperband_max_t_inference():
             assert final_max_t == myscheduler.max_t
         else:
             with pytest.raises(AssertionError):
-                myscheduler = HyperbandScheduler(
+                myscheduler = LegacyHyperbandScheduler(
                     config_space,
                     searcher="random",
                     max_t=max_t,
@@ -208,7 +208,7 @@ def test_hyperband_scheduler_type(scheduler_type, terminator_cls, does_pause_res
     config_space = {
         "epochs": 15,
     }
-    myscheduler = HyperbandScheduler(
+    myscheduler = LegacyHyperbandScheduler(
         config_space,
         type=scheduler_type,
         metric="accuracy",

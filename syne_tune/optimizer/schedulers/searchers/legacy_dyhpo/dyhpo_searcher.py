@@ -6,10 +6,10 @@ from syne_tune.optimizer.schedulers.searchers import (
     LegacyBaseSearcher,
     GPMultiFidelitySearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo import (
     KEY_NEW_CONFIGURATION,
 )
-from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_model_based_searcher import (
     create_initial_candidates_scorer,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
@@ -253,12 +253,12 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
     """
     Supports model-based decisions in the DyHPO algorithm proposed by Wistuba
     etal (see
-    :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DyHPORungSystem`).
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.DyHPORungSystem`).
 
     It is *not* recommended to create :class:`DynamicHPOSearcher` searcher
     objects directly, but rather to create
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
-    ``searcher="dyhpo"`` and ``type="dyhpo"``, and passing arguments here in
+    ``searcher="legacy_dyhpo"`` and ``type="legacy_dyhpo"``, and passing arguments here in
     ``search_options``. This will use the appropriate functions from
     :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.
@@ -273,7 +273,7 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
     configuration is started. Since all the work is already done in
     :meth:`score_paused_trials_and_new_configs`, the implementation of
     :meth:`get_config` becomes trivial. See also
-    :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DyHPORungSystem`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.DyHPORungSystem`.
     Extra points:
 
     * The number of new configurations scored in
@@ -287,7 +287,7 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` and
-     ``type="dyhpo"``. It has the same constructor parameters as
+     ``type="legacy_dyhpo"``. It has the same constructor parameters as
     :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`.
     Of these, the following are not used, but need to be given valid values:
     ``resource_acq``, ``initial_scoring``, ``skip_local_optimization``.
@@ -321,14 +321,14 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
         self._previous_winner_new_trial = True
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers import HyperbandScheduler
+        from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 
         self._searcher_int.configure_scheduler(scheduler)
         err_msg = (
-            "This searcher requires HyperbandScheduler scheduler with type='dyhpo'"
+            "This searcher requires HyperbandScheduler scheduler with type='legacy_dyhpo'"
         )
-        assert isinstance(scheduler, HyperbandScheduler), err_msg
-        assert scheduler.scheduler_type == "dyhpo", err_msg
+        assert isinstance(scheduler, LegacyHyperbandScheduler), err_msg
+        assert scheduler.scheduler_type == "legacy_dyhpo", err_msg
 
     def get_config(self, **kwargs) -> Optional[dict]:
         assert (

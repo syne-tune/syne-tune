@@ -1,13 +1,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_fifo_searcher import GPFIFOSearcher
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     cost_aware_gp_fifo_searcher_defaults,
     cost_aware_coarse_gp_fifo_searcher_factory,
     cost_aware_fine_gp_fifo_searcher_factory,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import decode_state
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import decode_state
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )

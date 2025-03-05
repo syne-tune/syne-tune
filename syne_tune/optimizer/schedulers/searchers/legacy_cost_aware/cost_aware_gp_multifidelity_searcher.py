@@ -1,14 +1,14 @@
 from typing import List, Optional, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_multifidelity_searcher import (
     GPMultiFidelitySearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     cost_aware_gp_multifidelity_searcher_defaults,
     cost_aware_gp_multifidelity_searcher_factory,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import decode_state
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import decode_state
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )

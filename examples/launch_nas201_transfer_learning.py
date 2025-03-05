@@ -3,7 +3,7 @@ from typing import Dict
 from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningTaskEvaluations,
     LegacyBoundingBox,
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     )
 
     scheduler = LegacyBoundingBox(
-        scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
+        scheduler_fun=lambda new_config_space, mode, metric: LegacyFIFOScheduler(
             new_config_space,
             points_to_evaluate=[],
             searcher="random",

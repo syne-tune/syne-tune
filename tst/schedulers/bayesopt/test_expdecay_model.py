@@ -3,14 +3,14 @@ import json
 import numpy as np
 import pytest
 
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     gp_multifidelity_searcher_defaults,
     gp_multifidelity_searcher_factory,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     decode_state_from_old_encoding,
 )
 from syne_tune.config_space import randint, uniform, loguniform

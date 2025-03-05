@@ -3,7 +3,7 @@ __all__ = []
 import logging
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.dyhpo.dyhpo_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.dyhpo_searcher import (  # noqa: F401
         DynamicHPOSearcher,
     )
 

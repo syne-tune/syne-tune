@@ -28,7 +28,7 @@ from syne_tune.optimizer.baselines import (
     KDE,
 )
 
-# List of schedulers to test, and whether they are multi-fidelity or constrained
+# List of schedulers to test, and whether they are multi-fidelity or legacy_constrained
 # Does not test transfer learning schedulers
 SCHEDULERS = [
     (GridSearch, False, False),

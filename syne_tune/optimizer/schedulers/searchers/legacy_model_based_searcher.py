@@ -57,7 +57,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.default
     DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
     DEFAULT_LOCAL_OPTIMIZER_CLASS,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     DEFAULT_INITIAL_SCORING,
     SUPPORTED_INITIAL_SCORING,
     MapReward,
