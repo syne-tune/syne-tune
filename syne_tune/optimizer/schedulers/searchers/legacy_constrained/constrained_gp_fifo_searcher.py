@@ -8,7 +8,9 @@ from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import 
     constrained_gp_fifo_searcher_defaults,
     constrained_gp_fifo_searcher_factory,
 )
-from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import decode_state
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
+    decode_state,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )

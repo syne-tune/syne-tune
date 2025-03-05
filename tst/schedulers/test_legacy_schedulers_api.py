@@ -152,7 +152,9 @@ list_schedulers_to_test = [
     LegacyFIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
     LegacyFIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
     LegacyFIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
-    LegacyFIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
+    LegacyFIFOScheduler(
+        categorical_config_space, searcher="grid", metric=metric1, mode=mode
+    ),
     LegacyHyperbandScheduler(
         config_space,
         searcher="random",

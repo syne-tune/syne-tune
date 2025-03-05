@@ -324,9 +324,7 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
         from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 
         self._searcher_int.configure_scheduler(scheduler)
-        err_msg = (
-            "This searcher requires HyperbandScheduler scheduler with type='legacy_dyhpo'"
-        )
+        err_msg = "This searcher requires HyperbandScheduler scheduler with type='legacy_dyhpo'"
         assert isinstance(scheduler, LegacyHyperbandScheduler), err_msg
         assert scheduler.scheduler_type == "legacy_dyhpo", err_msg
 

@@ -2,7 +2,9 @@ import itertools
 from typing import Any, Dict, List
 
 import numpy as np
-from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
+    PromotionRungSystem,
+)
 
 
 class PASHARungSystem(PromotionRungSystem):

@@ -94,7 +94,9 @@ def test_compare_local_simulator_backends(scheduler_name):
                 }
             )
         scheduler_cls = (
-            LegacyFIFOScheduler if scheduler_name == "fifo" else LegacyHyperbandScheduler
+            LegacyFIFOScheduler
+            if scheduler_name == "fifo"
+            else LegacyHyperbandScheduler
         )
         scheduler = scheduler_cls(benchmark["config_space"], **scheduler_options)
         # Create backend

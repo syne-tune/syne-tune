@@ -13,7 +13,9 @@ from syne_tune.optimizer.schedulers.legacy_hyperband_cost_promotion import (
     CostPromotionRungSystem,
 )
 from syne_tune.optimizer.schedulers.legacy_hyperband_pasha import PASHARungSystem
-from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
+    PromotionRungSystem,
+)
 from syne_tune.optimizer.schedulers.legacy_hyperband_rush import (
     RUSHPromotionRungSystem,
     RUSHStoppingRungSystem,
