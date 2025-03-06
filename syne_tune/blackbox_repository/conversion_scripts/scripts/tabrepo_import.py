@@ -94,7 +94,6 @@ CONFIGURATION_SPACE_CatBoost = {
     "grow_policy": choice(["SymmetricTree", "Depthwise"]),
 }
 
-
 def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
     from tabrepo import load_repository, EvaluationRepository
 
@@ -125,12 +124,12 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
 
     # Process each dataset.
     for dataset_name, group in filtered_metrics.groupby("dataset"):
-        print(f"Processing dataset: {dataset_name}")
+        if dataset_name in ["KDDCup99", "dionis", "Kuzushiji-49"]:
+            continue
         # For the dataset, get the configurations for the frameworks used.
         bb_dict[dataset_name] = convert_dataset(
             config_space, group, all_configurations, default_metrics, dataset_name
         )
-
     with catchtime("saving to disk"):
         serialize(
             bb_dict=bb_dict,
