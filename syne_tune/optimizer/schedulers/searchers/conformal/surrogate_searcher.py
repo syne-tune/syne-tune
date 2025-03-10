@@ -136,6 +136,15 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         self.trial_configs[trial_id] = config
         self.trial_results[trial_id].append(metric)
 
+    def on_trial_result(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int = None,
+    ):
+        self.trial_results[trial_id].append(metric)
+
     def sample_random(self) -> Dict:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v

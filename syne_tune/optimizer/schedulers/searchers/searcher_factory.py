@@ -27,7 +27,9 @@ searcher_cls_dict = {
 def searcher_factory(
     searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
-    assert searcher_name in searcher_cls_dict
+    assert (
+        searcher_name in searcher_cls_dict
+    ), f"Searcher name must be one of {list(searcher_cls_dict.keys())}, got {searcher_name}"
     return searcher_cls_dict[searcher_name](
         config_space=config_space, **searcher_kwargs
     )
