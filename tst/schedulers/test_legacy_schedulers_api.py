@@ -52,7 +52,9 @@ from syne_tune.optimizer.schedulers import (
     RayTuneScheduler,
 )
 from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
-from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import LegacyLinearScalarizedScheduler
+from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import (
+    LegacyLinearScalarizedScheduler,
+)
 from syne_tune.optimizer.schedulers.multiobjective import LegacyMOASHA
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     LCBAcquisitionFunction,
