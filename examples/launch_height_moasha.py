@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective import LegacyMOASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     mode = "min"
 
     np.random.seed(0)
-    scheduler = MOASHA(
+    scheduler = LegacyMOASHA(
         max_t=max_steps,
         time_attr="step",
         mode=mode,
