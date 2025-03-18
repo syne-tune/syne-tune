@@ -9,7 +9,7 @@ from syne_tune.optimizer.schedulers import (
 )
 from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTraining
 from syne_tune.optimizer.schedulers.multiobjective import (
-    MOASHA,
+    LegacyMOASHA,
     NSGA2Searcher,
     LegacyLinearScalarizedScheduler,
 )
@@ -1323,7 +1323,7 @@ baselines_dict = {
     "ASHA": ASHA,
     "MOBSTER": MOBSTER,
     "PASHA": PASHA,
-    "MOASHA": MOASHA,
+    "MOASHA": LegacyMOASHA,
     "PBT": LegacyPopulationBasedTraining,
     "BORE": BORE,
     "REA": REA,

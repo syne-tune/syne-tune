@@ -62,23 +62,20 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         self.random_state = np.random.RandomState(self.random_seed)
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
-        trial_id = len(self.trial_configs)
-        logger.debug(f"get_config trial {trial_id}, {self.num_results()} results")
         config = self._next_points_to_evaluate()
 
         if config is None:
             if self.should_update():
-                logger.debug(f"trial {trial_id}: fit model")
+                logger.debug(f"fit model")
                 with catchtime(f"fit model with {self.num_results()} observations"):
                     self.fit_model()
                 self.index_last_result_fit = self.num_results()
             if self.surrogate_model is not None:
-                logger.debug(f"trial {trial_id}: sample from model")
+                logger.debug(f"sample from model")
                 config = self.surrogate_model.suggest()
             else:
-                logger.debug(f"trial {trial_id}: sample at random")
+                logger.debug(f"sample at random")
                 config = self.sample_random()
-        self.trial_configs[trial_id] = config
         return config
 
     def should_update(self) -> bool:
@@ -124,8 +121,19 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         trial_id: int,
         config: Dict[str, Any],
         metric: float,
+        resource_level: int = None,
     ):
+        self.trial_configs[trial_id] = config
+        self.trial_results[trial_id].append(metric)
 
+    def on_trial_result(
+        self,
+        trial_id: int,
+        config: Dict[str, Any],
+        metric: float,
+        resource_level: int = None,
+    ):
+        self.trial_configs[trial_id] = config
         self.trial_results[trial_id].append(metric)
 
     def sample_random(self) -> Dict:

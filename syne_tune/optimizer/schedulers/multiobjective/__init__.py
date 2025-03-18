@@ -1,6 +1,6 @@
 import logging
 
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective.legacy_moasha import LegacyMOASHA
 from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
 )
@@ -12,7 +12,7 @@ from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer impo
 )
 
 __all__ = [
-    "MOASHA",
+    "LegacyMOASHA",
     "MultiObjectiveRegularizedEvolution",
     "NSGA2Searcher",
     "LegacyLinearScalarizedScheduler",

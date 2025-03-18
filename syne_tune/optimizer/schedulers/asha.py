@@ -8,8 +8,11 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
-    SingleObjectiveBaseSearcher,
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
+    IndependentMultiFidelitySearcher,
+)
+from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
+    MOPriority,
 )
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.config_space import (
@@ -18,7 +21,6 @@ from syne_tune.config_space import (
     remove_constant_and_cast,
     postprocess_config,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
 
 logger = logging.getLogger(__name__)
@@ -62,7 +64,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: Dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
+        searcher: Optional[
+            Union[str, IndependentMultiFidelitySearcher]
+        ] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -86,7 +90,12 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
 
-            self.searcher = searcher_factory(searcher, config_space, **searcher_kwargs)
+            self.searcher = IndependentMultiFidelitySearcher(
+                searcher_cls=searcher,
+                config_space=config_space,
+                random_seed=random_seed,
+                **searcher_kwargs,
+            )
         else:
             self.searcher = searcher
 
@@ -96,7 +105,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
         # Tracks state for new trial add
         self.brackets = [
-            _Bracket(
+            Bracket(
                 grace_period,
                 max_t,
                 reduction_factor,
@@ -131,7 +140,9 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
-        self.searcher.on_trial_result(trial.trial_id, config, metric=metric)
+        self.searcher.on_trial_result(
+            trial.trial_id, config, metric=metric, resource_level=result[self.time_attr]
+        )
         self._check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
             action = SchedulerDecision.STOP
@@ -140,7 +151,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             action = bracket.on_result(
                 trial_id=trial.trial_id,
                 cur_iter=result[self.time_attr],
-                metric=metric,
+                metrics={self.metric: metric},
             )
         if action == SchedulerDecision.STOP:
             self.num_stopped += 1
@@ -150,14 +161,16 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
-        self.searcher.on_trial_result(trial.trial_id, config, metric=metric)
+        self.searcher.on_trial_result(
+            trial.trial_id, config, metric=metric, resource_level=result[self.time_attr]
+        )
 
         self._check_metrics_are_present(result)
         bracket = self.trial_info[trial.trial_id]
         bracket.on_result(
             trial_id=trial.trial_id,
             cur_iter=result[self.time_attr],
-            metric=metric,
+            metrics={self.metric: metric},
         )
         del self.trial_info[trial.trial_id]
 
@@ -190,7 +203,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
                 assert key in result, f"{key} not found in reported result {result}"
 
 
-class _Bracket:
+class Bracket:
     """Bookkeeping system to track recorded values.
 
     Rungs are created in reversed order so that we can more easily find
@@ -203,14 +216,16 @@ class _Bracket:
         max_t: int,
         reduction_factor: float,
         s: int,
+        priority: Optional[MOPriority] = None,
     ):
         self.rf = reduction_factor
         MAX_RUNGS = int(np.log(max_t / min_t) / np.log(self.rf) - s + 1)
         self.rungs = [
             (min_t * self.rf ** (k + s), {}) for k in reversed(range(MAX_RUNGS))
         ]
+        self.priority = priority
 
-    def on_result(self, trial_id: int, cur_iter: int, metric: Optional[float]) -> str:
+    def on_result(self, trial_id: int, cur_iter: int, metrics: Optional[dict]) -> str:
         action = SchedulerDecision.CONTINUE
         for milestone, recorded in self.rungs:
             if cur_iter < milestone or trial_id in recorded:
@@ -222,13 +237,21 @@ class _Bracket:
                 else:
                     # get the list of metrics seen for the rung, compute rank and decide to continue
                     # if trial is in the top ones according to a rank induced by the ``reduction_factor``.
-                    metric_recorded = np.array(list(recorded.values()) + [metric])
-                    ranks = np.searchsorted(
-                        sorted(metric_recorded), metric_recorded
-                    ) / len(metric_recorded)
+                    metric_recorded = np.array(
+                        [list(x.values()) for x in recorded.values()]
+                        + [list(metrics.values())]
+                    )
+                    if self.priority is not None:
+                        priorities = self.priority(metric_recorded)
+                    else:
+                        # single objective case
+                        priorities = metric_recorded.flatten()
+                    ranks = np.searchsorted(sorted(priorities), priorities) / len(
+                        priorities
+                    )
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
                         action = SchedulerDecision.STOP
-                recorded[trial_id] = metric
+                recorded[trial_id] = metrics
                 break
         return action
