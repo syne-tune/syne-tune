@@ -18,8 +18,8 @@ from syne_tune.results_callback import StoreResultsCallback
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
@@ -94,7 +94,9 @@ def test_compare_local_simulator_backends(scheduler_name):
                 }
             )
         scheduler_cls = (
-            FIFOScheduler if scheduler_name == "fifo" else HyperbandScheduler
+            LegacyFIFOScheduler
+            if scheduler_name == "fifo"
+            else LegacyHyperbandScheduler
         )
         scheduler = scheduler_cls(benchmark["config_space"], **scheduler_options)
         # Create backend

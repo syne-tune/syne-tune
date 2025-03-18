@@ -3,8 +3,8 @@ import pytest
 import itertools
 import logging
 
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune import Tuner
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.backend.trial_status import Trial
@@ -71,15 +71,15 @@ def test_scheduler(scheduler, random_seed):
         random_seed=random_seed,
     )
     if scheduler == "fifo":
-        myscheduler1 = FIFOScheduler(config_space, **kwargs)
-        myscheduler2 = FIFOScheduler(config_space, **kwargs)
+        myscheduler1 = LegacyFIFOScheduler(config_space, **kwargs)
+        myscheduler2 = LegacyFIFOScheduler(config_space, **kwargs)
     else:
         prefix = "hyperband_"
         assert scheduler.startswith(prefix)
         sch_type = scheduler[len(prefix) :]
         kwargs = dict(kwargs, max_t=max_steps, type=sch_type, resource_attr="epoch")
-        myscheduler1 = HyperbandScheduler(config_space, **kwargs)
-        myscheduler2 = HyperbandScheduler(config_space, **kwargs)
+        myscheduler1 = LegacyHyperbandScheduler(config_space, **kwargs)
+        myscheduler2 = LegacyHyperbandScheduler(config_space, **kwargs)
 
     logging.getLogger("syne_tune.tuner").setLevel(logging.ERROR)
 

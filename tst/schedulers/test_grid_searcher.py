@@ -1,4 +1,4 @@
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.searchers import GridSearcher
 from tst.util_test import run_experiment_with_height
@@ -102,7 +102,7 @@ def make_scheduler_continuous(
         "debug_log": True,
         "num_samples": {"width": 5, "height": 10},
     }
-    return FIFOScheduler(
+    return LegacyFIFOScheduler(
         config_space,
         searcher="grid",
         search_options=search_options,
@@ -131,7 +131,7 @@ def make_scheduler_categorical(
         width=choice([1, 5, 10, 15, 20]),
         height=choice([30, 40, 50, 60, 70, 80]),
     )
-    return FIFOScheduler(
+    return LegacyFIFOScheduler(
         config_space,
         searcher="grid",
         search_options=search_options,

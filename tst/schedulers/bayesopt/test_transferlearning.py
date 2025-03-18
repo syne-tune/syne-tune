@@ -1,7 +1,7 @@
 import numpy as np
 
 from syne_tune.config_space import uniform, randint, choice
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     gp_fifo_searcher_defaults,
     gp_fifo_searcher_factory,
 )

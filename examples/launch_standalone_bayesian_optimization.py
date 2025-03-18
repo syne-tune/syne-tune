@@ -11,8 +11,12 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
     create_tuning_job_state,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import encode_state
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_fifo_searcher import (
+    GPFIFOSearcher,
+)
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
+    encode_state,
+)
 
 
 if __name__ == "__main__":

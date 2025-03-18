@@ -1,8 +1,8 @@
 import pytest
 import itertools
 
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -16,7 +16,7 @@ def make_async_scheduler(scheduler, searcher):
         config_space, metric, mode, random_seed, resource_attr, max_resource_attr
     ):
         search_options = {"debug_log": False}
-        if searcher == "hypertune":
+        if searcher == "legacy_hypertune":
             search_options["model"] = "gp_independent"
         if searcher == "grid":
             config_space = dict(
@@ -25,7 +25,7 @@ def make_async_scheduler(scheduler, searcher):
                 height=choice([-3, -2, -1, 0, 1, 2, 3]),
             )
         if scheduler == "fifo":
-            myscheduler = FIFOScheduler(
+            myscheduler = LegacyFIFOScheduler(
                 config_space,
                 searcher=searcher,
                 search_options=search_options,
@@ -37,7 +37,7 @@ def make_async_scheduler(scheduler, searcher):
             prefix = "hyperband_"
             assert scheduler.startswith(prefix)
             sch_type = scheduler[len(prefix) :]
-            myscheduler = HyperbandScheduler(
+            myscheduler = LegacyHyperbandScheduler(
                 config_space,
                 searcher=searcher,
                 search_options=search_options,

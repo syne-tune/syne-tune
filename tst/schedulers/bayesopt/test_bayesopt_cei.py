@@ -250,7 +250,7 @@ def test_no_feasible_candidates():
 
 @pytest.mark.skip("this unit test is skipped to save time")
 def test_best_value():
-    # test that the best value affects the constrained expected improvement
+    # test that the best value affects the legacy_constrained expected improvement
     active_models = default_models(INTERNAL_METRIC_NAME)
     constraint_models = default_models(INTERNAL_CONSTRAINT_NAME)
     for active_model, constraint_model in zip(active_models, constraint_models):

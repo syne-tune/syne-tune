@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
 
@@ -41,7 +41,7 @@ def test_cost_aware_bayesopt(scheduler, searcher, cost):
     }
     stop_criterion = StoppingCriterion(max_wallclock_time=18)
 
-    myscheduler = FIFOScheduler(
+    myscheduler = LegacyFIFOScheduler(
         config_space,
         searcher=searcher,
         search_options=search_options,
