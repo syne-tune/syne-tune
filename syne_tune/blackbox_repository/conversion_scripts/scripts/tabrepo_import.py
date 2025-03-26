@@ -125,6 +125,7 @@ def generate_tabrepo(config_space: dict, bb_name: str, context_name: str):
 
     # Process each dataset.
     for dataset_name, group in filtered_metrics.groupby("dataset"):
+        # For these datasets baseline results are missing, so we do not add them to avoid NaN values.
         if dataset_name in ["KDDCup99", "dionis", "Kuzushiji-49"]:
             continue
         # For the dataset, get the configurations for the frameworks used.
