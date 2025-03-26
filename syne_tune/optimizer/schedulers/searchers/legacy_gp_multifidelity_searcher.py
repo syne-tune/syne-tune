@@ -1,18 +1,18 @@
 from typing import Optional, List, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     gp_multifidelity_searcher_factory,
     gp_multifidelity_searcher_defaults,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_fifo_searcher import (
     GPFIFOSearcher,
     decode_state,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     ResourceForAcquisitionMap,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (

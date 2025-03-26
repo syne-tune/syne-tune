@@ -1,4 +1,4 @@
-from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.legacy_hyperband_pasha import PASHARungSystem
 
 
 def create_pasha_rung_system(mode="max"):

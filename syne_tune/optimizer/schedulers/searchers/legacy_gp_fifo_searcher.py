@@ -1,14 +1,14 @@
 from typing import Optional, List, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
+from syne_tune.optimizer.schedulers.searchers.legacy_model_based_searcher import (
     BayesianOptimizationSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
     gp_fifo_searcher_factory,
     gp_fifo_searcher_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_utils import (
     decode_state,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (

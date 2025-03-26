@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from datetime import datetime
 
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
 from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
@@ -17,7 +17,7 @@ def _new_trial(trial_id: int, config: Dict[str, Any]):
 
 def test_cost_offset():
     config_space = {"int": randint(1, 2), "float": uniform(5.5, 6.5), "epochs": 27}
-    scheduler = HyperbandScheduler(
+    scheduler = LegacyHyperbandScheduler(
         config_space,
         searcher="random",
         metric="metric",
@@ -75,7 +75,7 @@ def test_cost_offset():
 # scratch, which should lead to cost offsets being reset
 def test_reset_cost_offset():
     config_space = {"int": randint(1, 2), "float": uniform(5.5, 6.5), "epochs": 27}
-    scheduler = HyperbandScheduler(
+    scheduler = LegacyHyperbandScheduler(
         config_space,
         searcher="random",
         metric="metric",

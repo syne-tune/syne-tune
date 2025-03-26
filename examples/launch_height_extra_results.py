@@ -7,7 +7,7 @@ from syne_tune.config_space import randint
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import DyHPO
-from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
 )
 from syne_tune.results_callback import ExtraResultsComposer, StoreResultsCallback
@@ -20,7 +20,7 @@ class DyHPOExtraResults(ExtraResultsComposer):
     def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
         scheduler = tuner.scheduler
         assert isinstance(scheduler, DyHPO)  # sanity check
-        # :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo.DyHPORungSystem`
+        # :class:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo.DyHPORungSystem`
         # collects statistics about how often several types of decisions were made in
         # ``on_task_schedule``
         return scheduler.terminator._rung_systems[0].summary_schedule_records()

@@ -11,7 +11,7 @@ from syne_tune.callbacks.hyperband_remove_checkpoints_score import (
     compute_probabilities_of_getting_resumed,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.hyperband_stopping import PausedTrialsResult
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import PausedTrialsResult
 
 logger = logging.getLogger(__name__)
 

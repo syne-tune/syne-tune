@@ -9,7 +9,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F4
     StochasticAndFilterDuplicatesSearcher,
     extract_random_seed,
 )
-from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.legacy_random_grid_searcher import (  # noqa: F401
     LegacyRandomSearcher,
     GridSearcher,
 )
@@ -29,14 +29,14 @@ __all__ = [
 ]
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_model_based_searcher import (  # noqa: F401
         ModelBasedSearcher,
         BayesianOptimizationSearcher,
     )
-    from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_gp_fifo_searcher import (  # noqa: F401
         GPFIFOSearcher,
     )
-    from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.legacy_gp_multifidelity_searcher import (  # noqa: F401
         GPMultiFidelitySearcher,
     )
 

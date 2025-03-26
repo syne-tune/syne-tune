@@ -10,7 +10,7 @@ from typing import Callable, List, Optional, Tuple, Dict, Any
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
@@ -59,7 +59,7 @@ _CONSTRAINTS = {
 }
 
 
-class LegacyPopulationBasedTraining(FIFOScheduler):
+class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
     """
     Implements the Population Based Training (PBT) algorithm. This is an adapted
     version of the Ray Tune implementation:

@@ -10,7 +10,7 @@ import numpy as np
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import TrialSuggestion
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 
 logger = logging.getLogger(__name__)
 MAX_NAME_LENGTH = 64
@@ -89,7 +89,7 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
             single_objective_mode = next(x for x in mode)
 
         if base_scheduler_factory is None:
-            base_scheduler_factory = FIFOScheduler
+            base_scheduler_factory = LegacyFIFOScheduler
 
         self.base_scheduler = base_scheduler_factory(
             config_space=config_space,
@@ -99,8 +99,8 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
         )
 
     def _scalarized_metric(self, result: Dict[str, Any]) -> float:
-        if isinstance(self.base_scheduler, FIFOScheduler):
-            FIFOScheduler._check_keys_of_result(result, self.metric_names())
+        if isinstance(self.base_scheduler, LegacyFIFOScheduler):
+            LegacyFIFOScheduler._check_keys_of_result(result, self.metric_names())
 
         mo_results = np.array([result[item] for item in self.metric_names()])
         return np.sum(np.multiply(mo_results, self.scalarization_weights))

@@ -4,7 +4,7 @@ from baselines import methods
 from benchmark_definitions import benchmark_definitions
 from syne_tune import Tuner
 from syne_tune.experiments.launchers.hpo_main_simulator import main
-from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
 from syne_tune.results_callback import ExtraResultsComposer
 
 
@@ -18,7 +18,7 @@ class RungLevelsExtraResults(ExtraResultsComposer):
     """
 
     def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
-        if not isinstance(tuner.scheduler, HyperbandScheduler):
+        if not isinstance(tuner.scheduler, LegacyHyperbandScheduler):
             return None
         rung_information = tuner.scheduler.terminator.information_for_rungs()
         return {

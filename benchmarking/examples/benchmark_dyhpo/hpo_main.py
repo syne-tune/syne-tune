@@ -4,8 +4,8 @@ from baselines import methods
 from benchmark_definitions import benchmark_definitions
 from syne_tune import Tuner
 from syne_tune.experiments.launchers.hpo_main_simulator import main
-from syne_tune.optimizer.schedulers import HyperbandScheduler
-from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+from syne_tune.optimizer.schedulers import LegacyHyperbandScheduler
+from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
 )
 from syne_tune.results_callback import ExtraResultsComposer
@@ -62,8 +62,8 @@ class DyHPOExtraResults(ExtraResultsComposer):
         result = None
         scheduler = tuner.scheduler
         if (
-            isinstance(scheduler, HyperbandScheduler)
-            and scheduler.scheduler_type == "dyhpo"
+            isinstance(scheduler, LegacyHyperbandScheduler)
+            and scheduler.scheduler_type == "legacy_dyhpo"
         ):
             result = scheduler.terminator._rung_systems[0].summary_schedule_records()
         return result

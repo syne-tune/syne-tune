@@ -1,11 +1,11 @@
 import logging
 from typing import Optional, List
 
-from syne_tune.optimizer.schedulers.hyperband_promotion import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
     PromotionRungEntry,
     PromotionRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_stopping import (
+from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import (
     Rung,
     StoppingRungSystem,
 )
