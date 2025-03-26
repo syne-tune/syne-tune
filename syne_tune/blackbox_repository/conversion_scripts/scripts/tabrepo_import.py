@@ -189,7 +189,7 @@ def convert_dataset(
     )
 
     # Loop over each fold (seed) and insert the default evaluation
-    for seed_idx, fold in enumerate([0, 1, 2]):
+    for seed_idx, fold in enumerate(range(n_seeds)):
         try:
             fold_data = evaluations.xs(fold, level="fold")
         except KeyError:
