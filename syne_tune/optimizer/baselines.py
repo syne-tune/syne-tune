@@ -11,7 +11,7 @@ from syne_tune.optimizer.schedulers.legacy_pbt import LegacyPopulationBasedTrain
 from syne_tune.optimizer.schedulers.multiobjective import (
     LegacyMOASHA,
     NSGA2Searcher,
-    LinearScalarizedScheduler,
+    LegacyLinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective.legacy_multi_objective_regularized_evolution import (
     LegacyMultiObjectiveRegularizedEvolution,
@@ -934,7 +934,7 @@ class MOREA(LegacyFIFOScheduler):
         )
 
 
-class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
+class MOLinearScalarizationBayesOpt(LegacyLinearScalarizedScheduler):
     """
     Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`
     together with a default GP surrogate model.

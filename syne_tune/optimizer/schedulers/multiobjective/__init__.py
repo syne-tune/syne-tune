@@ -7,15 +7,15 @@ from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_e
 from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import (
     NSGA2Searcher,
 )
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
-    LinearScalarizedScheduler,
+from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import (
+    LegacyLinearScalarizedScheduler,
 )
 
 __all__ = [
     "LegacyMOASHA",
     "MultiObjectiveRegularizedEvolution",
     "NSGA2Searcher",
-    "LinearScalarizedScheduler",
+    "LegacyLinearScalarizedScheduler",
 ]
 
 try:

@@ -3,17 +3,14 @@ import string
 from collections.abc import Iterable
 from itertools import groupby
 import random
-from typing import Dict, Any, List, Union, Optional
+from typing import Dict, Any, List, Union, Callable, Optional
 
 import numpy as np
 
-from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.util import dump_json_with_numpy
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
-from syne_tune.optimizer.schedulers.single_objective_scheduler import (
-    SingleObjectiveScheduler,
-)
+from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
+from syne_tune.optimizer.scheduler import TrialSuggestion
+from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 
 logger = logging.getLogger(__name__)
 MAX_NAME_LENGTH = 64
@@ -29,15 +26,19 @@ def _all_equal(iterable: Iterable) -> bool:
     return next(g, True) and not next(g, False)
 
 
-class LinearScalarizedScheduler(TrialScheduler):
+class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
     """Scheduler with linear scalarization of multiple objectives
 
     This method optimizes a single objective equal to the linear scalarization
     of given two objectives. The scalarized single objective is named:
     ``"scalarized_<metric1>_<metric2>_..._<metricN>"``.
+
+    :param base_scheduler_factory: Factory method for the single-objective scheduler
+        used on the scalarized objective. It will be initialized inside this scheduler.
+        Defaults to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :param config_space: Configuration space for evaluation function
     :param metric: Names of metrics to optimize
-    :param do_minimize: True if we minimize the objective function
+    :param mode: Modes of metrics to optimize ("min" or "max"). All must be matching.
     :param scalarization_weights: Weights used to scalarize objectives. Defaults to
         an array of 1s
     :param base_scheduler_kwargs: Additional arguments to ``base_scheduler_factory``
@@ -46,30 +47,29 @@ class LinearScalarizedScheduler(TrialScheduler):
 
     scalarization_weights: np.ndarray
     single_objective_metric: str
-    base_scheduler: SingleObjectiveScheduler
+    base_scheduler: LegacyTrialScheduler
 
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metrics: List[str],
-        do_minimize: Optional[bool] = True,
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
         scalarization_weights: Union[np.ndarray, List[float]] = None,
-        random_seed: int = None,
+        base_scheduler_factory: Callable[[Any], LegacyTrialScheduler] = None,
         **base_scheduler_kwargs,
     ):
-        super(LinearScalarizedScheduler, self).__init__(random_seed=random_seed)
+        super(LegacyLinearScalarizedScheduler, self).__init__(config_space)
         if scalarization_weights is None:
-            scalarization_weights = np.ones(shape=len(metrics))
+            scalarization_weights = np.ones(shape=len(metric))
         self.scalarization_weights = np.asarray(scalarization_weights)
 
-        self.metrics = metrics
-        self.config_space = config_space
-        self.do_minimize = do_minimize
+        self.metric = metric
+        self.mode = mode
 
         assert (
-            len(metrics) > 1
-        ), "This Scheduler is intended for multi-objective optimization but only one metric is provided"
-        self.single_objective_metric = f"scalarized_{'_'.join(metrics)}"
+            len(metric) > 1
+        ), "This Scheduler is inteded for multi-objective optimization but only one metric is provided"
+        self.single_objective_metric = f"scalarized_{'_'.join(metric)}"
         if len(self.single_objective_metric) > MAX_NAME_LENGTH:
             # In case of multiple objectives, the name can become too long and clutter logs/results
             # If that is the case, we replace the objective names with a random string
@@ -80,23 +80,36 @@ class LinearScalarizedScheduler(TrialScheduler):
             )
             self.single_objective_metric = f"scalarized_objective_{rstring}"
 
-        self.base_scheduler = SingleObjectiveScheduler(
+        single_objective_mode = self.mode
+        if isinstance(single_objective_mode, Iterable):
+            assert len(mode) >= 1, "At least one mode must be provided"
+            assert _all_equal(
+                mode
+            ), "Modes must be the same, use positive/negative scalarization_weights to change relative signs"
+            single_objective_mode = next(x for x in mode)
+
+        if base_scheduler_factory is None:
+            base_scheduler_factory = LegacyFIFOScheduler
+
+        self.base_scheduler = base_scheduler_factory(
             config_space=config_space,
             metric=self.single_objective_metric,
-            do_minimize=do_minimize,
-            random_seed=random_seed,
+            mode=single_objective_mode,
             **base_scheduler_kwargs,
         )
 
     def _scalarized_metric(self, result: Dict[str, Any]) -> float:
-        mo_results = np.array([result[item] for item in self.metrics])
+        if isinstance(self.base_scheduler, LegacyFIFOScheduler):
+            LegacyFIFOScheduler._check_keys_of_result(result, self.metric_names())
+
+        mo_results = np.array([result[item] for item in self.metric_names()])
         return np.sum(np.multiply(mo_results, self.scalarization_weights))
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """Implements ``suggest``, except for basic postprocessing of config.
         See the docstring of the chosen base_scheduler for details
         """
-        return self.base_scheduler.suggest()
+        return self.base_scheduler._suggest(trial_id)
 
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
@@ -136,14 +149,36 @@ class LinearScalarizedScheduler(TrialScheduler):
         """
         return self.base_scheduler.on_trial_remove(trial)
 
+    def trials_checkpoints_can_be_removed(self) -> List[int]:
+        """
+        See the docstring of the chosen base_scheduler for details
+        :return: IDs of paused trials for which checkpoints can be removed
+        """
+        return self.base_scheduler.trials_checkpoints_can_be_removed()
+
+    def metric_names(self) -> List[str]:
+        """
+        :return: List of metric names.
+        """
+        return self.metric
+
+    def metric_mode(self) -> Union[str, List[str]]:
+        """
+        :return: "min" if target metric is minimized, otherwise "max".
+        """
+        return self.mode
+
     def metadata(self) -> Dict[str, Any]:
         """
         :return: Metadata of the scheduler
         """
-        metadata = super().metadata()
-        config_space_json = dump_json_with_numpy(
-            config_space_to_json_dict(self.config_space)
-        )
-        metadata["config_space"] = config_space_json
-        metadata["scalarized_metric"] = self.single_objective_metric
-        return metadata
+        return {
+            **super(LegacyLinearScalarizedScheduler, self).metadata(),
+            "scalarized_metric": self.single_objective_metric,
+        }
+
+    def is_multiobjective_scheduler(self) -> bool:
+        """
+        Return True if a scheduler is multi-objective.
+        """
+        return True
