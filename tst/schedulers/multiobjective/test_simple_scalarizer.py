@@ -5,8 +5,11 @@ import pytest
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import randint, uniform, choice
-from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import LegacyLinearScalarizedScheduler
+from syne_tune.optimizer.schedulers.multiobjective.legacy_linear_scalarizer import (
+    LegacyLinearScalarizedScheduler,
+)
 from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
+
 
 @pytest.fixture
 def config_space():
