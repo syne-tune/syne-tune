@@ -1,5 +1,5 @@
 from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
-from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.optimizer.legacy_baselines import RandomSearch
 from syne_tune.config_space import uniform
 
 

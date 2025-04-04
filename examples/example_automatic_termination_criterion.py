@@ -6,7 +6,7 @@ from syne_tune.stopping_criterions.automatic_termination_criterion import (
 )
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.baselines import BORE
+from syne_tune.optimizer.legacy_baselines import BORE
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.experiments import load_experiment
 

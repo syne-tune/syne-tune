@@ -4,7 +4,7 @@ from typing import Dict, Optional, Any
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.optimizer.baselines import ZeroShotTransfer
+from syne_tune.optimizer.legacy_baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
 from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (

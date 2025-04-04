@@ -5,7 +5,7 @@ import numpy as np
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint, uniform
-from syne_tune.optimizer.baselines import MORandomScalarizationBayesOpt
+from syne_tune.optimizer.legacy_baselines import MORandomScalarizationBayesOpt
 
 
 def main():
