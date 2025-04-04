@@ -36,12 +36,11 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     L. Li and K. Jamieson and A. Rostamizadeh and K. Gonina and M. Hardt and B. Recht and A. Talwalkar
     arXiv:1810.05934 [cs.LG]
 
-    #TODO: Update the docstring
-
-    :param config_space: Configuration space
+    :param config_space: Configuration space for the evaluation function.
     :param metric: Name of metric to optimize, key in results obtained via
        ``on_trial_result``.
     :param do_minimize: If True, we minimize the objective function specified by ``metric`` . Defaults to True.
+    :param searcher: Searcher object to sample configurations.
     :param time_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
@@ -57,6 +56,8 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         is simply a unit-less scalar. Defaults to 3
     :param brackets: Number of brackets. Each bracket has a different
         ``grace_period`` and number of rung levels. Defaults to 1
+    :param random_seed: Seed for initializing random number generators.
+    :param searcher_kwargs: Additional keyword arguments for the searcher.
     """
 
     def __init__(
