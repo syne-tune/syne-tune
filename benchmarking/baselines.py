@@ -1,26 +1,15 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
+import syne_tune.optimizer.baselines as legacy_baselines
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.optimizer import baselines
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
-
-# from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-#    SurrogateSearcher,
-# )
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution,
-)
-import syne_tune.optimizer.baselines as legacy_baselines
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-
-
-# import syne_tune.optimizer.baselines as baselines
 
 
 @dataclass
