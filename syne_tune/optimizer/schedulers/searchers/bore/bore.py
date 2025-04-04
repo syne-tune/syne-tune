@@ -33,9 +33,9 @@ class Bore(SingleObjectiveBaseSearcher):
         | Proceedings of the 38th International Conference on Machine Learning
         | https://arxiv.org/abs/2102.09009
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
-
+    :param config_space: Configuration space for the evaluation function.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param random_seed: Seed for initializing random number generators.
     :param gamma: Defines the percentile, i.e how many percent of configurations
         are used to model :math:`l(x)`. Defaults to 0.25
     :param calibrate: If set to true, we calibrate the predictions of the
