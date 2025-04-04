@@ -28,13 +28,13 @@ logger = logging.getLogger(__name__)
 
 class RandomSearch(SingleFidelityScheduler):
     """
-    Random search that samples hyperparameter configurations uniformly at random in each iteration.  
+    Random search that samples hyperparameter configurations uniformly at random in each iteration.
     Supports both single- and multi-objective optimization.
 
-    :param config_space: Configuration space for the evaluation function.  
-    :param metrics: Name(s) of the metric(s) to optimize.  
-    :param do_minimize: Set to True if the objective function should be minimized.  
-    :param random_seed: Seed for initializing random number generators.  
+    :param config_space: Configuration space for the evaluation function.
+    :param metrics: Name(s) of the metric(s) to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
@@ -68,10 +68,10 @@ class BORE(SingleObjectiveScheduler):
         | Proceedings of the 38th International Conference on Machine Learning
         | https://arxiv.org/abs/2102.09009
 
-    :param config_space: Configuration space for the evaluation function.  
+    :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
-    :param do_minimize: Set to True if the objective function should be minimized.  
-    :param random_seed: Seed for initializing random number generators.  
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
@@ -99,7 +99,7 @@ class BORE(SingleObjectiveScheduler):
 class TPE(SingleObjectiveScheduler):
     """
     Tree-Parzen Estimator as proposed by:
-    
+
         | Algorithms for Hyper-Parameter Optimization
         | J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
         | Proceedings of the 24th International Conference on Advances in Neural Information Processing Systems
