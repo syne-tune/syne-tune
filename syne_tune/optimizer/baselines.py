@@ -27,15 +27,15 @@ logger = logging.getLogger(__name__)
 
 
 class RandomSearch(SingleFidelityScheduler):
-    """Random search.
+    """
+    Random search that samples hyperparameter configurations uniformly at random in each iteration.  
+    Supports both single- and multi-objective optimization.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
-
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.  
+    :param metrics: Name(s) of the metric(s) to optimize.  
+    :param do_minimize: Set to True if the objective function should be minimized.  
+    :param random_seed: Seed for initializing random number generators.  
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -60,15 +60,19 @@ class RandomSearch(SingleFidelityScheduler):
 
 
 class BORE(SingleObjectiveScheduler):
-    """Random search.
+    """
+    Bayesian Optimization by Density-Ratio Estimation (BORE) as proposed by:
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
+        | BORE: Bayesian Optimization by Density-Ratio Estimation,
+        | Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V. and Archambeau, Cedric and Ramos, Fabio
+        | Proceedings of the 38th International Conference on Machine Learning
+        | https://arxiv.org/abs/2102.09009
 
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.  
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.  
+    :param random_seed: Seed for initializing random number generators.  
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -93,15 +97,39 @@ class BORE(SingleObjectiveScheduler):
 
 
 class TPE(SingleObjectiveScheduler):
-    """Random search.
+    """
+    Tree-Parzen Estimator as proposed by:
+    
+        | Algorithms for Hyper-Parameter Optimization
+        | J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
+        | Proceedings of the 24th International Conference on Advances in Neural Information Processing Systems
+        | https://papers.nips.cc/paper/2011/hash/86e8f7ab32cfd12577bc2619bc635690-Abstract.html
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
 
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param num_min_data_points: Minimum number of data points that we use to fit
+        the KDEs. As long as less observations have been received in
+        :meth:`update`, randomly drawn configurations are returned in
+        :meth:`get_config`.
+        If set to ``None``, we set this to the number of hyperparameters.
+        Defaults to ``None``.
+    :param top_n_percent: Determines how many datapoints we use to fit the first
+        KDE model for modeling the well performing configurations.
+        Defaults to 15
+    :param min_bandwidth: The minimum bandwidth for the KDE models. Defaults
+        to 1e-3
+    :param num_candidates: Number of candidates that are sampled to optimize
+        the acquisition function. Defaults to 64
+    :param bandwidth_factor: We sample continuous hyperparameter from a
+        truncated Normal. This factor is multiplied to the bandwidth to define
+        the standard deviation of this truncated Normal. Defaults to 3
+    :param random_fraction: Defines the fraction of configurations that are
+        drawn uniformly at random instead of sampling from the model.
+        Defaults to 0.33
     """
 
     def __init__(
@@ -138,15 +166,21 @@ class TPE(SingleObjectiveScheduler):
 
 
 class REA(SingleObjectiveScheduler):
-    """Random search.
+    """
+    Regularized Evolution as proposed by
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
+        | Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
+        | Regularized Evolution for Image Classifier Architecture Search.
+        | In Proceedings of the Conference on Artificial Intelligence (AAAI’19)
 
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param population_size: Size of the population, defaults to 100
+    :param sample_size: Size of the candidate set to obtain a parent for the
+        mutation, defaults to 10
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -175,15 +209,14 @@ class REA(SingleObjectiveScheduler):
 
 
 class BOTorch(SingleObjectiveScheduler):
-    """Random search.
+    """
+    Implements Gaussian-process based Bayesian optimization based on BOTorch.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
-
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -208,15 +241,27 @@ class BOTorch(SingleObjectiveScheduler):
 
 
 class ASHA(AsynchronousSuccessiveHalving):
-    """Random search.
+    """
+    Asynchronous Successive Halving (ASHA) as proposed by:
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
+        | Li, Jamieson, Rostamizadeh, Gonina, Hardt, Recht, Talwalkar (2018)
+        | A System for Massively Parallel Hyperparameter Tuning
+        | https://arxiv.org/abs/1810.05934
 
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param time_attr: A training result attr to use for comparing time.
+        Note that you can pass in something non-temporal such as
+        ``training_iteration`` as a measure of progress, the only requirement
+        is that the attribute should increase monotonically.
+        Defaults to "training_iteration"
+    :param max_t: max time units per trial. Trials will be stopped after
+        ``max_t`` time units (determined by ``time_attr``) have passed.
+        Defaults to 100
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -245,15 +290,22 @@ class ASHA(AsynchronousSuccessiveHalving):
 
 
 class ASHABORE(AsynchronousSuccessiveHalving):
-    """Random search.
+    """
+    Asynchronous Successive Halving (ASHA) which fits a BORE model on each rung level.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
-
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param time_attr: A training result attr to use for comparing time.
+        Note that you can pass in something non-temporal such as
+        ``training_iteration`` as a measure of progress, the only requirement
+        is that the attribute should increase monotonically.
+        Defaults to "training_iteration"
+    :param max_t: max time units per trial. Trials will be stopped after
+        ``max_t`` time units (determined by ``time_attr``) have passed.
+        Defaults to 100
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -279,15 +331,22 @@ class ASHABORE(AsynchronousSuccessiveHalving):
 
 
 class ASHACQR(AsynchronousSuccessiveHalving):
-    """Random search.
+    """
+    Asynchronous Successive Halving (ASHA) which fits a CQR model on each rung level.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
-
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param time_attr: A training result attr to use for comparing time.
+        Note that you can pass in something non-temporal such as
+        ``training_iteration`` as a measure of progress, the only requirement
+        is that the attribute should increase monotonically.
+        Defaults to "training_iteration"
+    :param max_t: max time units per trial. Trials will be stopped after
+        ``max_t`` time units (determined by ``time_attr``) have passed.
+        Defaults to 100
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -313,15 +372,22 @@ class ASHACQR(AsynchronousSuccessiveHalving):
 
 
 class BOHB(AsynchronousSuccessiveHalving):
-    """Random search.
+    """
+    Bayesian Optimization Hyperband combines ASHA with TPE-like Bayesian optimization, using kernel
+    density estimators as proposed by:
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
+        | BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+        | S. Falkner and A. Klein and F. Hutter
+        | Proceedings of the 35th International Conference on Machine Learning
+        | https://arxiv.org/abs/1807.01774
 
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    Compared to the method proposed by Falkner et al. we use asynchronous successive halving for scheduling.
+
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -363,15 +429,19 @@ class BOHB(AsynchronousSuccessiveHalving):
 
 
 class CQR(SingleObjectiveScheduler):
-    """Random search.
+    """
+    Single-fidelity Conformal Quantile Regression approach proposed in:
+        | Optimizing Hyperparameters with Conformal Quantile Regression.
+        | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
+        | ICML 2023.
+    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
+    predictions.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for ``kwargs["search_options"]`` parameters.
-
-    :param config_space: Configuration space for evaluation function
-    :param metric: Name of metric to optimize
-    :param kwargs: Additional arguments to
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     """
 
     def __init__(
@@ -395,8 +465,6 @@ class CQR(SingleObjectiveScheduler):
         )
 
 
-# Dictionary that allows to also list baselines who don't need a wrapper class
-# such as :class:`PopulationBasedTraining`
 baselines_dict = {
     "Random Search": RandomSearch,
     "BORE": BORE,
