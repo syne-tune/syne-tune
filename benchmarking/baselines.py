@@ -7,8 +7,6 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
 from syne_tune.optimizer import baselines
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 # from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
 #    SurrogateSearcher,
@@ -133,26 +131,26 @@ methods = {
         random_seed=method_arguments.random_seed,
         points_to_evaluate=method_arguments.points_to_evaluate,
     ),
-    Methods.GP: lambda method_arguments: FIFOScheduler(
-        method_arguments.config_space,
-        searcher="bayesopt",
-        search_options={"debug_log": False},
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.LegacyASHA: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
-        searcher="random",
-        search_options={"debug_log": False},
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        **_max_resource_attr_or_max_t(method_arguments),
-    ),
+    # Methods.GP: lambda method_arguments: FIFOScheduler(
+    #     method_arguments.config_space,
+    #     searcher="bayesopt",
+    #     search_options={"debug_log": False},
+    #     metric=method_arguments.metric,
+    #     mode=method_arguments.mode,
+    #     random_seed=method_arguments.random_seed,
+    #     points_to_evaluate=method_arguments.points_to_evaluate,
+    # ),
+    # Methods.LegacyASHA: lambda method_arguments: HyperbandScheduler(
+    #     config_space=method_arguments.config_space,
+    #     searcher="random",
+    #     search_options={"debug_log": False},
+    #     mode=method_arguments.mode,
+    #     metric=method_arguments.metric,
+    #     resource_attr=method_arguments.resource_attr,
+    #     random_seed=method_arguments.random_seed,
+    #     points_to_evaluate=method_arguments.points_to_evaluate,
+    #     **_max_resource_attr_or_max_t(method_arguments),
+    # ),
     Methods.LegacyASHABORE: lambda method_arguments: legacy_baselines.ASHABORE(
         config_space=method_arguments.config_space,
         mode=method_arguments.mode,
