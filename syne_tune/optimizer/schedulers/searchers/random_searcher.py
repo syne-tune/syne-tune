@@ -17,7 +17,11 @@ def sample_random_config(config_space):
 
 class RandomSearcher(SingleObjectiveBaseSearcher):
     """
-    Searcher which randomly samples configurations to try next.
+    Sample hyperparameter configurations uniformly at random from the given configuration space.
+
+    :param config_space: The configuration space to sample from.
+    :param points_to_evaluate: A list of configurations to evaluate initially (in the given order).
+    :param random_seed: Seed used to initialize the random number generators.
     """
 
     def __init__(
