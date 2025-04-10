@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class BaseSearcher:
     """
-    Base class for searchers that sample hyperparameter configurations 
+    Base class for searchers that sample hyperparameter configurations
     from the given configuration space.
 
     :param config_space: The configuration space to sample from.

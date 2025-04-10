@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class SingleFidelityScheduler(TrialScheduler):
     """
-    Scheduler class for both single- and multi-objective methods that optimize using a single fidelity only, 
+    Scheduler class for both single- and multi-objective methods that optimize using a single fidelity only,
     e.g., the highest amount of resources.
 
     :param config_space: Configuration space for evaluation function
