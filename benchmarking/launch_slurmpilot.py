@@ -2,7 +2,6 @@ import os
 from argparse import ArgumentParser
 from pathlib import Path
 
-from coolname import generate_slug
 from slurmpilot.config import load_config
 from slurmpilot import SlurmPilot, JobCreationInfo
 from slurmpilot.util import unify

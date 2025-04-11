@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
-import syne_tune.optimizer.baselines as legacy_baselines
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
