@@ -17,7 +17,6 @@ class BenchmarkDefinition:
     datasets: Optional[List[str]] = None
 
 
-# n_full_evals = 100 may be better as 200 evals is very slow for MOBSTER
 n_full_evals = 200
 
 
@@ -72,6 +71,7 @@ benchmark_definitions = {
     "nas201-cifar10": nas201_benchmark("cifar10"),
     "nas201-cifar100": nas201_benchmark("cifar100"),
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
+    # TODO currently fails
     # "nas301-yahpo": BenchmarkDefinition(
     #     max_wallclock_time=3600 * 100,
     #     elapsed_time_attr="runtime",

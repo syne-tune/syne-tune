@@ -190,17 +190,3 @@ def load_benchmark_results(
             benchmark_dfs, num_time_steps, max_seed
         )
     return benchmark_results
-
-
-if __name__ == "__main__":
-    experiment_tags = []
-    methods = None
-    num_time_steps = 20
-    path = "/Users/salinasd/slurmpilot/jobs/syne-tune/benchmarking/fantastic-shellfish-pretty-tricky-earwig-of-philosophy/results"
-    benchmark_results = load_benchmark_results(
-        path=path,
-        methods=methods,
-        num_time_steps=num_time_steps,
-        max_seed=None,
-        experiment_filter=None,
-    )

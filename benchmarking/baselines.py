@@ -43,16 +43,6 @@ class Methods:
     ASHACQR = "ASHACQR"
 
 
-def _max_resource_attr_or_max_t(
-    args: MethodArguments, max_t_name: str = "max_t"
-) -> dict:
-    if args.max_resource_attr is not None:
-        return {"max_resource_attr": args.max_resource_attr}
-    else:
-        assert args.max_t is not None
-        return {max_t_name: args.max_t}
-
-
 methods = {
     Methods.RS: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,

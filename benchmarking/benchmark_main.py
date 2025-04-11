@@ -94,6 +94,7 @@ def run(
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=30,
+            # we set a convenient name for tuner to retrieve results easily
             tuner_name=f"results/{method}-{seed}-{benchmark_name}".replace("_", "-"),
             save_tuner=False,
             suffix_tuner_name=False,
