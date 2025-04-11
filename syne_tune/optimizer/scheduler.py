@@ -202,11 +202,7 @@ class TrialScheduler:
             "scheduler_name": str(self.__class__.__name__),
             "scheduler_kwargs": self.__dict__,
             "metric_names": self.metric_names(),
-            "metric_mode": self.metric_mode(),
         }
 
     def metric_names(self) -> List[str]:
-        raise NotImplementedError()
-
-    def metric_mode(self) -> str:
         raise NotImplementedError()

@@ -37,7 +37,6 @@ if __name__ == "__main__":
     sbatch_arguments = args.sbatch_arguments
     slurmpilot_folder = args.slurmpilot_folder
 
-    print(args)
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
         Methods.BORE,
@@ -72,7 +71,6 @@ if __name__ == "__main__":
 
     jobname = unify(f"synetune/{experiment_tag}", method="date")
     print(f"Going to launch {len(python_args)} jobs, jobname: {jobname}")
-    WANDB_API_KEY = os.environ.get("WANDB_API_KEY", "")
     jobinfo = JobCreationInfo(
         cluster=cluster,
         partition=partition,

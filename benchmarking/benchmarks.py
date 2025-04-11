@@ -30,6 +30,7 @@ def fcnet_benchmark(dataset_name):
         mode="min",
         blackbox_name="fcnet",
         dataset_name=dataset_name,
+        # allow to stop after having seen the equivalent of `n_full_evals` evaluations
         max_num_evaluations=100 * n_full_evals,
     )
 
