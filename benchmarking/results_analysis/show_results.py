@@ -1,16 +1,12 @@
 import logging
-
-import matplotlib
-
-# matplotlib.rcParams["pdf.fonttype"] = 42
-
-import pandas as pd
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Dict, Tuple, Optional, List
 
 import dill
+import matplotlib
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 
 from benchmarking.baselines import (
@@ -20,10 +16,12 @@ from benchmarking.results_analysis.load_experiments_parallel import (
     load_benchmark_results,
 )
 from benchmarking.results_analysis.method_styles import (
-    method_styles,
     plot_range,
 )
 from syne_tune.util import catchtime
+
+
+# matplotlib.rcParams["pdf.fonttype"] = 42
 
 
 def figure_folder(path):

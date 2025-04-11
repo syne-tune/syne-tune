@@ -1,24 +1,8 @@
-import os
-
-import dill
-from matplotlib import cm
-from tqdm import tqdm
-
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Optional, Union
-import pandas as pd
-from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
-
-from benchmarking.baselines import (
-    Methods,
-)
-from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.experiments import get_metadata, load_experiments_df
-
-from syne_tune.util import catchtime
+from matplotlib import cm
 
 rs_color = "black"
 gp_color = "tab:orange"
