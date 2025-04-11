@@ -396,22 +396,14 @@ if __name__ == "__main__":
     )
 
     methods_selected = [
-        Methods.LegacyRS,
-        # Methods.LegacyREA,
-        Methods.LegacyTPE,
-        Methods.LegacyBORE,
-        Methods.LegacyCQR,
-        # Methods.LegacyBOTorch,
-        Methods.LegacyASHA,
-        Methods.LegacyASHABORE,
-        Methods.LegacyASHACQR,
-        # Methods.LegacyBOHB,
         Methods.BORE,
         Methods.TPE,
         Methods.CQR,
-        # Methods.ASHACQR,
-        Methods.ASHABORE,
+        Methods.BOTorch,
         Methods.BOHB,
+        Methods.ASHA,
+        Methods.ASHACQR,
+        Methods.ASHABORE,
     ]
 
     single_fidelity = [x for x in methods_selected if "ASHA" in x or "BOHB" in x]

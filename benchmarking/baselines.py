@@ -29,12 +29,6 @@ class MethodArguments:
 
 class Methods:
     # single fidelity
-    LegacyBORE = "LegacyBORE"
-    LegacyRS = "LegacyRS"
-    LegacyTPE = "LegacyTPE"
-    LegacyREA = "LegacyREA"
-    LegacyBOTorch = "LegacyBOTorch"
-    LegacyCQR = "LegacyCQR"
     BORE = "BORE"
     RS = "RS"
     TPE = "TPE"
@@ -42,27 +36,12 @@ class Methods:
     BOTorch = "BOTorch"
     GP = "GP"
     CQR = "CQR"
-    #   HEBO = "HEBO"
+    BOHB = "BOHB"
 
     # multifidelity
     ASHA = "ASHA"
     ASHABORE = "ASHABORE"
     ASHACQR = "ASHACQR"
-    BOHB = "BOHB"
-    LegacyASHA = "LegacyASHA"
-    LegacyASHABORE = "LegacyASHABORE"
-    LegacyASHACQR = "LegacyASHACQR"
-    LegacyBOHB = "LegacyBOHB"
-    #    BOREHB = "BOREHB"
-    MOBSTER = "MOB"
-    HYPERTUNE = "HT"
-
-    #    QR = "QR"
-    #    CQR = "CQR"
-
-    @staticmethod
-    def multifidelity(method):
-        return f"{method}-last"
 
 
 def _max_resource_attr_or_max_t(
@@ -76,99 +55,13 @@ def _max_resource_attr_or_max_t(
 
 
 methods = {
-    # Legacy Methods
-    Methods.LegacyRS: lambda method_arguments: legacy_baselines.RandomSearch(
+    Methods.RS: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
+        searcher="random_search",
         metric=method_arguments.metric,
-        mode=method_arguments.mode,
+        do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
     ),
-    Methods.LegacyREA: lambda method_arguments: legacy_baselines.REA(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.LegacyTPE: lambda method_arguments: legacy_baselines.KDE(
-        config_space=method_arguments.config_space,
-        search_options={"debug_log": False, "min_bandwidth": 0.1},
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.LegacyBORE: lambda method_arguments: legacy_baselines.BORE(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.LegacyCQR: lambda method_arguments: legacy_baselines.CQR(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    Methods.LegacyBOTorch: lambda method_arguments: legacy_baselines.BoTorch(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-    ),
-    # Methods.GP: lambda method_arguments: FIFOScheduler(
-    #     method_arguments.config_space,
-    #     searcher="bayesopt",
-    #     search_options={"debug_log": False},
-    #     metric=method_arguments.metric,
-    #     mode=method_arguments.mode,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    # ),
-    # Methods.LegacyASHA: lambda method_arguments: HyperbandScheduler(
-    #     config_space=method_arguments.config_space,
-    #     searcher="random",
-    #     search_options={"debug_log": False},
-    #     mode=method_arguments.mode,
-    #     metric=method_arguments.metric,
-    #     resource_attr=method_arguments.resource_attr,
-    #     random_seed=method_arguments.random_seed,
-    #     points_to_evaluate=method_arguments.points_to_evaluate,
-    #     **_max_resource_attr_or_max_t(method_arguments),
-    # ),
-    Methods.LegacyASHABORE: lambda method_arguments: legacy_baselines.ASHABORE(
-        config_space=method_arguments.config_space,
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        **_max_resource_attr_or_max_t(method_arguments),
-    ),
-    Methods.LegacyASHACQR: lambda method_arguments: legacy_baselines.ASHACQR(
-        config_space=method_arguments.config_space,
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        **_max_resource_attr_or_max_t(method_arguments),
-    ),
-    Methods.LegacyBOHB: lambda method_arguments: legacy_baselines.BOHB(
-        config_space=method_arguments.config_space,
-        search_options={"debug_log": False, "min_bandwidth": 0.1},
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        points_to_evaluate=method_arguments.points_to_evaluate,
-        **_max_resource_attr_or_max_t(method_arguments),
-    ),
-    # New methods
     Methods.BORE: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
         searcher="bore",
@@ -204,12 +97,13 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
     ),
-    Methods.RS: lambda method_arguments: SingleObjectiveScheduler(
+    Methods.BOHB: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
-        searcher="random_search",
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher="kde",
+        time_attr=method_arguments.resource_attr,
     ),
     Methods.ASHA: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
@@ -233,14 +127,6 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="bore",
-        time_attr=method_arguments.resource_attr,
-    ),
-    Methods.BOHB: lambda method_arguments: AsynchronousSuccessiveHalving(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        do_minimize=method_arguments.mode == "min",
-        random_seed=method_arguments.random_seed,
-        searcher="kde",
         time_attr=method_arguments.resource_attr,
     ),
 }

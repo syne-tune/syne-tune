@@ -4,7 +4,7 @@ from pathlib import Path
 
 from coolname import generate_slug
 from slurmpilot.config import load_config
-from slurmpilot.slurm_wrapper import SlurmWrapper, JobCreationInfo
+from slurmpilot import SlurmPilot, JobCreationInfo
 from slurmpilot.util import unify
 from tqdm import tqdm
 
@@ -41,33 +41,25 @@ if __name__ == "__main__":
     print(args)
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
-        Methods.LegacyRS,
-        # Methods.LegacyREA,
-        Methods.LegacyTPE,
-        Methods.LegacyBORE,
-        Methods.LegacyCQR,
-        # Methods.LegacyBOTorch,
-        Methods.LegacyASHA,
-        Methods.LegacyASHABORE,
-        Methods.LegacyASHACQR,
-        # Methods.LegacyBOHB,
         Methods.BORE,
         Methods.TPE,
         Methods.CQR,
+        Methods.BOTorch,
+        Methods.BOHB,
+        Methods.ASHA,
         Methods.ASHACQR,
         Methods.ASHABORE,
-        Methods.BOHB,
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
     config = load_config()
     #    cluster, partition = 'scule', 'paul'
 
-    slurm = SlurmWrapper(config=config, clusters=[cluster], ssh_engine="ssh")
+    slurm = SlurmPilot(config=config, clusters=[cluster], ssh_engine="ssh")
     max_runtime_minutes = 60 * 4
     python_args = []
     for method in tqdm(methods_selected):
-        assert method in methods
+        assert method in methods, f"{method} not in {methods}"
         for seed in range(num_seeds):
             python_args.append(
                 {
@@ -97,7 +89,7 @@ if __name__ == "__main__":
         n_cpus=8,
         mem=1024 * 8,
         max_runtime_minutes=max_runtime_minutes,
-        bash_setup_command="source ~/.bashrc; conda activate syne_tune",
+        bash_setup_command="source ~/.bashrc; conda activate synetune",
         env={
             # write tuner files in Slurmpilot folder corresponding to `jobname`
             "SYNETUNE_FOLDER": f"{slurmpilot_folder}/{jobname}",
