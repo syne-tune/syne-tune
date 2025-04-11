@@ -1,9 +1,8 @@
-import os
 from argparse import ArgumentParser
 from pathlib import Path
 
-from slurmpilot.config import load_config
 from slurmpilot import SlurmPilot, JobCreationInfo
+from slurmpilot.config import load_config
 from slurmpilot.util import unify
 from tqdm import tqdm
 
