@@ -13,7 +13,7 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.config_space import uniform
 from syne_tune.experiments.benchmark_definitions import nas201_benchmark
-from syne_tune.optimizer.baselines import SMAC
+from syne_tune.optimizer.legacy_baselines import SMAC
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 

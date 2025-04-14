@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import Domain
 

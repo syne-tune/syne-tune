@@ -94,26 +94,26 @@ Once you have a training script reporting a metric, you can launch a tuning as f
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 
 # hyperparameter search space to consider
 config_space = {
-    'width': randint(1, 20),
-    'height': randint(1, 20),
-    'epochs': 100,
+  'width': randint(1, 20),
+  'height': randint(1, 20),
+  'epochs': 100,
 }
 
 tuner = Tuner(
-    trial_backend=LocalBackend(entry_point='train_height_simple.py'),
-    scheduler=ASHA(
-        config_space,
-        metric='mean_loss',
-        resource_attr='epoch',
-        max_resource_attr="epochs",
-        search_options={'debug_log': False},
-    ),
-    stop_criterion=StoppingCriterion(max_wallclock_time=30),
-    n_workers=4,  # how many trials are evaluated in parallel
+  trial_backend=LocalBackend(entry_point='train_height_simple.py'),
+  scheduler=ASHA(
+    config_space,
+    metric='mean_loss',
+    resource_attr='epoch',
+    max_resource_attr="epochs",
+    search_options={'debug_log': False},
+  ),
+  stop_criterion=StoppingCriterion(max_wallclock_time=30),
+  n_workers=4,  # how many trials are evaluated in parallel
 )
 tuner.run()
 ```
