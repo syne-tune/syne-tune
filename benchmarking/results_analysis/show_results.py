@@ -431,6 +431,9 @@ if __name__ == "__main__":
             methods=methods_to_show,
         )
 
+    assert (
+        len(benchmark_results) > 0
+    ), f"Could not find results in path provided {args.path}."
     for group_name, methods in groups.items():
         folder_name = Path(args.path).parent.name
         result_folder = figure_folder(Path("figures") / folder_name / group_name)

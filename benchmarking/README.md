@@ -35,6 +35,7 @@ sp --download YOURJOBNAME
 
 Note the path where the data is downloaded, you can then plot results with: 
 ```
+pip install pyparfor
 python benchmarking/results_analysis/show_results.py --path "~/slurmpilot/jobs/synetune/bench-2025-02-20-16-00-38/results" 
 ```
 after adapting `path` to where the slurmpilot data was downloaded.

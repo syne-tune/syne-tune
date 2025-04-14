@@ -13,6 +13,7 @@ from syne_tune.util import catchtime
 from pathlib import Path
 import os
 from joblib import Parallel, delayed
+from pyparfor import parfor
 
 
 def load_result(name, metadata, path):
@@ -90,14 +91,20 @@ def show_number_seeds(benchmark_dfs):
     print(df_seeds.to_string())
 
 
-def convert_all_to_numpy(benchmark_dfs, num_time_steps, max_seed):
-    num_cores = max(1, os.cpu_count() // 2)
-
-    benchmarks_numpy = Parallel(min(4, num_cores))(
-        delayed(convert_to_numpy)(benchmark_df, num_time_steps=num_time_steps)
-        for benchmark_df in benchmark_dfs.values()
+def convert_all_to_numpy(
+    benchmark_dfs: dict[str, pd.DataFrame],
+    num_time_steps: int,
+    max_seed: int,
+    engine: str,
+):
+    benchmarks_numpy = parfor(
+        f=convert_to_numpy,
+        inputs=[
+            {"benchmark_df": benchmark_df, "num_time_steps": num_time_steps}
+            for benchmark_df in benchmark_dfs.values()
+        ],
+        engine=engine,
     )
-
     min_num_seeds = min(
         values.shape[0] for x in benchmarks_numpy for method, values in x[1].items()
     )
@@ -140,16 +147,20 @@ def get_metadata(root: Path):
 
 
 def load_benchmark_results(
-    path,
-    methods,
+    path: str | Path,
+    methods: list[str],
     num_time_steps: int = 20,
     max_seed: int = None,
     experiment_filter=None,
+    engine: str = "joblib",
 ) -> Dict[str, Tuple[np.array, Dict[str, np.array]]]:
     """
-    :param method_descriptions: list of method, tag filter, for instance [("ASHA", "tag1"), (None, "tag2)]
-    will load together all runs from ASHA with tag1 and all runs from tag2
+    :param path: where results are stored
+    :param methods: list of methods to consider
+    :param num_time_steps: number of time steps considered for results aggregation
     :param max_seed: maximum seed to load, default to None to load all seeds
+    :param experiment_filter:
+    :param engine: parallel engine to use, can be ["sequential", "ray", "joblib", "futures"]
     :return:
     """
     path = Path(path)
@@ -172,13 +183,11 @@ def load_benchmark_results(
 
     with catchtime("Load results dataframes"):
         # load results in parallel
-        num_cores = max(1, os.cpu_count() // 2)
-        from pyparfor import parfor
 
         dfs = parfor(
             lambda name, metadata: load_result(name, metadata, path),
             inputs=list(metadatas.items()),
-            engine="joblib",
+            engine=engine,
         )
     with catchtime("Compute best result over time"):
         benchmark_dfs = compute_best(dfs, metadatas)
@@ -187,6 +196,9 @@ def load_benchmark_results(
 
     with catchtime("Convert to numpy (num_seeds, num_time_steps)"):
         benchmark_results = convert_all_to_numpy(
-            benchmark_dfs, num_time_steps, max_seed
+            benchmark_dfs,
+            num_time_steps,
+            max_seed,
+            engine=engine,
         )
     return benchmark_results
