@@ -220,36 +220,38 @@ def stack_benchmark_results(
                     f"removing method {method} from methods to show as it is not present in all benchmarks"
                 )
                 methods_to_show.remove(method)
-
-    res = {}
-    for benchmark_family in benchmark_families:
-        # list of the benchmark of the current family
-        benchmarks_family = [
-            benchmark
-            for benchmark in benchmark_results_dict.keys()
-            if benchmark_family in benchmark
-        ]
-
-        benchmark_results = []
-        for benchmark in benchmarks_family:
-            benchmark_result = [
-                benchmark_results_dict[benchmark][1][method]
-                for method in methods_to_show
+    if len(methods_to_show) == 0:
+        return {}
+    else:
+        res = {}
+        for benchmark_family in benchmark_families:
+            # list of the benchmark of the current family
+            benchmarks_family = [
+                benchmark
+                for benchmark in benchmark_results_dict.keys()
+                if benchmark_family in benchmark
             ]
-            benchmark_result = np.stack(benchmark_result)
-            benchmark_results.append(benchmark_result)
 
-        # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
-        benchmark_results = np.stack(benchmark_results)
+            benchmark_results = []
+            for benchmark in benchmarks_family:
+                benchmark_result = [
+                    benchmark_results_dict[benchmark][1][method]
+                    for method in methods_to_show
+                ]
+                benchmark_result = np.stack(benchmark_result)
+                benchmark_results.append(benchmark_result)
 
-        if benchmark_family in ["lcbench", "yahpo"]:
-            # max instead of minimization, todo pass the mode somehow
-            benchmark_results *= -1
+            # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
+            benchmark_results = np.stack(benchmark_results)
 
-        # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
-        res[benchmark_family] = benchmark_results.swapaxes(0, 1)
+            if benchmark_family in ["lcbench", "yahpo"]:
+                # max instead of minimization, todo pass the mode somehow
+                benchmark_results *= -1
 
-    return res
+            # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
+            res[benchmark_family] = benchmark_results.swapaxes(0, 1)
+
+        return res
 
 
 def generate_rank_results(
@@ -404,7 +406,7 @@ if __name__ == "__main__":
         Methods.ASHABORE,
     ]
 
-    single_fidelity = [x for x in methods_selected if "ASHA" in x or "BOHB" in x]
+    single_fidelity = [x for x in methods_selected if not ("ASHA" in x or "BOHB" in x)]
     multi_fidelity = [x for x in methods_selected if x not in single_fidelity]
 
     methods_to_show = single_fidelity + multi_fidelity
@@ -435,37 +437,38 @@ if __name__ == "__main__":
         len(benchmark_results) > 0
     ), f"Could not find results in path provided {args.path}."
     for group_name, methods in groups.items():
-        folder_name = Path(args.path).parent.name
-        result_folder = figure_folder(Path("figures") / folder_name / group_name)
-        result_folder.mkdir(parents=True, exist_ok=True)
-
-        stacked_benchmark_results = stack_benchmark_results(
-            benchmark_results_dict=benchmark_results,
-            methods_to_show=methods,
-            benchmark_families=benchmark_families,
-        )
-        rename_dict = {}
-        with catchtime("generating rank table"):
-            generate_rank_results(
-                stacked_benchmark_results=stacked_benchmark_results,
+        if len(methods) > 0:
+            folder_name = Path(args.path).parent.name
+            result_folder = figure_folder(Path("figures") / folder_name / group_name)
+            result_folder.mkdir(parents=True, exist_ok=True)
+            stacked_benchmark_results = stack_benchmark_results(
+                benchmark_results_dict=benchmark_results,
+                methods_to_show=methods,
                 benchmark_families=benchmark_families,
-                methods_to_show=methods,
-                rename_dict=rename_dict,
-                result_folder=result_folder,
             )
+            if len(stacked_benchmark_results) > 0:
+                rename_dict = {}
+                with catchtime("generating rank table"):
+                    generate_rank_results(
+                        stacked_benchmark_results=stacked_benchmark_results,
+                        benchmark_families=benchmark_families,
+                        methods_to_show=methods,
+                        rename_dict=rename_dict,
+                        result_folder=result_folder,
+                    )
 
-        with catchtime("generating plots per task"):
-            plot_task_performance_over_time(
-                benchmark_results=benchmark_results,
-                methods_to_show=methods,
-                rename_dict=rename_dict,
-                result_folder=result_folder,
-            )
+                with catchtime("generating plots per task"):
+                    plot_task_performance_over_time(
+                        benchmark_results=benchmark_results,
+                        methods_to_show=methods,
+                        rename_dict=rename_dict,
+                        result_folder=result_folder,
+                    )
 
-        plot_average_normalized_regret(
-            stacked_benchmark_results=stacked_benchmark_results,
-            methods_to_show=methods,
-            rename_dict=rename_dict,
-            result_folder=result_folder,
-            title="Normalized-regret",
-        )
+                plot_average_normalized_regret(
+                    stacked_benchmark_results=stacked_benchmark_results,
+                    methods_to_show=methods,
+                    rename_dict=rename_dict,
+                    result_folder=result_folder,
+                    title="Normalized-regret",
+                )
