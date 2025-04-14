@@ -20,7 +20,7 @@ python benchmarking/nursery/benchmark_main.py --seed 2
 which will evaluate all methods on all blackboxes for 3 seeds.
 
 
-**Slurm.** You can also run on Slurm, for this you need to first install Slurmpilot and setup your cluster.
+**Slurm.** You can also run on Slurm, for this you need to first install [Slurmpilot](https://github.com/geoalgo/slurmpilot/tree/main) and setup your cluster.
 
 Then you can do:
 
