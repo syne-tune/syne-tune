@@ -50,7 +50,6 @@ if __name__ == "__main__":
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
     config = load_config()
-    #    cluster, partition = 'scule', 'paul'
 
     slurm = SlurmPilot(config=config, clusters=[cluster], ssh_engine="ssh")
     max_runtime_minutes = 60 * 4

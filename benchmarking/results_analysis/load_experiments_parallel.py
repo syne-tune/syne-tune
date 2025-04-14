@@ -1,19 +1,17 @@
 import json
 import logging
+from collections import defaultdict
 from json import JSONDecodeError
+from pathlib import Path
 from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
+from pyparfor import parfor
+from tqdm import tqdm
 
 from syne_tune.constants import ST_TUNER_TIME
-from tqdm import tqdm
-from collections import defaultdict
 from syne_tune.util import catchtime
-from pathlib import Path
-import os
-from joblib import Parallel, delayed
-from pyparfor import parfor
 
 
 def load_result(name, metadata, path):
