@@ -47,6 +47,8 @@ class MedianStoppingRule(TrialScheduler):
         ``grace_population`` have been observed at a resource level. Defaults to 5
     :param rank_cutoff: Results whose quantiles are below this level are
         discarded. Defaults to 0.5 (median)
+    :param random_seed: Seed used to initialize the random number generators.
+    :param do_minimize: True if we minimize the objective function
     """
 
     def __init__(

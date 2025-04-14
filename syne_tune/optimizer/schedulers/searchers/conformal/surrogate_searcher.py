@@ -23,23 +23,24 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
     def __init__(
         self,
         config_space: Dict,
+        random_seed: Optional[int] = None,
+        points_to_evaluate: Optional[List[Dict]] = None,
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
-        points_to_evaluate: Optional[List[Dict]] = None,
         max_fit_samples: int = None,
-        random_seed: Optional[int] = None,
         **surrogate_kwargs,
     ):
         """
         Wrapper to use a single-fidelity surrogate as a multi-fidelity method by taking the last observation of each
         trial.
+        :param config_space: Configuration space for the evaluation function.
+        :param random_seed: Seed for initializing random number generators.
+        :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
         :param num_init_random_draws: sampled at random until the number of observation exceeds this parameter.
         :param update_frequency: surrogates are only updated every `update_frequency` results, can be used to save
         scheduling time.
-        :param points_to_evaluate: list of configuration to evaluate first.
         :param max_fit_samples: if the number of observation exceed this parameter, then `max_fit_samples` random samples
         are used to fit the model.
-        :param random_seed:
         :param surrogate_kwargs:
         """
         super(SurrogateSearcher, self).__init__(

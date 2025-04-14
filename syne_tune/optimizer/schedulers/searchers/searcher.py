@@ -9,25 +9,12 @@ logger = logging.getLogger(__name__)
 
 class BaseSearcher:
     """
-    Base class of searchers, which are components of schedulers responsible for
-    implementing :meth:`get_config`.
+    Base class for searchers that sample hyperparameter configurations
+    from the given configuration space.
 
-    # TODO: Update docstrings
-    .. note::
-       This is an abstract base class. In order to implement a new searcher, try to
-       start from
-       :class:`~syne_tune.optimizer.scheduler.searcher.StochasticAndFilterDuplicatesSearcher`
-       or :class:`~syne_tune.optimizer.scheduler.searcher.StochasticSearcher`,
-       which implement generally useful properties.
-
-    :param config_space: Configuration space
-    :param points_to_evaluate: List of configurations to be evaluated
-        initially (in that order). Each config in the list can be partially
-        specified, or even be an empty dict. For each hyperparameter not
-        specified, the default value is determined using a midpoint heuristic.
-        If ``None`` (default), this is mapped to ``[dict()]``, a single default config
-        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
-        configurations are specified.
+    :param config_space: The configuration space to sample from.
+    :param points_to_evaluate: A list of configurations to evaluate initially (in the given order).
+    :param random_seed: Seed used to initialize the random number generators.
     """
 
     def __init__(

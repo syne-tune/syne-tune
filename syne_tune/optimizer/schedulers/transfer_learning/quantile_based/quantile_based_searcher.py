@@ -120,9 +120,7 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
     configuration performance given a hyperparameter. The surrogate is then sampled
     from and the best configurations are returned as next candidate to evaluate.
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
-
+    :param config_space: Configuration space for the evaluation function.
     :param transfer_learning_evaluations: Dictionary from task name to offline
         evaluations.
     :param max_fit_samples: Maximum number to use when fitting the method.
