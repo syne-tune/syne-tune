@@ -8,7 +8,7 @@ This repository shows an example on how to run a full evaluation: launching tuni
 
 Setup an environment by doing
 ```
-pip install -r benchmarking/nursery/benchmark_conformal/requirements.txt
+pip install -r benchmarking/requirements.txt
 ```
 
 Then run
