@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.tabrepo_import import (
+    TABREPO_DATASETS,
+)
+
 
 @dataclass
 class BenchmarkDefinition:
@@ -63,6 +67,22 @@ def lcbench_benchmark(dataset_name, datasets):
     )
 
 
+def tabrepo_benchmark(blackbox_name: str, dataset_name: str, datasets: list[str]):
+    return BenchmarkDefinition(
+        max_wallclock_time=36000,
+        max_num_evaluations=1 * n_full_evals,
+        n_workers=4,
+        elapsed_time_attr="metric_elapsed_time",  # todo should also include time_train_s + time_infer_s as metric
+        metric="metric_error_val",  # could also do rank
+        mode="min",
+        blackbox_name=blackbox_name,
+        dataset_name=dataset_name,
+        surrogate="KNeighborsRegressor",
+        surrogate_kwargs={"n_neighbors": 1},
+        datasets=datasets,
+    )
+
+
 benchmark_definitions = {
     "fcnet-protein": fcnet_benchmark("protein_structure"),
     "fcnet-naval": fcnet_benchmark("naval_propulsion"),
@@ -84,6 +104,7 @@ benchmark_definitions = {
     # ),
 }
 
+
 # 5 most expensive lcbench datasets
 lc_bench_datasets = [
     "Fashion-MNIST",
@@ -97,6 +118,26 @@ for task in lc_bench_datasets:
         "lcbench-" + task.replace("_", "-").replace(".", "")
     ] = lcbench_benchmark(task, datasets=lc_bench_datasets)
 
+
+# We select a sublist of search spaces
+tabrepo_search_spaces = [
+    "RandomForest",
+    "CatBoost",
+    "LightGBM",
+    "NeuralNetTorch",
+    "ExtraTrees",
+]
+# TODO find list of 10 representative datasets among the 200+ available
+tabrepo_datasets = TABREPO_DATASETS[:10]
+for task in tabrepo_datasets:
+    for search_space in tabrepo_search_spaces:
+        benchmark_definitions[
+            f"tabrepo-{search_space}-" + task.replace("_", "-").replace(".", "")
+        ] = tabrepo_benchmark(
+            blackbox_name=f"tabrepo_{search_space}",
+            dataset_name=task,
+            datasets=tabrepo_datasets,
+        )
 
 if __name__ == "__main__":
     from syne_tune.blackbox_repository import load_blackbox

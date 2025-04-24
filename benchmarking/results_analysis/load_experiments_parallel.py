@@ -59,15 +59,17 @@ def compute_best(dfs, metadatas):
         metric_name = metadata["metric_names"][0]
         for key in ["algorithm", "seed"]:
             df_bench[key] = metadata[key]
-        if metadata["metric_mode"] == "min":
+        # TODO this avoids the need to rely on the mode stored in the metadata but hardcode the benchmark mode,
+        #  we should pass it instead
+        if "lcbench" in benchmark or "nas301" in benchmark:
+            mode = "max"
+        else:
+            mode = "min"
+        if mode == "min":
             df_bench["best"] = df_bench[metric_name].cummin()
         else:
             df_bench["best"] = df_bench[metric_name].cummax()
             # todo perhaps rename column in O(1) for convenience
-        if "lcbench" in benchmark or "nas301" in benchmark:
-            assert metadata["metric_mode"] == "max", metadata
-        else:
-            assert metadata["metric_mode"] == "min"
         benchmark_dfs[benchmark].append(df_bench)
 
     benchmark_dfs = {
