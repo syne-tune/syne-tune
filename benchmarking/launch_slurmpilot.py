@@ -45,10 +45,10 @@ if __name__ == "__main__":
         Methods.BORE,
         Methods.CQR,
         Methods.BOTorch,
-        # Methods.BOHB,
-        # Methods.ASHA,
-        # Methods.ASHACQR,
-        # Methods.ASHABORE,
+        Methods.BOHB,
+        Methods.ASHA,
+        Methods.ASHACQR,
+        Methods.ASHABORE,
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 

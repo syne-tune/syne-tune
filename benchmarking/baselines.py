@@ -127,7 +127,7 @@ if __name__ == "__main__":
     )
 
     print(f"Checking initialization of {list(methods.keys())[::-1]}")
-    # sys.exit(0)
+
     benchmarks = [
         "fcnet-protein",
         "nas201-cifar10",
