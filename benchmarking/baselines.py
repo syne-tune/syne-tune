@@ -33,7 +33,6 @@ class Methods:
     TPE = "TPE"
     REA = "REA"
     BOTorch = "BOTorch"
-    GP = "GP"
     CQR = "CQR"
     BOHB = "BOHB"
 
@@ -128,8 +127,13 @@ if __name__ == "__main__":
     )
 
     print(f"Checking initialization of {list(methods.keys())[::-1]}")
-    # sys.exit(0)
-    benchmarks = ["fcnet-protein", "nas201-cifar10", "lcbench-Fashion-MNIST"]
+
+    benchmarks = [
+        "fcnet-protein",
+        "nas201-cifar10",
+        "lcbench-Fashion-MNIST",
+        "tabrepo-RandomForest-2dplanes",
+    ]
     for benchmark_name in benchmarks:
         benchmark = benchmark_definitions[benchmark_name]
         backend = BlackboxRepositoryBackend(

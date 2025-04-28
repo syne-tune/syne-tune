@@ -119,6 +119,14 @@ if __name__ == "__main__":
         help="seed to run",
     )
     parser.add_argument(
+        "--run_all_seeds",
+        type=int,
+        required=False,
+        default=0,
+        help="If 1 runs all seeds between [0, args.seed] if 0 run only args.seed.",
+    )
+
+    parser.add_argument(
         "--method",
         type=str,
         required=False,
@@ -138,7 +146,10 @@ if __name__ == "__main__":
     )
 
     args, _ = parser.parse_known_args()
-    seeds = [args.seed]
+    if args.run_all_seeds:
+        seeds = list(range(args.seed))
+    else:
+        seeds = [args.seed]
     method_names = [args.method] if args.method is not None else list(methods.keys())
     benchmark_names = (
         [args.benchmark]

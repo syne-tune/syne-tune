@@ -10,6 +10,7 @@ from baselines import (
     methods,
     Methods,
 )
+from benchmarking.benchmarks import benchmark_definitions
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -38,8 +39,10 @@ if __name__ == "__main__":
 
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
-        Methods.BORE,
+        Methods.RS,
+        Methods.REA,
         Methods.TPE,
+        Methods.BORE,
         Methods.CQR,
         Methods.BOTorch,
         Methods.BOHB,
@@ -49,25 +52,28 @@ if __name__ == "__main__":
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
+    benchmarks_selected = list(benchmark_definitions.keys())
     config = load_config()
 
     slurm = SlurmPilot(config=config, clusters=[cluster], ssh_engine="ssh")
-    max_runtime_minutes = 60 * 4
+    max_runtime_minutes = 60 * 24 - 1
     python_args = []
     for method in tqdm(methods_selected):
         assert method in methods, f"{method} not in {methods}"
-        for seed in range(num_seeds):
+        for benchmark in benchmarks_selected:
             python_args.append(
                 {
                     "method": method,
                     "n_workers": args.n_workers,
-                    # TODO this runs only a given seed, the API of benchmark_main is quite ugly
-                    #  we could simplify this by only supporting `--seed N` as argument to benchmark_main.py
-                    "seed": seed,
+                    "benchmark": benchmark,
+                    # run all seeds in [0, seed-1]
+                    "seed": num_seeds,
+                    "run_all_seed": 1,
                 }
             )
 
     jobname = unify(f"synetune/{experiment_tag}", method="date")
+
     print(f"Going to launch {len(python_args)} jobs, jobname: {jobname}")
     jobinfo = JobCreationInfo(
         cluster=cluster,

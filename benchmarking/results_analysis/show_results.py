@@ -41,6 +41,10 @@ benchmark_families = [
     "fcnet",
     "lcbench",
     "nas201",
+    "tabrepo-ExtraTrees",
+    "tabrepo-RandomForest",
+    "tabrepo-LightGBM",
+    "tabrepo-CatBoost",
     # "yahpo"
 ]
 benchmark_names = {
@@ -396,6 +400,8 @@ if __name__ == "__main__":
     )
 
     methods_selected = [
+        Methods.RS,
+        Methods.REA,
         Methods.BORE,
         Methods.TPE,
         Methods.CQR,
@@ -420,7 +426,7 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     print(args.__dict__)
-
+    assert Path(args.path).exists()
     max_seed = args.max_seed
     num_time_steps = 50
 
