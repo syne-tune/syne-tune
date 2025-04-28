@@ -13,9 +13,9 @@ pip install -r benchmarking/requirements.txt
 
 Then run
 ```
-python benchmarking/nursery/benchmark_main.py --seed 0
-python benchmarking/nursery/benchmark_main.py --seed 1 
-python benchmarking/nursery/benchmark_main.py --seed 2  
+python benchmarking/benchmark_main.py --seed 0
+python benchmarking/benchmark_main.py --seed 1 
+python benchmarking/benchmark_main.py --seed 2  
 ```
 which will evaluate all methods on all blackboxes for 3 seeds.
 
