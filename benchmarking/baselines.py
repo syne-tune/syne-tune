@@ -34,6 +34,7 @@ class Methods:
     REA = "REA"
     BOTorch = "BOTorch"
     CQR = "CQR"
+    LLMKD = "LLMKD"
     BOHB = "BOHB"
 
     # multifidelity
@@ -67,6 +68,13 @@ methods = {
     Methods.CQR: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
         searcher="cqr",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.LLMKD: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="llmkd",
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
