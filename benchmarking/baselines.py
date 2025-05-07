@@ -49,6 +49,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.BORE: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -56,6 +57,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.TPE: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -63,6 +65,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.CQR: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -70,6 +73,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.BOTorch: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -77,6 +81,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.REA: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -84,6 +89,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.BOHB: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
@@ -92,6 +98,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         searcher="kde",
         time_attr=method_arguments.resource_attr,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHA: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
@@ -100,6 +107,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         searcher="random_search",
         time_attr=method_arguments.resource_attr,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHACQR: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
@@ -108,6 +116,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         searcher="cqr",
         time_attr=method_arguments.resource_attr,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHABORE: lambda method_arguments: AsynchronousSuccessiveHalving(
         config_space=method_arguments.config_space,
@@ -116,6 +125,7 @@ methods = {
         random_seed=method_arguments.random_seed,
         searcher="bore",
         time_attr=method_arguments.resource_attr,
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
 }
 
