@@ -1,25 +1,23 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Union
 
 import numpy as np
 import pandas as pd
 
 from syne_tune.config_space import Domain
 
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_surrogate import (
-    QuantileRegressionSurrogateModel,
-)
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import catchtime
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls_dict
 
 logger = logging.getLogger(__name__)
 
 
-class SurrogateSearcher(SingleObjectiveBaseSearcher):
+class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
     def __init__(
         self,
         config_space: Dict,
@@ -28,7 +26,8 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
         max_fit_samples: int = None,
-        **surrogate_kwargs,
+        searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
+        searcher_kwargs: dict[str, Any] = None,
     ):
         """
         Wrapper to use a single-fidelity surrogate as a multi-fidelity method by taking the last observation of each
@@ -41,14 +40,13 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         scheduling time.
         :param max_fit_samples: if the number of observation exceed this parameter, then `max_fit_samples` random samples
         are used to fit the model.
-        :param surrogate_kwargs:
         """
-        super(SurrogateSearcher, self).__init__(
+        super(LastValueMultiFidelitySearcher, self).__init__(
             config_space=config_space,
             points_to_evaluate=points_to_evaluate,
             random_seed=random_seed,
         )
-        self.surrogate_kwargs = surrogate_kwargs
+        self.searcher_kwargs = searcher_kwargs
         self.num_init_random_draws = num_init_random_draws
         self.update_frequency = update_frequency
         self.trial_results = defaultdict(list)  # list of results for each trials
@@ -62,6 +60,20 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
 
         self.random_state = np.random.RandomState(self.random_seed)
 
+        if searcher_kwargs is None:
+            self.searcher_kwargs = dict()
+        else:
+            searcher_kwargs.pop('points_to_evaluate')  # this is handled by the SurrogateSearcher class
+            self.searcher_kwargs = searcher_kwargs
+            
+
+        if isinstance(searcher_cls, str):
+            assert searcher_cls in searcher_cls_dict
+            self.searcher_cls = searcher_cls_dict.get(searcher_cls)
+        else:
+            self.searcher_cls = searcher_cls
+        self.searcher = None
+
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
         config = self._next_points_to_evaluate()
 
@@ -71,9 +83,9 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
                 with catchtime(f"fit model with {self.num_results()} observations"):
                     self.fit_model()
                 self.index_last_result_fit = self.num_results()
-            if self.surrogate_model is not None:
+            if self.searcher is not None:
                 logger.debug(f"sample from model")
-                config = self.surrogate_model.suggest()
+                config = self.searcher.suggest()
             else:
                 logger.debug(f"sample at random")
                 config = self.sample_random()
@@ -99,23 +111,21 @@ class SurrogateSearcher(SingleObjectiveBaseSearcher):
         configs = [
             self.trial_configs[trial_id] for trial_id in self.trial_results.keys()
         ]
-        X = self.configs_to_df(configs)
         # takes the last value of each fidelity for each trial
-        z = np.array([trial_values[-1] for trial_values in self.trial_results.values()])
-        return X, z
+        metrics = np.array([trial_values[-1] for trial_values in self.trial_results.values()])
+        return configs, metrics
 
     def fit_model(self):
-        X, z = self.make_input_target()
-        self.surrogate_model = QuantileRegressionSurrogateModel(
+        configs, metrics = self.make_input_target()
+        self.searcher = self.searcher_cls(
             config_space=self.config_space,
-            max_fit_samples=self.max_fit_samples,
-            random_state=self.random_state,
-            mode="min",
-            min_samples_to_conformalize=32,
-            valid_fraction=0.1,
-            **self.surrogate_kwargs,
+            random_seed=self.random_seed,
+            points_to_evaluate=None,
+            **self.searcher_kwargs,
         )
-        self.surrogate_model.fit(df_features=X, y=z)
+
+        for (trial_id, config, metric) in zip(self.trial_results.keys(), configs, metrics):
+            self.searcher.on_trial_complete(trial_id=trial_id, config=config, metric=metric)
 
     def on_trial_complete(
         self,
