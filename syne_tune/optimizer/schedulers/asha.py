@@ -8,7 +8,9 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune.optimizer.schedulers.searchers.last_value_multi_fidelity_searcher import LastValueMultiFidelitySearcher
+from syne_tune.optimizer.schedulers.searchers.last_value_multi_fidelity_searcher import (
+    LastValueMultiFidelitySearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
     IndependentMultiFidelitySearcher,
 )

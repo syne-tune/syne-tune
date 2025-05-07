@@ -63,9 +63,10 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         if searcher_kwargs is None:
             self.searcher_kwargs = dict()
         else:
-            searcher_kwargs.pop('points_to_evaluate')  # this is handled by the SurrogateSearcher class
+            searcher_kwargs.pop(
+                "points_to_evaluate"
+            )  # this is handled by the SurrogateSearcher class
             self.searcher_kwargs = searcher_kwargs
-            
 
         if isinstance(searcher_cls, str):
             assert searcher_cls in searcher_cls_dict
@@ -112,7 +113,9 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
             self.trial_configs[trial_id] for trial_id in self.trial_results.keys()
         ]
         # takes the last value of each fidelity for each trial
-        metrics = np.array([trial_values[-1] for trial_values in self.trial_results.values()])
+        metrics = np.array(
+            [trial_values[-1] for trial_values in self.trial_results.values()]
+        )
         return configs, metrics
 
     def fit_model(self):
@@ -124,8 +127,12 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
             **self.searcher_kwargs,
         )
 
-        for (trial_id, config, metric) in zip(self.trial_results.keys(), configs, metrics):
-            self.searcher.on_trial_complete(trial_id=trial_id, config=config, metric=metric)
+        for (trial_id, config, metric) in zip(
+            self.trial_results.keys(), configs, metrics
+        ):
+            self.searcher.on_trial_complete(
+                trial_id=trial_id, config=config, metric=metric
+            )
 
     def on_trial_complete(
         self,

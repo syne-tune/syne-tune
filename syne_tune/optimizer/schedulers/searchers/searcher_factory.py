@@ -10,7 +10,9 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import ConformalQuantileRegression
+from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+    ConformalQuantileRegression,
+)
 
 searcher_cls_dict = {
     "random_search": RandomSearcher,

@@ -7,7 +7,9 @@ import pandas as pd
 
 from syne_tune.config_space import Domain
 
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.surrogate_model import SurrogateModel
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.surrogate_model import (
+    SurrogateModel,
+)
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_surrogate import (
     QuantileRegressionSurrogateModel,
 )
