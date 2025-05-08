@@ -9,13 +9,17 @@
 
 ![Syne Tune](docs/source/synetune.gif)
 
-**[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Blackboxes]()** | **[Benchmarking]()** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)** | **[Discord](https://discord.gg/vzYkjZjs)** 
+**[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Blackboxes](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md)** | **[Benchmarking](https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md)** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)** | **[Discord](https://discord.gg/vzYkjZjs)** 
 
-Syne Tune provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
-* **State-of-the-art HPO methods** for multi-fidelity optimization, multi-objective optimization, transfer learning, and population-based training.
-* **Simple, modular design** that let's you easily implement your own HPO searcher or scheduler.
-* **Tooling for Experimentation** that let's you easily run large-scale comparison on your local machine or on SLURM clusters. 
-* **Large collection of blackboxes** consisting of surrogate or tabular benchmarks to efficiently simulate HPO runs.
+Syne Tune is a library for large-scale hyperparameter optimization (HPO) with the following key features:
+
+- State-of-the-art HPO methods for multi-fidelity optimization, multi-objective optimization, transfer learning, and population-based training.
+
+- Simple, modular design that lets you easily implement your own HPO searcher or scheduler.
+
+- Tooling that lets you run [large-scale experimentation](https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md) either locally or on SLURM clusters.
+
+- Extensive [collection of blackboxes](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md) including surrogate and tabular benchmarks for efficient HPO simulation.
 
 ## Installing
 
@@ -46,7 +50,8 @@ from argparse import ArgumentParser
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--epochs', type=int)
-    parser.add_argument('--hyperparameter', type=float)
+    parser.add_argument('--hyperparameter1', type=float)
+    parser.add_argument('--hyperparameter3', type=float)
     args, _ = parser.parse_known_args()
     # instantiate your machine learning model
     for epoch in range(args.epochs):  # training loop
@@ -55,9 +60,11 @@ if __name__ == '__main__':
         # validate your model on some hold-out validation data
 ```
 
+### Step 1: Adapt your training script
 
-To enable tuning of your training script, you have to report metrics  that they can be communicated later to Syne Tune,
-this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example below:
+First, to enable tuning of your training script, you need to report metrics so they can be communicated to Syne Tune.
+For example, in the script above, we assume you're tuning two hyperparameters — `height` and `width` — to minimize a loss function.
+To report the loss back to Syne Tune after each epoch, simply add `report(epoch=epoch, loss=loss)` inside your training loop:
 
 ```python
 # train_height_simple.py
@@ -83,7 +90,11 @@ if __name__ == '__main__':
         report(epoch=step + 1, mean_loss=dummy_score)
 ```
 
-Once you have a training script reporting a metric, you can launch a tuning as follows:
+### Step 2: Define a launching script
+
+Once the training script is prepared, we first define the search space and then start the tuning process.
+In this example, we launch [ASHA] for a total of 30 seconds using four workers.
+Each worker spawns a separate Python process to evaluate a hyperparameter configuration, meaning that four configurations are trained in parallel.
 
 ```python
 # launch_height_simple.py
@@ -104,17 +115,27 @@ tuner = Tuner(
     scheduler=ASHA(
         config_space,
         metric='mean_loss',
-        resource_attr='epoch',
-        max_resource_attr="epochs",
-        search_options={'debug_log': False},
+        time_attr='epoch',
     ),
-    stop_criterion=StoppingCriterion(max_wallclock_time=30),
+    stop_criterion=StoppingCriterion(max_wallclock_time=30), # total runtime in seconds
     n_workers=4,  # how many trials are evaluated in parallel
 )
 tuner.run()
 ```
 
-The above example runs ASHA with 4 asynchronous workers on a local machine.
+### Step 3: Plot the results
+
+Next, we can plot the results as follows. Replace `TUNER_NAME` with the name of the tuning job 
+used earlier — this is shown at the beginning of the logs.
+
+```python
+import matplotlib.pyplot as plt
+from syne_tune.experiments import load_experiment
+
+e = load_experiment('TUNER_NAME')  # name of the tuning run which is printed at the beginning of the run
+e.plot_trials_over_time(metric_to_plot='mean_loss')
+plt.show()
+```
 
 
 ## Benchmarking
