@@ -1,0 +1,8 @@
+  numpy==1.26.3
+  coolname
+  pandas
+  huggingface-hub
+  scikit-learn
+  dill
+  syne-tune[blackbox-repository]
+  syne-tune[gpsearchers]

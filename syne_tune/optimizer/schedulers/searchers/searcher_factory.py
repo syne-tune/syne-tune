@@ -1,9 +1,6 @@
 from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-    SurrogateSearcher,
-)
 from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
     BoTorchSearcher,
 )
@@ -13,13 +10,16 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+    ConformalQuantileRegression,
+)
 
 searcher_cls_dict = {
     "random_search": RandomSearcher,
     "bore": Bore,
     "kde": KernelDensityEstimator,
     "regularized_evolution": RegularizedEvolution,
-    "cqr": SurrogateSearcher,
+    "cqr": ConformalQuantileRegression,
     "botorch": BoTorchSearcher,
 }
 
@@ -27,7 +27,9 @@ searcher_cls_dict = {
 def searcher_factory(
     searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
-    assert searcher_name in searcher_cls_dict
+    assert (
+        searcher_name in searcher_cls_dict
+    ), f"Searcher name must be one of {list(searcher_cls_dict.keys())}, got {searcher_name}"
     return searcher_cls_dict[searcher_name](
         config_space=config_space, **searcher_kwargs
     )

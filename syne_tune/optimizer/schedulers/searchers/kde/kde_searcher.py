@@ -36,14 +36,8 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         | Proceedings of the 35th International Conference on Machine Learning
         | https://arxiv.org/abs/1807.01774
 
-    Note: ``restrict_configurations`` is not supported here, this would require
-    reimplementing the selection of configs in :meth:`_get_config`.
-
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
-
-    :param mode: Mode to use for the metric given, can be "min" or "max". Is
-        obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
+    :param config_space: Configuration space for the evaluation function.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     :param num_min_data_points: Minimum number of data points that we use to fit
         the KDEs. As long as less observations have been received in
         :meth:`update`, randomly drawn configurations are returned in
@@ -63,6 +57,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
     :param random_fraction: Defines the fraction of configurations that are
         drawn uniformly at random instead of sampling from the model.
         Defaults to 0.33
+     :param random_seed: Seed for initializing random number generators.
     """
 
     def __init__(
