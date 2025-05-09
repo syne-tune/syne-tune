@@ -8,6 +8,9 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
+from syne_tune.optimizer.schedulers.searchers.last_value_multi_fidelity_searcher import (
+    LastValueMultiFidelitySearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
     IndependentMultiFidelitySearcher,
 )
@@ -66,7 +69,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         metric: str,
         do_minimize: Optional[bool] = True,
         searcher: Optional[
-            Union[str, IndependentMultiFidelitySearcher]
+            Union[str, IndependentMultiFidelitySearcher, LastValueMultiFidelitySearcher]
         ] = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
@@ -91,7 +94,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
 
-            self.searcher = IndependentMultiFidelitySearcher(
+            self.searcher = LastValueMultiFidelitySearcher(
                 searcher_cls=searcher,
                 config_space=config_space,
                 random_seed=random_seed,
