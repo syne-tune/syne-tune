@@ -7,7 +7,7 @@ from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import random_string
 

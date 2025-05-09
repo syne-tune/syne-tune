@@ -20,7 +20,7 @@ import numpy as np
 from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
 from syne_tune.backend.trial_status import Trial, TrialResult
 from syne_tune.config_space import uniform
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 

@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 import sys
 
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     RandomSearch,
     BayesianOptimization,
     ASHA,
@@ -32,7 +32,7 @@ list_schedulers_to_test = [
 ]
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
-    from syne_tune.optimizer.baselines import BoTorch
+    from syne_tune.optimizer.legacy_baselines import BoTorch
 
     list_schedulers_to_test.append(
         ("BoTorch", BoTorch),

@@ -9,7 +9,7 @@ import numpy as np
 
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 import syne_tune.config_space as sp
 from syne_tune import Tuner, StoppingCriterion
 

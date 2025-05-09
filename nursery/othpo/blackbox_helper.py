@@ -9,7 +9,7 @@ from syne_tune.blackbox_repository import (
     BlackboxRepositoryBackend,
     UserBlackboxBackend,
 )
-from syne_tune.optimizer.baselines import BoTorch, RandomSearch, ZeroShotTransfer
+from syne_tune.optimizer.legacy_baselines import BoTorch, RandomSearch, ZeroShotTransfer
 from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback

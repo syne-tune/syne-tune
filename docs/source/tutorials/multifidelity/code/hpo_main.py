@@ -20,7 +20,7 @@ from syne_tune.backend.simulator_backend.simulator_callback import (
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     ASHA,
     MOBSTER,
     HyperTune,

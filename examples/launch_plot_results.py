@@ -3,7 +3,7 @@ from pathlib import Path
 
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.optimizer.legacy_baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from examples.training_scripts.height_example.train_height import (

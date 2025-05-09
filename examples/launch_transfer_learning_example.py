@@ -12,7 +12,7 @@ from examples.training_scripts.height_example.train_height import (
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import BayesianOptimization, ZeroShotTransfer
+from syne_tune.optimizer.legacy_baselines import BayesianOptimization, ZeroShotTransfer
 from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
 
 from syne_tune.optimizer.schedulers.transfer_learning import (

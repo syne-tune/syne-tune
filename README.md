@@ -15,8 +15,6 @@ Syne Tune is a library for large-scale hyperparameter optimization (HPO) with th
 
 - State-of-the-art HPO methods for multi-fidelity optimization, multi-objective optimization, transfer learning, and population-based training.
 
-- Simple, modular design that lets you easily implement your own HPO searcher or scheduler.
-
 - Tooling that lets you run [large-scale experimentation](https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md) either locally or on SLURM clusters.
 
 - Extensive [collection of blackboxes](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md) including surrogate and tabular benchmarks for efficient HPO simulation.
@@ -105,9 +103,9 @@ from syne_tune.optimizer.baselines import ASHA
 
 # hyperparameter search space to consider
 config_space = {
-    'width': randint(1, 20),
-    'height': randint(1, 20),
-    'epochs': 100,
+  'width': randint(1, 20),
+  'height': randint(1, 20),
+  'epochs': 100,
 }
 
 tuner = Tuner(

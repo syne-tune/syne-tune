@@ -4,7 +4,7 @@ from pathlib import Path
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     RandomSearch,
     ASHA,
 )
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         ASHA(**scheduler_kwargs, resource_attr=RESOURCE_ATTR),
     ]
     try:
-        from syne_tune.optimizer.baselines import BayesianOptimization
+        from syne_tune.optimizer.legacy_baselines import BayesianOptimization
 
         # example of setting additional kwargs arguments
         schedulers.append(
