@@ -68,6 +68,12 @@ def load_blackbox(
         * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
           blackboxes come with surrogates already, so no need to wrap them into
           :class:`SurrogateBlackbox`
+        * "hpob_*": ca. 6.34 million evaluations distributed on 16 search spaces and 101 datasets.
+          HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML.
+          S. Arango, H. Jomaa, M. Wistuba, J. Grabocka, 2021.
+        * "tabrepo-*": TabRepo contains the predictions and metrics of 1530 models evaluated on 211 classification and regression datasets.
+          TabRepo: A Large Scale Repository of Tabular Model Evaluations and its AutoML Applications.
+          D. Salinas, N. Erickson, 2024.
     :param custom_repo_id: custom hugging face repoid to use, default to Syne Tune hub
     :param yahpo_kwargs: For a YAHPO blackbox (``name == "yahpo-*"``), these are
         additional arguments to ``instantiate_yahpo``
