@@ -104,7 +104,7 @@ To add your own blackbox, follow these steps:
 ```
 
 
-## Support blackboxes
+## Supported blackboxes
 
 Currently we support the following blackbox from the literature:
 
