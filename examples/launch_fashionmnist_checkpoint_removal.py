@@ -10,7 +10,7 @@ from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
 )
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import MOBSTER
+from syne_tune.optimizer.legacy_baselines import MOBSTER
 from syne_tune.results_callback import ExtraResultsComposer, StoreResultsCallback
 from syne_tune.util import find_first_of_type
 from syne_tune import Tuner, StoppingCriterion

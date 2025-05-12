@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import Dict, Any
 
-from syne_tune.optimizer.baselines import BoTorch
+from syne_tune.optimizer.legacy_baselines import BoTorch
 from syne_tune.optimizer.schedulers.transfer_learning import (
     LegacyTransferLearningTaskEvaluations,
 )

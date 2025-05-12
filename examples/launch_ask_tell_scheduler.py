@@ -16,7 +16,7 @@ import numpy as np
 
 from syne_tune.backend.trial_status import TrialResult
 from syne_tune.config_space import uniform
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization
+from syne_tune.optimizer.legacy_baselines import RandomSearch, BayesianOptimization
 from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
 
 

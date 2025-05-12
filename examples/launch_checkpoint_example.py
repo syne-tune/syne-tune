@@ -10,7 +10,7 @@ from pathlib import Path
 from examples.training_scripts.xgboost.xgboost_checkpoint import evaluate_accuracy
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import BayesianOptimization
+from syne_tune.optimizer.legacy_baselines import BayesianOptimization
 from syne_tune import Tuner, StoppingCriterion
 import syne_tune.config_space as cs
 

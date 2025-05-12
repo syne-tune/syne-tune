@@ -12,7 +12,7 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     GridSearch,
     RandomSearch,
     BayesianOptimization,
@@ -451,7 +451,7 @@ list_schedulers_to_test = [
 
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
-    from syne_tune.optimizer.baselines import BoTorch
+    from syne_tune.optimizer.legacy_baselines import BoTorch
 
     list_schedulers_to_test.append(
         BoTorch(

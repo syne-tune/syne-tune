@@ -10,7 +10,7 @@ from examples.training_scripts.height_example.train_height import (
 )
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     GridSearch,
     RandomSearch,
     BayesianOptimization,
@@ -50,7 +50,7 @@ SCHEDULERS = [
 ]
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
-    from syne_tune.optimizer.baselines import BoTorch
+    from syne_tune.optimizer.legacy_baselines import BoTorch
 
     SCHEDULERS.append((BoTorch, False, False))
 

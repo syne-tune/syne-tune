@@ -6,7 +6,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.baselines import DyHPO
+from syne_tune.optimizer.legacy_baselines import DyHPO
 from syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
 )

@@ -5,7 +5,7 @@ An example showing to launch a tuning of a python function ``train_height``.
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import PythonBackend
 from syne_tune.config_space import randint
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.legacy_baselines import ASHA
 
 
 def train_height(steps: int, width: float, height: float):

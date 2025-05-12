@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     RandomSearch,
     BayesianOptimization,
     ASHA,
