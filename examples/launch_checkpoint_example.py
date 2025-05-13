@@ -10,7 +10,7 @@ from pathlib import Path
 from examples.training_scripts.xgboost.xgboost_checkpoint import evaluate_accuracy
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.legacy_baselines import BayesianOptimization
+from syne_tune.optimizer.baselines import CQR
 from syne_tune import Tuner, StoppingCriterion
 import syne_tune.config_space as cs
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         trial_backend=trial_backend,
-        scheduler=BayesianOptimization(config_space, metric="merror", mode="min"),
+        scheduler=CQR(config_space, metric="merror"),
         stop_criterion=StoppingCriterion(max_wallclock_time=10),
         n_workers=n_workers,
     )
