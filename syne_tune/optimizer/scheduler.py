@@ -201,8 +201,4 @@ class TrialScheduler:
         return {
             "scheduler_name": str(self.__class__.__name__),
             "scheduler_kwargs": self.__dict__,
-            "metric_names": self.metric_names(),
         }
-
-    def metric_names(self) -> List[str]:
-        raise NotImplementedError()
