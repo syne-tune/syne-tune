@@ -14,7 +14,7 @@ from syne_tune.blackbox_repository import load_blackbox
 n_workers = 4
 blackbox_name, dataset, metric = "nasbench201", "cifar100", "metric_valid_error"
 elapsed_time_attr = "metric_elapsed_time"
-mode = 'min'
+mode = "min"
 blackbox = load_blackbox(blackbox_name)[dataset]
 max_wallclock_time = 3600 * 6
 num_seeds = 10
