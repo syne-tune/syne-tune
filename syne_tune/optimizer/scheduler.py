@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 from syne_tune.backend.trial_status import Trial
 
