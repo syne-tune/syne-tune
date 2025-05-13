@@ -279,11 +279,7 @@ class ASHA(AsynchronousSuccessiveHalving):
             metric=metric,
             do_minimize=do_minimize,
             max_t=max_t,
-            searcher=RandomSearcher(
-                config_space=config_space,
-                points_to_evaluate=points_to_evaluate,
-                random_seed=random_seed,
-            ),
+            searcher="random_search",
             random_seed=random_seed,
             time_attr=time_attr,
         )
