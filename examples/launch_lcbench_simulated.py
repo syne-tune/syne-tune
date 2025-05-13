@@ -8,7 +8,7 @@ import logging
 from syne_tune.experiments.benchmark_definitions.lcbench import lcbench_benchmark
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.baselines import BayesianOptimization
+from syne_tune.optimizer.legacy_baselines import BayesianOptimization
 from syne_tune import Tuner, StoppingCriterion
 
 

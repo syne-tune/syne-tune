@@ -3,7 +3,7 @@ from datetime import datetime
 import itertools
 import numpy as np
 
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.legacy_baselines import (
     RandomSearch,
     GridSearch,
     BayesianOptimization,

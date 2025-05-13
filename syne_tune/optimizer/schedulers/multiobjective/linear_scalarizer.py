@@ -147,3 +147,6 @@ class LinearScalarizedScheduler(TrialScheduler):
         metadata["config_space"] = config_space_json
         metadata["scalarized_metric"] = self.single_objective_metric
         return metadata
+
+    def metric_names(self) -> List[str]:
+        return self.metrics

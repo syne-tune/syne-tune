@@ -1,6 +1,6 @@
 import pytest
 
-from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.optimizer.legacy_baselines import RandomSearch
 from syne_tune import Tuner
 from syne_tune.stopping_criterion import PlateauStopper
 from syne_tune.backend.trial_status import Trial, Status

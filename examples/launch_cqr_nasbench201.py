@@ -6,7 +6,7 @@ import logging
 from syne_tune.experiments.benchmark_definitions.nas201 import nas201_benchmark
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.baselines import ASHACQR
+from syne_tune.optimizer.legacy_baselines import ASHACQR
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.experiments import load_experiment
 

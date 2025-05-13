@@ -46,7 +46,10 @@ def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
         help="first seed to run (if ``run_all_seed`` == 1)",
     )
     parser.add_argument(
-        "--method", type=str, required=False, help="a method to run from baselines.py"
+        "--method",
+        type=str,
+        required=False,
+        help="a method to run from legacy_baselines.py",
     )
     parser.add_argument(
         "--benchmark",
