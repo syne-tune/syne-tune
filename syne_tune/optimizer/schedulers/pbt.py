@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from collections import deque
 from typing import Callable, List, Optional, Tuple, Dict, Any
 
-from syne_tune.config_space import Domain, Integer, Float, FiniteRange, config_space_to_json_dict
+from syne_tune.config_space import (
+    Domain,
+    Integer,
+    Float,
+    FiniteRange,
+    config_space_to_json_dict,
+)
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
