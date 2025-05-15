@@ -3,8 +3,12 @@ from typing import Dict
 from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
+    TransferLearningTaskEvaluations,
+)
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune import StoppingCriterion, Tuner
 
@@ -51,7 +55,7 @@ if __name__ == "__main__":
             do_minimize=do_minimize,
             searcher="random_search",
             metric=metric,
-            random_seed=random_seed
+            random_seed=random_seed,
         ),
         config_space=bb_dict[test_task].configuration_space,
         metric=metric,
