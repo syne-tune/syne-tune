@@ -3,17 +3,15 @@ from typing import Dict
 from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers import LegacyFIFOScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import (
-    LegacyTransferLearningTaskEvaluations,
-    LegacyBoundingBox,
-)
+from syne_tune.optimizer.schedulers.single_objective_scheduler import SingleObjectiveScheduler
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune import StoppingCriterion, Tuner
 
 
 def load_transfer_learning_evaluations(
     blackbox_name: str, test_task: str, metric: str
-) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
+) -> Dict[str, TransferLearningTaskEvaluations]:
     bb_dict = load_blackbox(blackbox_name)
     metric_index = [
         i
@@ -21,7 +19,7 @@ def load_transfer_learning_evaluations(
         if name == metric
     ][0]
     transfer_learning_evaluations = {
-        task: LegacyTransferLearningTaskEvaluations(
+        task: TransferLearningTaskEvaluations(
             hyperparameters=bb.hyperparameters,
             configuration_space=bb.configuration_space,
             objectives_evaluations=bb.objectives_evaluations[
@@ -40,21 +38,21 @@ if __name__ == "__main__":
     test_task = "cifar100"
     elapsed_time_attr = "metric_elapsed_time"
     metric = "metric_valid_error"
-
+    random_seed = 42
+    do_minimize = True
     bb_dict = load_blackbox(blackbox_name)
     transfer_learning_evaluations = load_transfer_learning_evaluations(
         blackbox_name, test_task, metric
     )
 
-    scheduler = LegacyBoundingBox(
-        scheduler_fun=lambda new_config_space, mode, metric: LegacyFIFOScheduler(
+    scheduler = BoundingBox(
+        scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
             new_config_space,
-            points_to_evaluate=[],
-            searcher="random",
+            do_minimize=do_minimize,
+            searcher="random_search",
             metric=metric,
-            mode=mode,
+            random_seed=random_seed
         ),
-        mode="min",
         config_space=bb_dict[test_task].configuration_space,
         metric=metric,
         num_hyperparameters_per_task=10,
