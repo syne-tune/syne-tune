@@ -5,8 +5,8 @@ from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
     BoTorchSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
-    SurrogateSearcher,
+from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+    ConformalQuantileRegression,
 )
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
@@ -279,11 +279,7 @@ class ASHA(AsynchronousSuccessiveHalving):
             metric=metric,
             do_minimize=do_minimize,
             max_t=max_t,
-            searcher=RandomSearcher(
-                config_space=config_space,
-                points_to_evaluate=points_to_evaluate,
-                random_seed=random_seed,
-            ),
+            searcher="random_search",
             random_seed=random_seed,
             time_attr=time_attr,
         )
@@ -456,7 +452,7 @@ class CQR(SingleObjectiveScheduler):
             config_space=config_space,
             metric=metric,
             do_minimize=do_minimize,
-            searcher=SurrogateSearcher(
+            searcher=ConformalQuantileRegression(
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
