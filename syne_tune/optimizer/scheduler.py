@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 from syne_tune.backend.trial_status import Trial
 
@@ -201,8 +201,4 @@ class TrialScheduler:
         return {
             "scheduler_name": str(self.__class__.__name__),
             "scheduler_kwargs": self.__dict__,
-            "metric_names": self.metric_names(),
         }
-
-    def metric_names(self) -> List[str]:
-        raise NotImplementedError()

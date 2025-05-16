@@ -147,3 +147,15 @@ class SMACScheduler(TrialScheduler):
 
     def metric_names(self) -> List[str]:
         return [self.metric]
+
+    def metadata(self) -> Dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        metadata = super().metadata()
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
+        return metadata
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"

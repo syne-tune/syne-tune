@@ -131,6 +131,8 @@ class SingleFidelityScheduler(TrialScheduler):
             config_space_to_json_dict(self.config_space)
         )
         metadata["config_space"] = config_space_json
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
         return metadata
 
     def metric_names(self) -> List[str]:
