@@ -122,7 +122,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         configs, metrics = self.make_input_target()
         self.searcher = self.searcher_cls(
             config_space=self.config_space,
-            random_seed=self.random_seed,
+            random_seed=self.random_seed + self.random_state.randint(0, 2**32 - 1),
             points_to_evaluate=None,
             **self.searcher_kwargs,
         )
