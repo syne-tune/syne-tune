@@ -22,13 +22,10 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     | Proceedings of the 35th International Conference on Machine Learning
 
     :param config_space: Configuration space
+    :param searcher_cls: Searcher to sample configurations on each rung level.
     :param points_to_evaluate: List of configurations to be evaluated
-        initially (in that order). Each config in the list can be partially
-        specified, or even be an empty dict. For each hyperparameter not
-        specified, the default value is determined using a midpoint heuristic.
-        If ``None`` (default), this is mapped to ``[dict()]``, a single default config
-        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
-        configurations are specified.
+        initially (in that order).
+    :param random_seed: Seed used to initialize the random number generators.
     """
 
     def __init__(
