@@ -33,7 +33,7 @@ class AskTellScheduler:
         Ask the scheduler for new trial to run
         :return: Trial to run
         """
-        trial_suggestion = self.base_scheduler.suggest(self.trial_counter)
+        trial_suggestion = self.base_scheduler.suggest()
         trial = Trial(
             trial_id=self.trial_counter,
             config=trial_suggestion.config,
