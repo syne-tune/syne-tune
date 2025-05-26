@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing_extensions import TypeAlias
+from typing_extensions import TYPE_CHECKING, TypeAlias
 
 from collections import defaultdict
 
@@ -14,10 +14,15 @@ from syne_tune.constants import ST_WORKER_TIMESTAMP
 logger = logging.getLogger(__name__)
 
 
-TrialAndStatusInformation: TypeAlias = dict[int, tuple[Trial, str]]
+if TYPE_CHECKING:
+    TrialAndStatusInformation: TypeAlias = dict[int, tuple[Trial, str]]
+else:
+    TrialAndStatusInformation = dict
 
-
-TrialIdAndResultList: TypeAlias = list[tuple[int, dict]]
+if TYPE_CHECKING:
+    TrialIdAndResultList: TypeAlias = list[tuple[int, dict]]
+else:
+    TrialIdAndResultList = list
 
 
 BUSY_STATUS = {Status.in_progress, Status.stopping}
