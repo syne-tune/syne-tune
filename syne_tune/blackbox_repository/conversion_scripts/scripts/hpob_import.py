@@ -253,7 +253,7 @@ MAX_RESOURCE_LEVEL = 100
 # since the HPO-B dataset does not provide the same number of evaluations for each blackbox.
 # This is a constraint in the original serialize() function.
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: dict[str, BlackboxTabular], path: str, metadata: Optional[dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))

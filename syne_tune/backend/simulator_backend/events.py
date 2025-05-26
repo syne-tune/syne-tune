@@ -97,7 +97,7 @@ class SimulatorState:
         ]
         heapq.heapify(self.event_heap)
 
-    def next_until(self, time_until: float) -> Optional[Tuple[float, Event]]:
+    def next_until(self, time_until: float) -> Optional[tuple[float, Event]]:
         """
         Returns (and pops) event on top of heap, if event time is <=
         ``time_until``. Otherwise, returns None.

@@ -38,8 +38,8 @@ class BlackboxTabular(Blackbox):
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
-        configuration_space: Dict[str, Any],
-        fidelity_space: Dict[str, Any],
+        configuration_space: dict[str, Any],
+        fidelity_space: dict[str, Any],
         objectives_evaluations: np.array,
         fidelity_values: Optional[np.array] = None,
         objectives_names: Optional[list[str]] = None,

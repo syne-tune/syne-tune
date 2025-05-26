@@ -11,10 +11,10 @@ from syne_tune.constants import ST_WORKER_TIMESTAMP
 logger = logging.getLogger(__name__)
 
 
-TrialAndStatusInformation = dict[int, Tuple[Trial, str]]
+TrialAndStatusInformation = dict[int, tuple[Trial, str]]
 
 
-TrialIdAndResultList = list[Tuple[int, dict]]
+TrialIdAndResultList = list[tuple[int, dict]]
 
 
 BUSY_STATUS = {Status.in_progress, Status.stopping}
