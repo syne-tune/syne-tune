@@ -1,4 +1,3 @@
-from typing import Dict
 from pathlib import Path
 
 from syne_tune.experiments.benchmark_definitions.common import RealBenchmarkDefinition
@@ -158,7 +157,7 @@ def finetune_transformer_glue_all_benchmarks(
     train_valid_fraction: float = 0.7,
     random_seed: int = 31415927,
     **kwargs,
-) -> Dict[str, RealBenchmarkDefinition]:
+) -> dict[str, RealBenchmarkDefinition]:
     result = dict()
     for choose_model in [True, False]:
         prefix = "finetune_transformer_glue_"

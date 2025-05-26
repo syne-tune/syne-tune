@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from syne_tune.optimizer.schedulers.searchers.legacy_regularized_evolution import (
     PopulationElement,
@@ -32,9 +32,9 @@ class LegacyMultiObjectiveRegularizedEvolution(LegacyRegularizedEvolution):
     def __init__(
         self,
         config_space,
-        metric: List[str],
-        mode: Union[List[str], str],
-        points_to_evaluate: Optional[List[dict]] = None,
+        metric: list[str],
+        mode: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict]] = None,
         population_size: int = 100,
         sample_size: int = 10,
         multiobjective_priority: Optional[MOPriority] = None,

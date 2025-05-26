@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Iterable, List, Callable
+from typing import Optional
+from collections.abc import Callable, Iterable
 
 import numpy as np
 from numpy.random import RandomState
@@ -35,9 +36,9 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
 
     def __init__(
         self,
-        predictor: Dict[str, Predictor],
-        active_metric: Optional[List[str]] = None,
-        weights_sampler: Optional[Callable[[], Dict[str, float]]] = None,
+        predictor: dict[str, Predictor],
+        active_metric: Optional[list[str]] = None,
+        weights_sampler: Optional[Callable[[], dict[str, float]]] = None,
         kappa: float = 0.5,
         normalize_acquisition: bool = True,
         random_seed: int = None,
@@ -59,8 +60,8 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
     def score(
         self,
         candidates: Iterable[Configuration],
-        predictor: Optional[Dict[str, Predictor]] = None,
-    ) -> List[float]:
+        predictor: Optional[dict[str, Predictor]] = None,
+    ) -> list[float]:
         from scipy import stats
 
         if predictor is None:

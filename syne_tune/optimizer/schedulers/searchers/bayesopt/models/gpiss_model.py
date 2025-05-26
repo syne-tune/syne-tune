@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Optional
 import numpy as np
 import logging
 
@@ -63,7 +63,7 @@ class GaussProcAdditivePredictor(BasePredictor):
         self,
         state: TuningJobState,
         gpmodel: GaussianProcessLearningCurveModel,
-        fantasy_samples: List[FantasizedPendingEvaluation],
+        fantasy_samples: list[FantasizedPendingEvaluation],
         active_metric: str,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         normalize_mean: float = 0.0,
@@ -75,7 +75,7 @@ class GaussProcAdditivePredictor(BasePredictor):
         self.std = normalize_std
         self.fantasy_samples = fantasy_samples
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         """
         Input features ``inputs`` are w.r.t. extended configs ``(x, r)``.
 
@@ -99,8 +99,8 @@ class GaussProcAdditivePredictor(BasePredictor):
         return predictions_list
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         poster_states = self.posterior_states
         assert (
             poster_states is not None
@@ -124,7 +124,7 @@ class GaussProcAdditivePredictor(BasePredictor):
         return False
 
     @property
-    def posterior_states(self) -> Optional[List[GaussProcAdditivePosteriorState]]:
+    def posterior_states(self) -> Optional[list[GaussProcAdditivePosteriorState]]:
         return self._gpmodel.states
 
 
@@ -243,7 +243,7 @@ class GaussProcAdditiveEstimator(Estimator):
         )
 
     def predictor_for_fantasy_samples(
-        self, state: TuningJobState, fantasy_samples: List[FantasizedPendingEvaluation]
+        self, state: TuningJobState, fantasy_samples: list[FantasizedPendingEvaluation]
     ) -> Predictor:
         """
         Same as ``model`` with ``fit_params=False``, but ``fantasy_samples`` are

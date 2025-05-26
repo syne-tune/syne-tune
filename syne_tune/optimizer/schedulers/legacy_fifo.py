@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Any, Union
 import logging
 
 from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
@@ -49,7 +49,7 @@ _CONSTRAINTS = {
 }
 
 
-MetricModeType = Union[str, List[str]]
+MetricModeType = Union[str, list[str]]
 
 
 def _to_list(x) -> list:
@@ -128,7 +128,7 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
         optional
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         super().__init__(config_space, **kwargs)
         # Check values and impute default values
         assert_no_invalid_options(kwargs, _ARGUMENT_KEYS, name="FIFOScheduler")
@@ -244,7 +244,7 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
             mode = mode[0]
         return metric, mode
 
-    def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
+    def _extend_search_options(self, search_options: dict[str, Any]) -> dict[str, Any]:
         """Allows child classes to extend ``search_options``.
 
         :param search_options: Original dict of options
@@ -286,8 +286,8 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
         return config
 
     def _on_config_suggest(
-        self, config: Dict[str, Any], trial_id: str, **kwargs
-    ) -> Dict[str, Any]:
+        self, config: dict[str, Any], trial_id: str, **kwargs
+    ) -> dict[str, Any]:
         """Called by ``suggest`` to allow scheduler to register a new config.
 
         We register the config here, not in ``on_trial_add``. While this risks
@@ -338,7 +338,7 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
         return self.time_keeper.time()
 
     @staticmethod
-    def _check_keys_of_result(result: Dict[str, Any], keys: List[str]):
+    def _check_keys_of_result(result: dict[str, Any], keys: list[str]):
         assert all(key in result for key in keys), (
             "Your training evaluation function needs to report values for the "
             + f"keys {keys}:\n   report("
@@ -346,10 +346,10 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
             + ", ...)"
         )
 
-    def _check_result(self, result: Dict[str, Any]):
+    def _check_result(self, result: dict[str, Any]):
         self._check_keys_of_result(result, self.metric_names())
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """
         We simply relay ``result`` to the searcher. Other decisions are done
         in ``on_trial_complete``.
@@ -376,10 +376,10 @@ class LegacyFIFOScheduler(TrialSchedulerWithSearcher):
         logger.debug(log_msg)
         return trial_decision
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return _to_list(self.metric)
 
-    def metric_mode(self) -> Union[str, List[str]]:
+    def metric_mode(self) -> Union[str, list[str]]:
         return self.mode
 
     def is_multiobjective_scheduler(self) -> bool:

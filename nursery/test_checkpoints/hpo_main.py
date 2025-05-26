@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Any, List
+from typing import Optional, Any
 
 from benchmarking.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
@@ -14,11 +14,11 @@ from syne_tune.util import find_first_of_type
 
 
 class CPRemovalExtraResults(ExtraResultsComposer):
-    def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner: Tuner) -> Optional[dict[str, Any]]:
         callback = find_first_of_type(tuner.callbacks, HyperbandRemoveCheckpointsCommon)
         return None if callback is None else callback.extra_results()
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         return HyperbandRemoveCheckpointsCommon.extra_results_keys()
 
 

@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 def make_hyperparameter_ranges(
-    config_space: Dict,
+    config_space: dict,
     name_last_pos: Optional[str] = None,
     value_for_last_pos=None,
-    active_config_space: Optional[Dict] = None,
-    prefix_keys: Optional[List[str]] = None,
+    active_config_space: Optional[dict] = None,
+    prefix_keys: Optional[list[str]] = None,
 ) -> HyperparameterRanges:
     """Default method to create :class:`HyperparameterRanges` from ``config_space``
 

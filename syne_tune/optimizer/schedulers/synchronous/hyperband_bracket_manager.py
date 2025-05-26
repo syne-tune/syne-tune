@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List
+from typing import Optional
 import copy
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
@@ -94,7 +94,7 @@ class SynchronousHyperbandBracketManager:
         )
         return bracket_id
 
-    def next_job(self) -> Tuple[int, SlotInRung]:
+    def next_job(self) -> tuple[int, SlotInRung]:
         """
         Called by scheduler to request a new job. Jobs are preferentially
         assigned to the primary bracket, which has the lowest id among all
@@ -126,7 +126,7 @@ class SynchronousHyperbandBracketManager:
         assert slot_in_rung is not None, "Newly created bracket has to have a free slot"
         return bracket_id, slot_in_rung
 
-    def on_result(self, result: Tuple[int, SlotInRung]) -> Optional[List[int]]:
+    def on_result(self, result: tuple[int, SlotInRung]) -> Optional[list[int]]:
         """
         Called by scheduler to provide result for previously requested job.
         See :meth:`next_job`.

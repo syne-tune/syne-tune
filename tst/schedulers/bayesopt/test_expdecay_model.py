@@ -1,4 +1,3 @@
-from typing import Dict
 import json
 import numpy as np
 import pytest
@@ -19,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 )
 
 
-def _common_kwargs(config_space: Dict) -> Dict:
+def _common_kwargs(config_space: dict) -> dict:
     return {
         "config_space": config_space,
         "max_epochs": config_space["epochs"],
@@ -32,7 +31,7 @@ def _common_kwargs(config_space: Dict) -> Dict:
     }
 
 
-def build_gp_estimator(config_space: Dict, model_params: Dict) -> Dict:
+def build_gp_estimator(config_space: dict, model_params: dict) -> dict:
     kwargs = dict(
         _common_kwargs(config_space),
         model="gp_multitask",
@@ -53,7 +52,7 @@ def _convert_keys(dict_old, dict_new, pref_old, pref_new):
             dict_new[k_new] = v
 
 
-def _convert_model_params(model_params: Dict) -> Dict:
+def _convert_model_params(model_params: dict) -> dict:
     """
     Convert from ``GaussianProcessRegression`` to
     ``GaussianProcessLearningCurveModel`` parameters.
@@ -69,7 +68,7 @@ def _convert_model_params(model_params: Dict) -> Dict:
     return new_model_params
 
 
-def build_gped_estimator(config_space: Dict, model_params: Dict, **kwargs):
+def build_gped_estimator(config_space: dict, model_params: dict, **kwargs):
     kwargs = dict(
         _common_kwargs(config_space),
         model="gp_expdecay",

@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Dict, Tuple, Optional, Callable, Set
+from typing import Optional
+from collections.abc import Callable
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.posterior_state import (
@@ -27,7 +28,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_util
 
 
 def assert_ensemble_distribution(
-    distribution: Dict[int, float], all_resources: Set[int]
+    distribution: dict[int, float], all_resources: set[int]
 ):
     assert set(distribution.keys()).issubset(all_resources), (
         f"distribution.keys() = {set(distribution.keys())} must be subset "
@@ -39,7 +40,7 @@ def assert_ensemble_distribution(
 
 
 def _sample_hypertune_common(
-    ensemble_distribution: Dict[int, float],
+    ensemble_distribution: dict[int, float],
     sample_func: Callable[[int, int], np.ndarray],
     num_samples: int,
     random_state: Optional[RandomState] = None,
@@ -98,11 +99,11 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
         features: np.ndarray,
         targets: np.ndarray,
         kernel: KernelFunction,
-        mean: Dict[int, MeanFunction],
-        covariance_scale: Dict[int, np.ndarray],
+        mean: dict[int, MeanFunction],
+        covariance_scale: dict[int, np.ndarray],
         noise_variance: NoiseVariance,
-        resource_attr_range: Tuple[int, int],
-        ensemble_distribution: Dict[int, float],
+        resource_attr_range: tuple[int, int],
+        ensemble_distribution: dict[int, float],
         debug_log: bool = False,
     ):
         """
@@ -123,7 +124,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
         assert_ensemble_distribution(ensemble_distribution, set(mean.keys()))
         self.ensemble_distribution = ensemble_distribution
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         means, variances = 0, 0
         for resource, theta in self.ensemble_distribution.items():
             _means, _variances = self._states[resource].predict(test_features)
@@ -213,7 +214,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:
@@ -259,8 +260,8 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
         mean: MeanFunction,
         kernel: KernelFunctionWithCovarianceScale,
         noise_variance: np.ndarray,
-        resource_attr_range: Tuple[int, int],
-        ensemble_distribution: Dict[int, float],
+        resource_attr_range: tuple[int, int],
+        ensemble_distribution: dict[int, float],
         debug_log: bool = False,
     ):
         """
@@ -287,7 +288,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
         )
         return helper.extend_features_by_resource(test_features)
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         means, variances = 0, 0
         for resource, theta in self.ensemble_distribution.items():
             features_ext = self._extend_features_by_resource(test_features, resource)
@@ -380,7 +381,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:

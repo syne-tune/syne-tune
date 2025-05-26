@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -95,7 +95,7 @@ def nondominated_sort(
     dim: Optional[int] = None,
     max_items: Optional[int] = None,
     flatten: bool = True,
-) -> Union[List[int], List[List[int]]]:
+) -> Union[list[int], list[list[int]]]:
     """
     Performs a multi-objective sort by iteratively computing the Pareto front and sparsifying the
     items within the Pareto front. This is a non-dominated sort leveraging an epsilon-net.

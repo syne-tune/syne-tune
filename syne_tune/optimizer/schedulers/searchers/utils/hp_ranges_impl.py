@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, Any, Optional, Union
+from typing import Any, Optional, Union
 import numpy as np
 
 from syne_tune.config_space import (
@@ -43,7 +43,7 @@ class HyperparameterRange:
     def ndarray_size(self) -> int:
         return 1
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         raise NotImplementedError
 
 
@@ -151,7 +151,7 @@ class HyperparameterRangeContinuous(HyperparameterRange):
             )
         return False
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._ndarray_bounds
 
 
@@ -232,7 +232,7 @@ class HyperparameterRangeInteger(HyperparameterRange):
             )
         return False
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._continuous_range.get_ndarray_bounds()
 
 
@@ -334,7 +334,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
             )
         return False
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._range_int.get_ndarray_bounds()
 
 
@@ -346,7 +346,7 @@ class HyperparameterRangeCategorical(HyperparameterRange):
     :param choices: Values parameter can take
     """
 
-    def __init__(self, name: str, choices: Tuple[Any, ...]):
+    def __init__(self, name: str, choices: tuple[Any, ...]):
         super().__init__(name)
         self._assert_choices(choices)
         self.choices = list(choices)
@@ -360,7 +360,7 @@ class HyperparameterRangeCategorical(HyperparameterRange):
         ), f"value = {value} has type {type(value)}, must be str, int, or float"
 
     @staticmethod
-    def _assert_choices(choices: Tuple[Any, ...]):
+    def _assert_choices(choices: tuple[Any, ...]):
         assert len(choices) > 0
         HyperparameterRangeCategorical._assert_value_type(choices[0])
         value_type = type(choices[0])
@@ -370,7 +370,7 @@ class HyperparameterRangeCategorical(HyperparameterRange):
 
     @staticmethod
     def _assert_choices_and_active_choices(
-        choices: Tuple[Any, ...], active_choices: Optional[Tuple[Any, ...]] = None
+        choices: tuple[Any, ...], active_choices: Optional[tuple[Any, ...]] = None
     ) -> Optional[int]:
         HyperparameterRangeCategorical._assert_choices(choices)
         firstpos = None
@@ -414,8 +414,8 @@ class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
     def __init__(
         self,
         name: str,
-        choices: Tuple[Any, ...],
-        active_choices: Tuple[Any, ...] = None,
+        choices: tuple[Any, ...],
+        active_choices: tuple[Any, ...] = None,
     ):
         super().__init__(name, choices)
         if active_choices is None:
@@ -454,7 +454,7 @@ class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
         assert len(cand_ndarray) == self.num_choices, (cand_ndarray, self)
         return self.choices[int(np.argmax(cand_ndarray))]
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._ndarray_bounds
 
 
@@ -471,8 +471,8 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
     def __init__(
         self,
         name: str,
-        choices: Tuple[Any, ...],
-        active_choices: Tuple[Any, ...] = None,
+        choices: tuple[Any, ...],
+        active_choices: tuple[Any, ...] = None,
     ):
         assert len(choices) == 2, (
             f"len(choices) = {len(choices)}, must be 2. Use "
@@ -514,7 +514,7 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
         assert len(cand_ndarray) == 1
         return self.choices[self._range_int.from_ndarray(cand_ndarray)]
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._range_int.get_ndarray_bounds()
 
 
@@ -532,8 +532,8 @@ class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
     def __init__(
         self,
         name: str,
-        choices: Tuple[Any, ...],
-        active_choices: Optional[Tuple[Any, ...]] = None,
+        choices: tuple[Any, ...],
+        active_choices: Optional[tuple[Any, ...]] = None,
     ):
         super().__init__(name, choices)
         active_lower_bound = self._assert_choices_and_active_choices(
@@ -562,7 +562,7 @@ class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
         assert len(cand_ndarray) == 1
         return self.choices[self._range_int.from_ndarray(cand_ndarray)]
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._range_int.get_ndarray_bounds()
 
     def __eq__(self, other) -> bool:
@@ -588,9 +588,9 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
     def __init__(
         self,
         name: str,
-        choices: Tuple[Any, ...],
+        choices: tuple[Any, ...],
         log_scale: bool = False,
-        active_choices: Optional[Tuple[Any, ...]] = None,
+        active_choices: Optional[tuple[Any, ...]] = None,
     ):
         assert len(choices) > 1, "Use HyperparameterRangeOrdinalEqual"
         super().__init__(name, choices)
@@ -606,8 +606,8 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
         )
 
     def _get_active_bounds(
-        self, active_choices: Optional[Tuple[Any, ...]]
-    ) -> Tuple[Optional[float], Optional[float]]:
+        self, active_choices: Optional[tuple[Any, ...]]
+    ) -> tuple[Optional[float], Optional[float]]:
         if active_choices is None:
             return None, None
         else:
@@ -650,7 +650,7 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
         assert len(cand_ndarray) == 1
         return self._domain_int.cast_int(self._range_int.from_ndarray(cand_ndarray))
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         return self._range_int.get_ndarray_bounds()
 
     def __eq__(self, other) -> bool:
@@ -677,11 +677,11 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         name_last_pos: str = None,
         value_for_last_pos=None,
-        active_config_space: Dict[str, Any] = None,
-        prefix_keys: Optional[List[str]] = None,
+        active_config_space: dict[str, Any] = None,
+        prefix_keys: Optional[list[str]] = None,
     ):
         super().__init__(
             config_space,
@@ -783,10 +783,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         return self.tuple_to_config(tuple(hps))
 
     @property
-    def encoded_ranges(self) -> Dict[str, Tuple[int, int]]:
+    def encoded_ranges(self) -> dict[str, tuple[int, int]]:
         return self._encoded_ranges
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         bounds = [
             x for hp_range in self._hp_ranges for x in hp_range.get_ndarray_bounds()
         ]
@@ -810,7 +810,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
 def decode_extended_features(
     features_ext: np.ndarray,
-    resource_attr_range: Tuple[int, int],
+    resource_attr_range: tuple[int, int],
 ) -> (np.ndarray, np.ndarray):
     """
     Given matrix of features from extended configs, corresponding to

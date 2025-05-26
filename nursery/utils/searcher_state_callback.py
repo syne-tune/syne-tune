@@ -1,4 +1,3 @@
-from typing import Dict
 import json
 import time
 
@@ -37,7 +36,7 @@ class StoreSearcherStatesCallback(TunerCallback):
             if isinstance(searcher, ModelBasedSearcher):
                 self._searcher = searcher
 
-    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         if self._searcher is not None:
             state = self._searcher.state_transformer.state
             num_observations = state.num_observed_cases()

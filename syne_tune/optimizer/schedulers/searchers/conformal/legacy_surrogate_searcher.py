@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Optional, List
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -23,12 +23,12 @@ logger = logging.getLogger(__name__)
 class LegacySurrogateSearcher(StochasticSearcher):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         mode: str = "min",
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         max_fit_samples: int = None,
         random_seed: Optional[int] = None,
         **surrogate_kwargs,
@@ -132,22 +132,22 @@ class LegacySurrogateSearcher(StochasticSearcher):
         self.surrogate_model.fit(df_features=X, y=z)
 
     def on_trial_result(
-        self, trial_id: str, config: Dict, result: Dict, update: bool = True
+        self, trial_id: str, config: dict, result: dict, update: bool = True
     ):
         trial_id = int(trial_id)
         y = result[self.metric]
         self.trial_results[trial_id].append(y)
 
-    def sample_random(self) -> Dict:
+    def sample_random(self) -> dict:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.config_space.items()
         }
 
-    def configs_to_df(self, configs: List[Dict]) -> pd.DataFrame:
+    def configs_to_df(self, configs: list[dict]) -> pd.DataFrame:
         return pd.DataFrame(configs)
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:

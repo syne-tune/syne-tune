@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 import pytest
 
@@ -61,7 +60,7 @@ def _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending):
 
 def default_models(
     metric, do_mcmc=True, with_pending=False
-) -> List[GaussProcPredictor]:
+) -> list[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
@@ -99,7 +98,7 @@ def _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending):
 
 def default_models_all_infeasible(
     metric, do_mcmc=True, with_pending=False
-) -> List[GaussProcPredictor]:
+) -> list[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [

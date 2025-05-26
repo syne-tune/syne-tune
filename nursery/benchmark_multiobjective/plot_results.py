@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 import logging
 
 from benchmarking.nursery.benchmark_multiobjective.baselines import methods
@@ -12,7 +12,7 @@ from syne_tune.experiments import (
 )
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     # The setup is the algorithm. No filtering
     return metadata["algorithm"]
 

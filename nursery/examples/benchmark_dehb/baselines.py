@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from syne_tune.experiments.baselines import (
     convert_categorical_to_ordinal,
     convert_categorical_to_ordinal_numeric,
@@ -25,7 +25,7 @@ class Methods:
     SYNCMOBSTER = "SYNCMOBSTER"
 
 
-def conv_numeric_then_rest(margs) -> Dict[str, Any]:
+def conv_numeric_then_rest(margs) -> dict[str, Any]:
     return convert_categorical_to_ordinal(
         convert_categorical_to_ordinal_numeric(
             margs.config_space, kind=margs.fcnet_ordinal

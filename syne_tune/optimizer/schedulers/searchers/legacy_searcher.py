@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Any, Union
+from typing import Optional, Any, Union
 
 from syne_tune.config_space import (
     Domain,
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def _impute_default_config(
-    default_config: Configuration, config_space: Dict[str, Any]
+    default_config: Configuration, config_space: dict[str, Any]
 ) -> Configuration:
     """Imputes missing values in ``default_config`` by mid-point rule
 
@@ -94,17 +94,17 @@ def _non_default_config(hp_range: Domain) -> Hyperparameter:
     return midpoint
 
 
-def _to_tuple(config: Dict[str, Any], keys: List) -> Tuple:
+def _to_tuple(config: dict[str, Any], keys: list) -> tuple:
     return tuple(config[k] for k in keys)
 
 
-def _sorted_keys(config_space: Dict[str, Any]) -> List[str]:
+def _sorted_keys(config_space: dict[str, Any]) -> list[str]:
     return sorted(k for k, v in config_space.items() if isinstance(v, Domain))
 
 
 def impute_points_to_evaluate(
-    points_to_evaluate: Optional[List[Dict[str, Any]]], config_space: Dict[str, Any]
-) -> List[Dict[str, Any]]:
+    points_to_evaluate: Optional[list[dict[str, Any]]], config_space: dict[str, Any]
+) -> list[dict[str, Any]]:
     """
     Transforms ``points_to_evaluate`` argument to
     :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`. Each
@@ -165,10 +165,10 @@ class LegacyBaseSearcher:
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: Union[List[str], str],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
-        mode: Union[List[str], str] = "min",
+        config_space: dict[str, Any],
+        metric: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
+        mode: Union[list[str], str] = "min",
     ):
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
@@ -202,7 +202,7 @@ class LegacyBaseSearcher:
         if hasattr(scheduler, "mode"):
             self._mode = getattr(scheduler, "mode")
 
-    def _next_initial_config(self) -> Optional[Dict[str, Any]]:
+    def _next_initial_config(self) -> Optional[dict[str, Any]]:
         """
         :return: Next entry from remaining ``points_to_evaluate`` (popped
             from front), or None
@@ -212,7 +212,7 @@ class LegacyBaseSearcher:
         else:
             return None  # No more initial configs
 
-    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         """Suggest a new configuration.
 
         Note: Query :meth:`_next_initial_config` for initial configs to return
@@ -231,8 +231,8 @@ class LegacyBaseSearcher:
     def on_trial_result(
         self,
         trial_id: str,
-        config: Dict[str, Any],
-        result: Dict[str, Any],
+        config: dict[str, Any],
+        result: dict[str, Any],
         update: bool,
     ):
         """Inform searcher about result
@@ -253,7 +253,7 @@ class LegacyBaseSearcher:
         if update:
             self._update(trial_id, config, result)
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         """Update surrogate model with result
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
@@ -265,7 +265,7 @@ class LegacyBaseSearcher:
     def register_pending(
         self,
         trial_id: str,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         milestone: Optional[int] = None,
     ):
         """
@@ -329,7 +329,7 @@ class LegacyBaseSearcher:
         """
         return dict()
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """
         Together with :meth:`clone_from_state`, this is needed in order to
         store and re-create the mutable state of the searcher.
@@ -339,7 +339,7 @@ class LegacyBaseSearcher:
         """
         return {"points_to_evaluate": self._points_to_evaluate}
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         """
         Together with :meth:`get_state`, this is needed in order to store and
         re-create the mutable state of the searcher.
@@ -354,7 +354,7 @@ class LegacyBaseSearcher:
         """
         raise NotImplementedError
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         self._points_to_evaluate = state["points_to_evaluate"].copy()
 
     @property

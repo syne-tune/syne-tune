@@ -1,4 +1,3 @@
-from typing import Dict
 import numpy as np
 import pytest
 
@@ -31,7 +30,7 @@ def _log_avg(a, b):
     return np.exp(0.5 * (np.log(b) + np.log(a)))
 
 
-def _impute_config(config: Dict) -> Dict:
+def _impute_config(config: dict) -> dict:
     new_config = config.copy()
     k, lower, upper = "int", 1, 5
     if k not in config:

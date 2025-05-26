@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 import logging
 import numpy as np
 
@@ -10,12 +10,12 @@ def _is_positive_int(x):
 
 
 def successive_halving_rung_levels(
-    rung_levels: Optional[List[int]],
+    rung_levels: Optional[list[int]],
     grace_period: int,
     reduction_factor: Optional[float],
     rung_increment: Optional[int],
     max_t: int,
-) -> List[int]:
+) -> list[int]:
     """Creates ``rung_levels`` from ``grace_period``, ``reduction_factor``
 
     Note: If ``rung_levels`` is given and ``rung_levels[-1] == max_t``, we strip

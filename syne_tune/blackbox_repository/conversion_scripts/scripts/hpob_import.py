@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
@@ -304,7 +304,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+def deserialize(path: str) -> dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
     TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -31,13 +31,13 @@ class Estimator:
     can be accessed with :meth:`get_params`, :meth:`set_params`.
     """
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         :return: Current tunable model parameters
         """
         raise NotImplementedError()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         """
         :param param_dict: New model parameters
         """
@@ -87,7 +87,7 @@ class Estimator:
 # that work both in the standard case of a single output model and in the
 # multi-output case
 
-OutputEstimator = Union[Estimator, Dict[str, Estimator]]
+OutputEstimator = Union[Estimator, dict[str, Estimator]]
 
 
 @dataclass

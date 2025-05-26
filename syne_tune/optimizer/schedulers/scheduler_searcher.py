@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import LegacyBaseSearcher
@@ -27,7 +27,7 @@ class TrialSchedulerWithSearcher(LegacyTrialScheduler):
     * Master seed, :attr:`random_seed_generator`
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         super().__init__(config_space)
         self._searcher_initialized = False
         # Generator for random seeds
@@ -60,7 +60,7 @@ class TrialSchedulerWithSearcher(LegacyTrialScheduler):
             if self.searcher.debug_log is not None:
                 logger.info(f"trial_id {trial_id}: Evaluation failed!")
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         self._initialize_searcher()
         if self.searcher is not None:
             config = self._preprocess_config(trial.config)

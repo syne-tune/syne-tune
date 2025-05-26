@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, Dict, Any, List
+from typing import Optional, Union, Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -65,7 +65,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
         searcher: Optional[
@@ -141,7 +141,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.searcher.on_trial_error(trial.trial_id)
         logger.warning(f"trial_id {trial.trial_id}: Evaluation failed!")
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
@@ -161,7 +161,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             self.num_stopped += 1
         return action
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
 
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
@@ -181,13 +181,13 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     def on_trial_remove(self, trial: Trial):
         del self.trial_info[trial.trial_id]
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:
         return "min" if self.do_minimize else "max"
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """
@@ -201,7 +201,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         metadata["metric_mode"] = self.metric_mode()
         return metadata
 
-    def _check_metrics_are_present(self, result: Dict[str, Any]):
+    def _check_metrics_are_present(self, result: dict[str, Any]):
         for key in [self.metric, self.time_attr]:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"

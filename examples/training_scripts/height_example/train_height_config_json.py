@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from argparse import ArgumentParser
 
 from syne_tune import Reporter
@@ -26,7 +26,7 @@ def train_height(step: int, width: float, height: float) -> float:
 
 def height_config_space(
     max_steps: int, sleep_time: Optional[float] = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if sleep_time is None:
         sleep_time = 0.1
     return {
@@ -48,7 +48,7 @@ def height_config_space(
     }
 
 
-def _check_extra_args(config: Dict[str, Any]):
+def _check_extra_args(config: dict[str, Any]):
     config_space = height_config_space(5)
     for k in ("list_arg", "dict_arg"):
         a, b = config[k], config_space[k]

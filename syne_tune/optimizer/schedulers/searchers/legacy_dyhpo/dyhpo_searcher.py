@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, Any
 import logging
 import numpy as np
 
@@ -42,7 +42,7 @@ INTERNAL_KEY = "RESERVED_KEY_31415927"
 
 # DEBUG:
 def _debug_print_info(
-    resource: int, scores: List[float], acq_function: EIAcquisitionFunction
+    resource: int, scores: list[float], acq_function: EIAcquisitionFunction
 ):
     msg_parts = [
         f"Summary scores [resource = {resource}]",
@@ -63,7 +63,7 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
     :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`.
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         assert (
             INTERNAL_KEY not in config_space
         ), f"Key {INTERNAL_KEY} must not be used in config_space (reserved)"
@@ -84,8 +84,8 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         return {INTERNAL_KEY: "dummy"}
 
     def _extended_configs_from_paused(
-        self, paused_trials: List[Tuple[str, int, int]], state: TuningJobState
-    ) -> List[Dict[str, Any]]:
+        self, paused_trials: list[tuple[str, int, int]], state: TuningJobState
+    ) -> list[dict[str, Any]]:
         return [
             self.config_space_ext.get(state.config_for_trial[trial_id], resource)
             for trial_id, _, resource in paused_trials
@@ -97,7 +97,7 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         min_resource: int,
         exclusion_candidates: ExclusionList,
         random_generator: CandidateGenerator,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         return [
             self.config_space_ext.get(config, min_resource)
             for config in random_generator.generate_candidates_en_bulk(
@@ -112,8 +112,8 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         end: int,
         predictor: BasePredictor,
         sorted_ind: np.ndarray,
-        configs_all: List[Dict[str, Any]],
-    ) -> (List[float], np.ndarray):
+        configs_all: list[dict[str, Any]],
+    ) -> (list[float], np.ndarray):
         def my_filter_observed_data(config: Configuration) -> bool:
             return self.config_space_ext.get_resource(config) == resource
 
@@ -140,11 +140,11 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
 
     def score_paused_trials_and_new_configs(
         self,
-        paused_trials: List[Tuple[str, int, int]],
+        paused_trials: list[tuple[str, int, int]],
         min_resource: int,
         new_trial_id: str,
         skip_optimization: bool,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         See :meth:`DynamicHPOSearcher.score_paused_trials_and_new_configs`.
         If ``skip_optimization == True``, this is passed to the posterior state
@@ -295,9 +295,9 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         **kwargs,
     ):
         mode = kwargs.get("mode")
@@ -337,8 +337,8 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
     def on_trial_result(
         self,
         trial_id: str,
-        config: Dict[str, Any],
-        result: Dict[str, Any],
+        config: dict[str, Any],
+        result: dict[str, Any],
         update: bool,
     ):
         self._searcher_int.on_trial_result(trial_id, config, result, update)
@@ -368,10 +368,10 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
 
     def score_paused_trials_and_new_configs(
         self,
-        paused_trials: List[Tuple[str, int, int]],
+        paused_trials: list[tuple[str, int, int]],
         min_resource: int,
         new_trial_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         This method computes acquisition scores for a number of extended
         configs :math:`(x, r)`. The acquisition score :math:`EI(x | r)` is
@@ -410,16 +410,16 @@ class DynamicHPOSearcher(LegacyBaseSearcher):
         self._previous_winner_new_trial = "config" in result
         return result
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             "searcher_int": self._searcher_int.get_state(),
             "previous_winner_new_trial": self._previous_winner_new_trial,
         }
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         raise NotImplementedError
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         searcher_int = self._searcher_int.clone_from_state(state["searcher_int"])
         return DynamicHPOSearcher(
             self.config_space,

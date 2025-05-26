@@ -2,7 +2,7 @@ import copy
 import logging
 
 import numpy as np
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 
 
 try:
@@ -34,7 +34,7 @@ def parse_value(val):
         return val
 
 
-def configs_from_df(df) -> List[dict]:
+def configs_from_df(df) -> list[dict]:
     return [
         {key: parse_value(df[key][ii]) for key in df.keys()} for ii in range(len(df))
     ]
@@ -45,7 +45,7 @@ class BoTorchTransfer(BoTorch):
         self,
         config_space: dict,
         metric: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         new_task_id: Any,
         random_seed: Optional[int] = None,
         encode_tasks_ordinal: bool = False,
@@ -72,9 +72,9 @@ class BoTorchTransferSearcher(LegacyBoTorchSearcher):
         self,
         config_space: dict,
         metric: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         new_task_id: Any,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         allow_duplicates: bool = False,
         num_init_random: int = 0,
         encode_tasks_ordinal: bool = False,
@@ -139,7 +139,7 @@ class BoTorchTransferSearcher(LegacyBoTorchSearcher):
         return ext_config
 
     def _config_to_feature_matrix(
-        self, configs: List[dict], task_val: Optional[str] = None
+        self, configs: list[dict], task_val: Optional[str] = None
     ) -> Tensor:
         if task_val is None:
             task_val = self._new_task_id
@@ -169,7 +169,7 @@ class BoTorchTransferSearcher(LegacyBoTorchSearcher):
     def _config_from_ndarray(self, candidate) -> dict:
         return self._ext_hp_ranges.from_ndarray(candidate)
 
-    def _configs_with_results(self) -> List[dict]:
+    def _configs_with_results(self) -> list[dict]:
         # List of configs for which we have results
         this_task = [
             self._extend_config_with_task(config, self._new_task_id)

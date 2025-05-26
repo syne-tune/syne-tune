@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Union
 import autograd.numpy as anp
 import autograd.scipy.linalg as aspl
 import numpy as np
@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
 
 
 KernelFunctionWithCovarianceScale = Union[
-    KernelFunction, Tuple[KernelFunction, np.ndarray]
+    KernelFunction, tuple[KernelFunction, np.ndarray]
 ]
 
 

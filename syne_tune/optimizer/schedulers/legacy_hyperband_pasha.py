@@ -1,5 +1,5 @@
 import itertools
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
@@ -22,8 +22,8 @@ class PASHARungSystem(PromotionRungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -249,8 +249,8 @@ class PASHARungSystem(PromotionRungSystem):
         return not keep_current_budget
 
     def on_task_report(
-        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
-    ) -> Dict[str, Any]:
+        self, trial_id: str, result: dict[str, Any], skip_rungs: int
+    ) -> dict[str, Any]:
         """
         Apart from calling the superclass method, we also check the rankings
         and decides if to increase the current maximum resources.

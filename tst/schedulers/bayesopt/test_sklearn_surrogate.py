@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import pytest
 
@@ -30,7 +28,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 
 
 class TestPredictor(SKLearnPredictor):
-    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones_like(nexamples), np.zeros(nexamples)
 

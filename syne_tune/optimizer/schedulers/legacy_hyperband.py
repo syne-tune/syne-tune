@@ -1,7 +1,8 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, Tuple, Callable
+from typing import Optional,Any
+from collections.abc import Callable
 
 import numpy as np
 
@@ -133,7 +134,7 @@ class TrialInformation:
     attributes ``self.metric`` and ``self._resource_attr``.
     """
 
-    config: Dict[str, Any]
+    config: dict[str, Any]
     time_stamp: float
     bracket: int
     keep_case: bool
@@ -390,7 +391,7 @@ class LegacyHyperbandScheduler(
     :type early_checkpoint_removal_kwargs: Dict[str, Any], optional
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         # Before we can call the superclass constructor, we need to set a few
         # members (see also ``_extend_search_options``).
         # To do this properly, we first check values and impute defaults for
@@ -501,7 +502,7 @@ class LegacyHyperbandScheduler(
         )
 
     def _initialize_early_checkpoint_removal(
-        self, callback_kwargs: Optional[Dict[str, Any]]
+        self, callback_kwargs: Optional[dict[str, Any]]
     ):
         if callback_kwargs is not None:
             for name in ["max_num_checkpoints"]:
@@ -518,7 +519,7 @@ class LegacyHyperbandScheduler(
         return HyperbandBracketManager.does_pause_resume(self.scheduler_type)
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         """
         Note that all entries of ``rung_levels`` are smaller than ``max_t`` (or
         ``config_space[max_resource_attr]``): rung levels are resource levels where
@@ -551,7 +552,7 @@ class LegacyHyperbandScheduler(
             super()._initialize_searcher()
             self.bracket_distribution.configure(self)
 
-    def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
+    def _extend_search_options(self, search_options: dict[str, Any]) -> dict[str, Any]:
         # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
@@ -600,8 +601,8 @@ class LegacyHyperbandScheduler(
             return self._cost_attr
 
     def _on_config_suggest(
-        self, config: Dict[str, Any], trial_id: str, **kwargs
-    ) -> Dict[str, Any]:
+        self, config: dict[str, Any], trial_id: str, **kwargs
+    ) -> dict[str, Any]:
         """
         ``kwargs`` being used here:
 
@@ -778,7 +779,7 @@ class LegacyHyperbandScheduler(
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
     def _update_searcher_internal(
-        self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]
+        self, trial_id: str, config: dict[str, Any], result: dict[str, Any]
     ):
         if self.searcher_data == "rungs_and_last":
             # Remove last recently added result for this task. This is not
@@ -791,9 +792,9 @@ class LegacyHyperbandScheduler(
     def _update_searcher(
         self,
         trial_id: str,
-        config: Dict[str, Any],
-        result: Dict[str, Any],
-        task_info: Dict[str, Any],
+        config: dict[str, Any],
+        result: dict[str, Any],
+        task_info: dict[str, Any],
     ):
         """Updates searcher with ``result``, registers pending config there
 
@@ -844,7 +845,7 @@ class LegacyHyperbandScheduler(
             )
         return do_update
 
-    def _check_result(self, result: Dict[str, Any]):
+    def _check_result(self, result: dict[str, Any]):
         super()._check_result(result)
         keys = [self._resource_attr]
         if self.scheduler_type == "cost_promotion":
@@ -857,7 +858,7 @@ class LegacyHyperbandScheduler(
             + f"value {resource}, which is not permitted"
         )
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
@@ -992,7 +993,7 @@ class LegacyHyperbandScheduler(
     def on_trial_remove(self, trial: Trial):
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         # Check whether searcher was already updated based on ``result``
         trial_id = str(trial.trial_id)
         largest_update_resource = self._active_trials[trial_id].largest_update_resource
@@ -1052,12 +1053,12 @@ class HyperbandBracketManager:
         metric: str,
         mode: str,
         max_t: int,
-        rung_levels: List[int],
+        rung_levels: list[int],
         brackets: int,
         rung_system_per_bracket: bool,
         cost_attr: str,
         random_seed: int,
-        rung_system_kwargs: Dict[str, Any],
+        rung_system_kwargs: dict[str, Any],
         scheduler: LegacyHyperbandScheduler,
     ):
         assert (
@@ -1126,7 +1127,7 @@ class HyperbandBracketManager:
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         return rung_sys, bracket_id, skip_rungs
 
-    def on_task_add(self, trial_id: str, **kwargs) -> List[int]:
+    def on_task_add(self, trial_id: str, **kwargs) -> list[int]:
         """
         Called when new task is started (can be new trial or trial being
         resumed).
@@ -1153,7 +1154,7 @@ class HyperbandBracketManager:
             milestones = [self._max_t]
         return milestones
 
-    def on_task_report(self, trial_id: str, result: Dict[str, Any]) -> Dict[str, Any]:
+    def on_task_report(self, trial_id: str, result: dict[str, Any]) -> dict[str, Any]:
         """
         This method is called whenever a new report is received. It returns a
         dictionary with all the information needed for making decisions
@@ -1268,7 +1269,7 @@ class HyperbandBracketManager:
             entry for rs in self._rung_systems for entry in rs.paused_trials(resource)
         ]
 
-    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+    def information_for_rungs(self) -> list[tuple[int, int, float]]:
         """
         :return: List of ``(resource, num_entries, prom_quant)``, where
             ``resource`` is a rung level, ``num_entries`` the number of entries

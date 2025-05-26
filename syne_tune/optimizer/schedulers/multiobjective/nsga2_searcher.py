@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from typing import Optional, List, Union, Dict, Any
+from typing import Optional, Union, Any
 
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain, Float, Integer, Categorical, FiniteRange
@@ -24,13 +24,13 @@ except ImportError as e:
     logging.debug(e)
 
 
-def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **kwargs):
+def _create_multiobjective_problem(config_space: dict[str, Any], n_obj: int, **kwargs):
     # This needs to be an inner class, since ``Problem`` can only be imported
     # with ``moo`` dependencies. We want this module to be importable even if
     # ``moo`` dependencies are not present: only creating a ``NSGA2Searcher``
     # object should fail in this case.
     class _MultiObjectiveMixedVariableProblem(Problem):
-        def __init__(self, n_obj: int, config_space: Dict[str, Any], **kwargs):
+        def __init__(self, n_obj: int, config_space: dict[str, Any], **kwargs):
             vars = {}
 
             for hp_name, hp in config_space.items():
@@ -90,10 +90,10 @@ class NSGA2Searcher(StochasticSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str] = "min",
+        points_to_evaluate: Optional[list[dict]] = None,
         population_size: int = 20,
         **kwargs,
     ):
@@ -156,7 +156,7 @@ class NSGA2Searcher(StochasticSearcher):
             self.observed_values = dict()
             self.current_individual = 0
 
-    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         """Suggest a new configuration.
 
         Note: Query :meth:`_next_initial_config` for initial configs to return

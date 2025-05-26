@@ -1,4 +1,3 @@
-from typing import List, Set, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
@@ -51,10 +50,10 @@ def hp_ranges():
 )
 def test_compute_blacklisted_candidates(
     hp_ranges: HyperparameterRanges,
-    observed_data: List[Tuple],
-    failed_tuples: List[Tuple],
-    pending_tuples: List[Tuple],
-    expected: Set[str],
+    observed_data: list[tuple],
+    failed_tuples: list[tuple],
+    pending_tuples: list[tuple],
+    expected: set[str],
 ):
     if observed_data:
         cand_tuples, metrics = zip(*observed_data)
@@ -75,7 +74,7 @@ def test_compute_blacklisted_candidates(
 
 
 def _assert_no_duplicates(
-    candidates: List[Configuration], hp_ranges: HyperparameterRanges
+    candidates: list[Configuration], hp_ranges: HyperparameterRanges
 ):
     cands_tpl = [hp_ranges.config_to_match_string(x) for x in candidates]
     assert len(candidates) == len(set(cands_tpl))

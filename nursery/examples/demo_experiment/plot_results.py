@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List, Set
+from typing import Any, Optional
 import logging
 
 from baselines import methods
@@ -7,7 +7,7 @@ from hpo_main import RungLevelsExtraResults
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     # The setup is the algorithm. No filtering
     return metadata["algorithm"]
 
@@ -24,14 +24,14 @@ SETUP_TO_SUBPLOT = {
 }
 
 
-def metadata_to_subplot(metadata: Dict[str, Any]) -> Optional[int]:
+def metadata_to_subplot(metadata: dict[str, Any]) -> Optional[int]:
     return SETUP_TO_SUBPLOT[metadata["algorithm"]]
 
 
 def _print_extra_results(
-    extra_results: Dict[str, Dict[str, List[float]]],
-    keys: List[str],
-    skip_setups: Set[str],
+    extra_results: dict[str, dict[str, list[float]]],
+    keys: list[str],
+    skip_setups: set[str],
 ):
     for setup_name, results_for_setup in extra_results.items():
         if setup_name not in skip_setups:

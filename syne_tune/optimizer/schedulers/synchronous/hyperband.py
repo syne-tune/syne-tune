@@ -1,4 +1,4 @@
-from typing import Optional, List, Set, Dict, Any, Tuple
+from typing import Optional, Any
 import logging
 import numpy as np
 
@@ -75,8 +75,8 @@ class SynchronousHyperbandCommon(
     """
 
     def _create_internal_common(
-        self, skip_searchers: Optional[Set[str]] = None, **kwargs
-    ) -> Dict[str, Any]:
+        self, skip_searchers: Optional[set[str]] = None, **kwargs
+    ) -> dict[str, Any]:
         self.metric = kwargs.get("metric")
         assert self.metric is not None, (
             "Argument 'metric' is mandatory. Pass the name of the metric "
@@ -230,7 +230,7 @@ class SynchronousHyperbandScheduler(
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         bracket_rungs: RungSystemsPerBracket,
         **kwargs,
     ):
@@ -263,7 +263,7 @@ class SynchronousHyperbandScheduler(
         self._trials_checkpoints_can_be_removed = []
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         return self._rung_levels
 
     @property
@@ -334,7 +334,7 @@ class SynchronousHyperbandScheduler(
             self._report_as_failed(bracket_id, slot_in_rung)
         return suggestion
 
-    def _on_result(self, result: Tuple[int, SlotInRung]):
+    def _on_result(self, result: tuple[int, SlotInRung]):
         trials_not_promoted = self.bracket_manager.on_result(result)
         if trials_not_promoted is not None:
             self._trials_checkpoints_can_be_removed.extend(trials_not_promoted)
@@ -349,7 +349,7 @@ class SynchronousHyperbandScheduler(
         )
         self._on_result((bracket_id, result_failed))
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
@@ -421,13 +421,13 @@ class SynchronousHyperbandScheduler(
                 "on_trial_error call is ignored"
             )
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:
         return self.mode
 
-    def trials_checkpoints_can_be_removed(self) -> List[int]:
+    def trials_checkpoints_can_be_removed(self) -> list[int]:
         result = self._trials_checkpoints_can_be_removed
         self._trials_checkpoints_can_be_removed = []
         return result

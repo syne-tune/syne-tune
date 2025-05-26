@@ -2,7 +2,8 @@ import numpy as np
 import autograd.numpy as anp
 from autograd import grad
 from autograd.tracer import getval
-from typing import Tuple, Optional, Dict, Callable, Any
+from typing import Optional, Any
+from collections.abc import Callable
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
@@ -46,7 +47,7 @@ class PosteriorState:
         """
         raise NotImplementedError
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Computes marginal statistics (means, variances) for a number of test
         features.
@@ -75,7 +76,7 @@ class PosteriorState:
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:
@@ -188,7 +189,7 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
     def num_fantasies(self):
         return self.pred_mat.shape[1]
 
-    def _state_kwargs(self) -> Dict[str, Any]:
+    def _state_kwargs(self) -> dict[str, Any]:
         return {
             "features": self.features,
             "mean": self.mean,
@@ -204,7 +205,7 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
         critval = negative_log_marginal_likelihood(self.chol_fact, self.pred_mat)
         return critval
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         return predict_posterior_marginals(
             **self._state_kwargs(), test_features=test_features
         )
@@ -227,7 +228,7 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:
@@ -275,9 +276,9 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
 
 
 def backward_gradient_given_predict(
-    predict_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    predict_func: Callable[[np.ndarray], tuple[np.ndarray, np.ndarray]],
     input: np.ndarray,
-    head_gradients: Dict[str, np.ndarray],
+    head_gradients: dict[str, np.ndarray],
     mean_data: float,
     std_data: float,
 ) -> np.ndarray:

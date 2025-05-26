@@ -5,7 +5,8 @@ import numpy as np
 
 from dataclasses import dataclass
 from collections import deque
-from typing import Callable, List, Optional, Tuple, Dict, Any
+from collections.abc import Callable
+from typing import Optional, Any
 
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
@@ -123,7 +124,7 @@ class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         custom_explore_fn: Optional[Callable[[dict], dict]] = None,
         **kwargs,
     ):
@@ -191,7 +192,7 @@ class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
         else:
             return trial_id
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         for name, value in [
             ("resource_attr", self._resource_attr),
             ("metric", self.metric),
@@ -245,7 +246,7 @@ class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
             return SchedulerDecision.STOP
 
     def _save_trial_state(
-        self, state: PBTTrialState, time: int, result: Dict[str, Any]
+        self, state: PBTTrialState, time: int, result: dict[str, Any]
     ) -> float:
         """Saves necessary trial information when result is received.
 
@@ -263,7 +264,7 @@ class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
         state.last_result = result
         return score
 
-    def _quantiles(self) -> Tuple[List[Trial], List[Trial]]:
+    def _quantiles(self) -> tuple[list[Trial], list[Trial]]:
         """Returns trials in the lower and upper ``quantile`` of the population.
 
         If there is not enough data to compute this, returns empty lists.
@@ -305,7 +306,7 @@ class LegacyPopulationBasedTraining(LegacyFIFOScheduler):
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
 
-    def _explore(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _explore(self, config: dict[str, Any]) -> dict[str, Any]:
         """Return a config perturbed as specified.
 
         :param config: Original hyperparameter configuration from the cloned trial

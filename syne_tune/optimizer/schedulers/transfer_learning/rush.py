@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Any
+from typing import Optional, Any
 
 from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -41,12 +41,12 @@ class RUSHScheduler(LegacyTransferLearningMixin, LegacyHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
         type: str = "stopping",
-        points_to_evaluate: Optional[List[dict]] = None,
-        custom_rush_points: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
+        custom_rush_points: Optional[list[dict]] = None,
         num_hyperparameters_per_task: int = 1,
         **kwargs,
     ):

@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List
+from typing import Optional
 
 from syne_tune.optimizer.schedulers.legacy_hyperband_promotion import (
     PromotionRungEntry,
@@ -88,8 +88,8 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -125,8 +125,8 @@ class RUSHPromotionRungSystem(PromotionRungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,

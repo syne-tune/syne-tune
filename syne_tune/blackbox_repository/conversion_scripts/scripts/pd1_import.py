@@ -3,7 +3,7 @@ import logging
 import os
 import tarfile
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -137,7 +137,7 @@ class PD1Recipe(BlackboxRecipe):
         else:
             logger.info(f"Skip downloading since {file_name} is available locally.")
 
-    def _convert_data(self) -> Dict[str, BlackboxTabular]:
+    def _convert_data(self) -> dict[str, BlackboxTabular]:
         with tarfile.open(repository_path / f"{BLACKBOX_NAME}.tar.gz") as f:
 
             def is_within_directory(directory, target):
@@ -210,7 +210,7 @@ class PD1Recipe(BlackboxRecipe):
                 bb_dict[task_name] = convert_task(task_data)
         return bb_dict
 
-    def _save_data(self, bb_dict: Dict[str, BlackboxTabular]) -> None:
+    def _save_data(self, bb_dict: dict[str, BlackboxTabular]) -> None:
         with catchtime("saving to disk"):
             serialize(
                 bb_dict=bb_dict,
@@ -229,7 +229,7 @@ class PD1Recipe(BlackboxRecipe):
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: dict[str, BlackboxTabular], path: str, metadata: Optional[dict] = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -280,7 +280,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+def deserialize(path: str) -> dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
     TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.

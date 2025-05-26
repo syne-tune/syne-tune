@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Type, Dict, Any, List
+from typing import Optional, Type, Any
 import logging
 import numpy as np
 import copy
@@ -118,7 +118,7 @@ class ModelBasedSearcher(StochasticSearcher):
         filter_observed_data: Optional[ConfigurationFilter] = None,
         state_converter: Optional[StateForModelConverter] = None,
         allow_duplicates: bool = False,
-        restrict_configurations: List[Dict[str, Any]] = None,
+        restrict_configurations: list[dict[str, Any]] = None,
     ):
         self.hp_ranges = hp_ranges
         self.num_initial_candidates = num_initial_candidates
@@ -188,7 +188,7 @@ class ModelBasedSearcher(StochasticSearcher):
             logger.info("\n".join(msg_parts))
 
     def _copy_kwargs_to_kwargs_int(
-        self, kwargs_int: Dict[str, Any], kwargs: Dict[str, Any]
+        self, kwargs_int: dict[str, Any], kwargs: dict[str, Any]
     ):
         """Copies extra arguments not dealt with by ``gp_fifo_searcher_factory``
 
@@ -219,15 +219,15 @@ class ModelBasedSearcher(StochasticSearcher):
         return self._hp_ranges_in_state()
 
     def _metric_val_update(
-        self, crit_val: float, result: Dict[str, Any]
+        self, crit_val: float, result: dict[str, Any]
     ) -> MetricValues:
         return crit_val
 
     def on_trial_result(
         self,
         trial_id: str,
-        config: Dict[str, Any],
-        result: Dict[str, Any],
+        config: dict[str, Any],
+        result: dict[str, Any],
         update: bool,
     ):
         # If both ``cost_attr`` and ``resource_attr`` are given, cost data (if
@@ -249,13 +249,13 @@ class ModelBasedSearcher(StochasticSearcher):
         if update:
             self._update(trial_id, config, result)
 
-    def _trial_id_string(self, trial_id: str, result: Dict[str, Any]):
+    def _trial_id_string(self, trial_id: str, result: dict[str, Any]):
         """
         For multi-fidelity, we also want to output the resource level
         """
         return trial_id
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         metric_val = result[self._metric]
         # Reject NaN or infinite values
         if np.isnan(metric_val) or np.isinf(metric_val):
@@ -364,7 +364,7 @@ class ModelBasedSearcher(StochasticSearcher):
                 )
         return config, pick_random
 
-    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         """
         Runs Bayesian optimization in order to suggest the next config to evaluate.
 
@@ -424,7 +424,7 @@ class ModelBasedSearcher(StochasticSearcher):
     def set_params(self, param_dict):
         self.state_transformer.set_params(param_dict)
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """
         The mutable state consists of the GP model parameters, the
         ``TuningJobState``, and the ``skip_optimization`` predicate (which can have a
@@ -445,7 +445,7 @@ class ModelBasedSearcher(StochasticSearcher):
             state["restrict_configurations"] = self._restrict_configurations
         return state
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         super()._restore_from_state(state)
         self.state_transformer.set_params(state["model_params"])
         self._restrict_configurations = state.get("restrict_configurations")
@@ -536,7 +536,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
             estimator.configure_scheduler(scheduler)
 
     def register_pending(
-        self, trial_id: str, config: Optional[Dict[str, Any]] = None, milestone=None
+        self, trial_id: str, config: Optional[dict[str, Any]] = None, milestone=None
     ):
         """
         Registers trial as pending. This means the corresponding evaluation
@@ -553,7 +553,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
     def _fix_resource_attribute(self, **kwargs):
         pass
 
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _postprocess_config(self, config: dict[str, Any]) -> dict[str, Any]:
         return config
 
     def _create_random_generator(self) -> CandidateGenerator:
@@ -576,7 +576,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
 
     def _update_restrict_configurations(
         self,
-        new_configs: List[Dict[str, Any]],
+        new_configs: list[dict[str, Any]],
         random_generator: RandomFromSetCandidateGenerator,
     ):
         # ``random_generator`` maintains all positions returned during the
@@ -656,7 +656,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
         batch_size: int,
         num_init_candidates_for_batch: Optional[int] = None,
         **kwargs,
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         """
         Asks for a batch of ``batch_size`` configurations to be suggested. This
         is roughly equivalent to calling ``get_config`` ``batch_size`` times,
@@ -771,7 +771,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
         # future get_config calls)
         self.state_transformer.mark_trial_failed(trial_id)
 
-    def _new_searcher_kwargs_for_clone(self) -> Dict[str, Any]:
+    def _new_searcher_kwargs_for_clone(self) -> dict[str, Any]:
         """
         Helper method for ``clone_from_state``. Args need to be extended
         by ``estimator``, ``init_state``, ``skip_optimization``, and others

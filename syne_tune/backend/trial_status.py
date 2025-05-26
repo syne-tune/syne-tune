@@ -2,7 +2,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Optional, List
+from typing import Optional
 
 try:
     from typing_extensions import Literal
@@ -26,7 +26,7 @@ class Status:
 @dataclass
 class Trial:
     trial_id: int
-    config: Dict[str, object]
+    config: dict[str, object]
     creation_time: datetime
 
     def add_results(self, metrics, status, training_end_time):
@@ -43,8 +43,8 @@ class Trial:
 @dataclass
 class TrialResult(Trial):
     # Metrics recorded for each call of ``report``. Each metric is a dictionary from metric name to value (
-    # could be numeric or string, the only constrain is that it must be compatible with json).
-    metrics: List[Dict[str, object]]
+    # could be numeric or string, the only constraint is that it must be compatible with json).
+    metrics: list[dict[str, object]]
     status: Literal[
         Status.completed,
         Status.in_progress,

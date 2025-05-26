@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from syne_tune.experiments.baselines import (
     search_options,
     default_arguments,
@@ -34,7 +34,7 @@ class Methods:
     NeuralBandEpsilon = "NeuralBandEpsilon"
 
 
-def conv_numeric_only(margs) -> Dict[str, Any]:
+def conv_numeric_only(margs) -> dict[str, Any]:
     return convert_categorical_to_ordinal_numeric(
         margs.config_space, kind=margs.fcnet_ordinal
     )

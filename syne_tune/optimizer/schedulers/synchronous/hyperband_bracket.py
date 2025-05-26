@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional
 from operator import itemgetter
 import numpy as np
 from dataclasses import dataclass
@@ -43,7 +43,7 @@ class SynchronousBracket:
         self.current_rung = 0
 
     @staticmethod
-    def assert_check_rungs(rungs: List[Tuple[int, int]]):
+    def assert_check_rungs(rungs: list[tuple[int, int]]):
         assert len(rungs) > 0, "There must be at least one rung"
         sizes, levels = zip(*rungs)
         assert is_positive_integer(
@@ -66,7 +66,7 @@ class SynchronousBracket:
 
     def _current_rung_and_level(
         self,
-    ) -> (List[Tuple[Optional[int], Optional[float]]], int):
+    ) -> (list[tuple[Optional[int], Optional[float]]], int):
         raise NotImplementedError
 
     def num_pending_slots(self) -> int:
@@ -96,7 +96,7 @@ class SynchronousBracket:
             metric_val=None,
         )
 
-    def on_result(self, result: SlotInRung) -> Optional[List[int]]:
+    def on_result(self, result: SlotInRung) -> Optional[list[int]]:
         """
         Provides result for slot previously requested by ``next_free_slot``.
         Here, ``result.metric`` is written to the slot in order to make it
@@ -146,7 +146,7 @@ class SynchronousBracket:
     def _assert_on_result_trial_id(self, result: SlotInRung, trial_id: int):
         pass
 
-    def _promote_trials_at_rung_complete(self) -> List[int]:
+    def _promote_trials_at_rung_complete(self) -> list[int]:
         """
         This is called when a rung has just been filled in :meth:`on_result`,
         and this is not the final rung of the bracket. It opens a new rung
@@ -166,7 +166,7 @@ class SynchronousHyperbandBracket(SynchronousBracket):
     slots in the lowest not fully occupied rung can be filled.
     """
 
-    def __init__(self, rungs: List[Tuple[int, int]], mode: str):
+    def __init__(self, rungs: list[tuple[int, int]], mode: str):
         """
         :param rungs: List of ``(rung_size, level)``, where ``level`` is rung
             (resource) level, ``rung_size`` is rung size (number of slots).
@@ -188,14 +188,14 @@ class SynchronousHyperbandBracket(SynchronousBracket):
 
     def _current_rung_and_level(
         self,
-    ) -> (List[Tuple[Optional[int], Optional[float]]], int):
+    ) -> (list[tuple[Optional[int], Optional[float]]], int):
         return self._rungs[self.current_rung]
 
     def _assert_on_result_trial_id(self, result: SlotInRung, trial_id: int):
         if trial_id is not None:
             assert result.trial_id == trial_id, (result, trial_id)
 
-    def _promote_trials_at_rung_complete(self) -> List[int]:
+    def _promote_trials_at_rung_complete(self) -> list[int]:
         pos = self.current_rung
         new_len, milestone = self._rungs[pos]
         previous_rung, _ = self._rungs[pos - 1]
@@ -210,8 +210,8 @@ class SynchronousHyperbandBracket(SynchronousBracket):
 
 
 def get_top_list(
-    rung: List[Tuple[int, float]], new_len: int, mode: str
-) -> (List[int], List[int]):
+    rung: list[tuple[int, float]], new_len: int, mode: str
+) -> (list[int], list[int]):
     """
     Returns list of IDs of trials of len ``new_len`` which should be promoted,
     because they performed best. We also return the list of IDs of the remaining

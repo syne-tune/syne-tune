@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, List, Dict, Any
+from typing import Optional, Union, Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -58,9 +58,9 @@ class LegacyMOASHA(LegacyTrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metrics: List[str],
-        mode: Optional[Union[str, List[str]]] = None,
+        config_space: dict[str, Any],
+        metrics: list[str],
+        mode: Optional[Union[str, list[str]]] = None,
         time_attr: str = "training_iteration",
         multiobjective_priority: Optional[MOPriority] = None,
         max_t: int = 100,
@@ -75,7 +75,7 @@ class LegacyMOASHA(LegacyTrialScheduler):
         assert reduction_factor > 1, "reduction factor not valid!"
         assert brackets > 0, "brackets must be positive!"
         if mode:
-            if isinstance(mode, List):
+            if isinstance(mode, list):
                 assert len(mode) == len(metrics), "one mode should be given per metric"
                 assert all(
                     m in ["min", "max"] for m in mode
@@ -104,7 +104,7 @@ class LegacyMOASHA(LegacyTrialScheduler):
         self._num_stopped = 0
         self._metrics = metrics
         self._mode = mode
-        if isinstance(self._mode, List):
+        if isinstance(self._mode, list):
             self._metric_op = {
                 metric: 1 if mode == "min" else -1
                 for metric, mode in zip(metrics, self._mode)
@@ -116,7 +116,7 @@ class LegacyMOASHA(LegacyTrialScheduler):
                 self._metric_op = dict(zip(self._metrics, [-1.0] * len(self._metrics)))
         self._time_attr = time_attr
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self._metrics
 
     def metric_mode(self) -> str:
@@ -137,7 +137,7 @@ class LegacyMOASHA(LegacyTrialScheduler):
         print(f"adding trial {trial.trial_id}")
         self._trial_info[trial.trial_id] = self._brackets[idx]
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         self._check_metrics_are_present(result)
         if result[self._time_attr] >= self._max_t:
             action = SchedulerDecision.STOP
@@ -153,18 +153,18 @@ class LegacyMOASHA(LegacyTrialScheduler):
             self._num_stopped += 1
         return action
 
-    def _metric_dict(self, reported_results: Dict[str, Any]) -> Dict[str, Any]:
+    def _metric_dict(self, reported_results: dict[str, Any]) -> dict[str, Any]:
         return {
             metric: reported_results[metric] * self._metric_op[metric]
             for metric in self._metrics
         }
 
-    def _check_metrics_are_present(self, result: Dict[str, Any]):
+    def _check_metrics_are_present(self, result: dict[str, Any]):
         for key in [self._time_attr] + self._metrics:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         self._check_metrics_are_present(result)
         bracket = self._trial_info[trial.trial_id]
         bracket.on_result(

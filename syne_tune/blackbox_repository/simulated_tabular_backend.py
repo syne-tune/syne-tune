@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 
 import numpy as np
 
@@ -66,11 +66,11 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
             resource = int(result[resource_attr])
             self._resource_paused_for_trial[trial_id] = resource
 
-    def _filter_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _filter_config(self, config: dict[str, Any]) -> dict[str, Any]:
         config_space = self.blackbox.configuration_space
         return {k: v for k, v in config.items() if k in config_space}
 
-    def config_objectives(self, config: Dict[str, Any], seed: int) -> List[dict]:
+    def config_objectives(self, config: dict[str, Any], seed: int) -> list[dict]:
         mattr = self._max_resource_attr
         if mattr is not None and mattr in config:
             max_resource = int(config[mattr])
@@ -90,7 +90,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
     def _run_job_and_collect_results(
         self, trial_id: int, config: Optional[dict] = None
-    ) -> (str, List[dict]):
+    ) -> (str, list[dict]):
         assert (
             trial_id in self._trial_dict
         ), f"Trial with trial_id = {trial_id} not registered with backend"

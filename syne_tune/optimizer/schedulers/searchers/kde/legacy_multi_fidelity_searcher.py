@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Any, Tuple
+from typing import Optional, Any
 import logging
 import numpy as np
 
@@ -30,9 +30,9 @@ class LegacyMultiFidelityKernelDensityEstimator(LegacyKernelDensityEstimator):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
@@ -85,7 +85,7 @@ class LegacyMultiFidelityKernelDensityEstimator(LegacyKernelDensityEstimator):
 
     def _train_kde(
         self, train_data: np.ndarray, train_targets: np.ndarray
-    ) -> Optional[Tuple[Any, Any]]:
+    ) -> Optional[tuple[Any, Any]]:
         """
         Find the highest resource level so that the data only at that level is
         large enough to train KDE models both on the good part and the rest.
@@ -107,7 +107,7 @@ class LegacyMultiFidelityKernelDensityEstimator(LegacyKernelDensityEstimator):
             sub_targets = train_targets[indices]
             return super()._train_kde(sub_data, sub_targets)
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         super()._update(trial_id=trial_id, config=config, result=result)
         resource_level = int(result[self.resource_attr])
         self.resource_levels.append(resource_level)

@@ -3,7 +3,7 @@ Wrap Surrogates from
 YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization
 Florian Pfisterer, Lennart Schneider, Julia Moosbauer, Martin Binder, Bernd Bischl
 """
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import logging
 import shutil
 
@@ -99,7 +99,7 @@ class BlackBoxYAHPO(Blackbox):
     def __init__(
         self,
         benchmark: BenchmarkSet,
-        fidelities: Optional[List[int]] = None,
+        fidelities: Optional[list[int]] = None,
     ):
         self.benchmark = benchmark
         super(BlackBoxYAHPO, self).__init__(
@@ -163,7 +163,7 @@ class BlackBoxYAHPO(Blackbox):
             }
             self._shortened_keys = set(shortened_keys)
 
-    def _adjust_fidelity_space(self, fidelities: Optional[List[int]]):
+    def _adjust_fidelity_space(self, fidelities: Optional[list[int]]):
         assert len(self.fidelity_space) == 1, "Only one fidelity is supported"
         self._fidelity_name, domain = next(iter(self.fidelity_space.items()))
         assert (
@@ -181,7 +181,7 @@ class BlackBoxYAHPO(Blackbox):
             self._fidelity_values = np.array(fidelities)
             self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
-    def _map_configuration(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _map_configuration(self, config: dict[str, Any]) -> dict[str, Any]:
         if self._is_nb301:
 
             def map_key(k: str) -> str:
@@ -195,8 +195,8 @@ class BlackBoxYAHPO(Blackbox):
             return config
 
     def _prepare_yahpo_configuration(
-        self, configuration: Dict[str, Any], fidelity: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, configuration: dict[str, Any], fidelity: dict[str, Any]
+    ) -> dict[str, Any]:
         """Some of the hyperparameters are only active for certain values of other
         hyperparameters. We filter out the inactive ones, and add the fidelity to the
         configuration in order to interface with YAHPO.
@@ -212,7 +212,7 @@ class BlackBoxYAHPO(Blackbox):
         )
         return {k: v for k, v in configuration.items() if k in active_hyperparameters}
 
-    def _parse_fidelity(self, fidelity: Dict[str, Any]) -> Dict[str, Any]:
+    def _parse_fidelity(self, fidelity: dict[str, Any]) -> dict[str, Any]:
         if self._is_iaml or self._is_rbv2:
             k = "trainsize"
             fidelity_value = fidelity.get(k)
@@ -227,10 +227,10 @@ class BlackBoxYAHPO(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
+        configuration: dict[str, Any],
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         configuration = self._map_configuration(configuration.copy())
 
         if fidelity is not None:
@@ -335,7 +335,7 @@ def cs_to_synetune(config_space):
 def instantiate_yahpo(
     scenario: str,
     check: bool = False,
-    fidelities: Optional[List[int]] = None,
+    fidelities: Optional[list[int]] = None,
 ):
     """
     Instantiates a dict of ``BlackBoxYAHPO``, one entry for each instance.

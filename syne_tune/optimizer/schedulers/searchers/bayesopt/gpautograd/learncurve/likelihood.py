@@ -1,4 +1,4 @@
-from typing import Union, Optional, List, Dict, Any
+from typing import Union, Optional, Any
 import autograd.numpy as anp
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
@@ -115,21 +115,21 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
                 self.params, "noise_variance", self.encoding
             )
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         return self._type(
             data,
             **self._posterstate_kwargs,
             noise_variance=self.get_noise_variance(),
         )
 
-    def forward(self, data: Dict[str, Any]):
+    def forward(self, data: dict[str, Any]):
         assert not data["do_fantasizing"], (
             "data must not be for fantasizing. Call prepare_data with "
             + "do_fantasizing=False"
         )
         return super().forward(data)
 
-    def param_encoding_pairs(self) -> List[tuple]:
+    def param_encoding_pairs(self) -> list[tuple]:
         own_param_encoding_pairs = [(self.noise_variance_internal, self.encoding)]
         return (
             own_param_encoding_pairs
@@ -147,13 +147,13 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
     def _set_noise_variance(self, val):
         self.encoding.set(self.noise_variance_internal, val)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         result = {"noise_variance": self.get_noise_variance()}
         for pref, func in self._components:
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         for pref, func in self._components:
             len_pref = len(pref)
             stripped_dict = {
@@ -162,11 +162,11 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def data_precomputations(self, data: Dict[str, Any], overwrite: bool = False):
+    def data_precomputations(self, data: dict[str, Any], overwrite: bool = False):
         if overwrite or not self._type.has_precomputations(data):
             self._type.data_precomputations(data)
 
-    def on_fit_start(self, data: Dict[str, Any]):
+    def on_fit_start(self, data: dict[str, Any]):
         assert not data["do_fantasizing"], (
             "data must not be for fantasizing. Call prepare_data with "
             + "do_fantasizing=False"

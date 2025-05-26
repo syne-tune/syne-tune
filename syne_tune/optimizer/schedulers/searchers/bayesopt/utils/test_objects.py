@@ -4,7 +4,8 @@
 Object definitions that are used for testing.
 """
 
-from typing import Iterator, Tuple, Dict, List, Optional, Union
+from collections.abc import Iterator
+from typing import Optional, Union
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
@@ -134,8 +135,8 @@ class Quadratic3d:
 
 
 def tuples_to_configs(
-    config_tpls: List[Tuple[Hyperparameter, ...]], hp_ranges: HyperparameterRanges
-) -> List[Configuration]:
+    config_tpls: list[tuple[Hyperparameter, ...]], hp_ranges: HyperparameterRanges
+) -> list[Configuration]:
     """
     Many unit tests write configs as tuples.
 
@@ -160,10 +161,10 @@ TupleOrDict = Union[tuple, dict]
 
 def create_tuning_job_state(
     hp_ranges: HyperparameterRanges,
-    cand_tuples: List[TupleOrDict],
-    metrics: List[Dict],
-    pending_tuples: Optional[List[TupleOrDict]] = None,
-    failed_tuples: Optional[List[TupleOrDict]] = None,
+    cand_tuples: list[TupleOrDict],
+    metrics: list[dict],
+    pending_tuples: Optional[list[TupleOrDict]] = None,
+    failed_tuples: Optional[list[TupleOrDict]] = None,
 ) -> TuningJobState:
     """
     Builds ``TuningJobState`` from basics, where configs are given as tuples or

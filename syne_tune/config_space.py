@@ -5,7 +5,8 @@ import logging
 from copy import copy
 from math import isclose
 import sys
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Union
+from collections.abc import Sequence
 import argparse
 
 import numpy as np
@@ -63,10 +64,10 @@ class Domain:
 
     def sample(
         self,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
-    ) -> Union[Any, List[Any]]:
+    ) -> Union[Any, list[Any]]:
         """
         :param spec: Passed to sampler
         :param size: Number of values to sample, defaults to 1
@@ -123,7 +124,7 @@ class Sampler:
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
@@ -191,7 +192,7 @@ class Grid(Sampler):
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
@@ -220,7 +221,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -235,7 +236,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -258,7 +259,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -275,7 +276,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -397,7 +398,7 @@ class Integer(Domain):
         def sample(
             self,
             domain: "Integer",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -412,7 +413,7 @@ class Integer(Domain):
         def sample(
             self,
             domain: "Integer",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -505,7 +506,7 @@ class Categorical(Domain):
         def sample(
             self,
             domain: "Categorical",
-            spec: Optional[Union[List[dict], dict]] = None,
+            spec: Optional[Union[list[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -708,10 +709,10 @@ class OrdinalNearestNeighbor(Ordinal):
 
     def sample(
         self,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
-    ) -> Union[Any, List[Any]]:
+    ) -> Union[Any, list[Any]]:
         if random_state is None:
             random_state = np.random
         items = random_state.uniform(self._lower_int, self._upper_int, size=size)
@@ -812,10 +813,10 @@ class FiniteRange(Domain):
 
     def sample(
         self,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
-    ) -> Union[Any, List[Any]]:
+    ) -> Union[Any, list[Any]]:
         int_sample = self._uniform_int.sample(spec, size, random_state)
         if size > 1:
             return [self._values[x] for x in int_sample]
@@ -1022,7 +1023,7 @@ def is_uniform_space(domain: Domain) -> bool:
         )
 
 
-def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict[str, Any]):
+def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict[str, Any]):
     """
     Use this to prepare argument parser in endpoint script, for the
     non-fixed parameters in ``config_space``.
@@ -1036,8 +1037,8 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict[str, Any
 
 
 def cast_config_values(
-    config: Dict[str, Any], config_space: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: dict[str, Any], config_space: dict[str, Any]
+) -> dict[str, Any]:
     """
     Returns config with keys, values of ``config``, but values are cast to
     their specific types.
@@ -1054,8 +1055,8 @@ def cast_config_values(
 
 
 def postprocess_config(
-    config: Dict[str, Any], config_space: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: dict[str, Any], config_space: dict[str, Any]
+) -> dict[str, Any]:
     """Post-processes a config as returned by a searcher
 
     * Adding parameters which are constant, therefore do not feature
@@ -1073,8 +1074,8 @@ def postprocess_config(
 
 
 def remove_constant_and_cast(
-    config: Dict[str, Any], config_space: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: dict[str, Any], config_space: dict[str, Any]
+) -> dict[str, Any]:
     """Pre-processes a config before passing it to a searcher
 
     * Removing parameters which are constant in ``config_space`` (these do
@@ -1093,7 +1094,7 @@ def remove_constant_and_cast(
     )
 
 
-def non_constant_hyperparameter_keys(config_space: Dict[str, Any]) -> List[str]:
+def non_constant_hyperparameter_keys(config_space: dict[str, Any]) -> list[str]:
     """
     :param config_space: Configuration space
     :return: Keys corresponding to (non-fixed) hyperparameters
@@ -1102,7 +1103,7 @@ def non_constant_hyperparameter_keys(config_space: Dict[str, Any]) -> List[str]:
 
 
 def config_space_size(
-    config_space: Dict[str, Any], upper_limit: int = 2**20
+    config_space: dict[str, Any], upper_limit: int = 2**20
 ) -> Optional[int]:
     """
     Counts the number of distinct configurations in the configuration space
@@ -1128,7 +1129,7 @@ def config_space_size(
 
 
 def config_to_match_string(
-    config: Dict[str, Any], config_space: Dict[str, Any], keys: List[str]
+    config: dict[str, Any], config_space: dict[str, Any], keys: list[str]
 ) -> str:
     """
     Maps configuration to a match string, which can be used to compare configs
@@ -1147,7 +1148,7 @@ def config_to_match_string(
     return ",".join(parts)
 
 
-def to_dict(x: Domain) -> Dict[str, Any]:
+def to_dict(x: Domain) -> dict[str, Any]:
     """
     We assume that for each :class:`Domain` subclass, the :meth:`__init__`
     kwargs are also members, and all other members start with ``_``.
@@ -1168,7 +1169,7 @@ def to_dict(x: Domain) -> Dict[str, Any]:
     return result
 
 
-def from_dict(d: Dict[str, Any]) -> Domain:
+def from_dict(d: dict[str, Any]) -> Domain:
     """
     :param d: Representation of :class:`Domain` object as ``dict``
     :return: Decoded :class:`Domain` object
@@ -1185,8 +1186,8 @@ def from_dict(d: Dict[str, Any]) -> Domain:
 
 
 def config_space_to_json_dict(
-    config_space: Dict[str, Union[Domain, int, float, str]]
-) -> Dict[str, Union[int, float, str]]:
+    config_space: dict[str, Union[Domain, int, float, str]]
+) -> dict[str, Union[int, float, str]]:
     """Converts ``config_space`` into a dictionary that can be saved as a json file.
 
     :param config_space: Configuration space
@@ -1198,8 +1199,8 @@ def config_space_to_json_dict(
 
 
 def config_space_from_json_dict(
-    config_space_dict: Dict[str, Union[int, float, str]]
-) -> Dict[str, Union[Domain, int, float, str]]:
+    config_space_dict: dict[str, Union[int, float, str]]
+) -> dict[str, Union[Domain, int, float, str]]:
     """Converts the given dictionary into a Syne Tune search space.
 
     Reverse of :func:`config_space_to_json_dict`.
@@ -1267,7 +1268,7 @@ class Quantized(Sampler):
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[dict], dict]] = None,
+        spec: Optional[Union[list[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):

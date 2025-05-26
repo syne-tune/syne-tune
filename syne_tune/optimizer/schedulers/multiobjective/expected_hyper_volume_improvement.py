@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import logging
 
 import numpy as np
@@ -68,8 +68,8 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict]] = None,
         num_init_random: int = 3,
         no_fantasizing: bool = False,
         max_num_observations: Optional[int] = 200,
@@ -97,7 +97,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         self.random_state = np.random.RandomState(self.random_seed)
 
     def on_trial_complete(
-        self, trial_id: int, config: Dict[str, Any], metrics: List[float]
+        self, trial_id: int, config: dict[str, Any], metrics: list[float]
     ):
 
         self.trial_observations[trial_id] = metrics
@@ -240,7 +240,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[dict]):
+    def _config_to_feature_matrix(self, configs: list[dict]):
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
@@ -248,14 +248,14 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     def objectives(self):
         return np.array(list(self.trial_observations.values()))
 
-    def _configs_with_results(self) -> List[dict]:
+    def _configs_with_results(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if not trial in self.pending_trials
         ]
 
-    def _configs_pending(self) -> List[dict]:
+    def _configs_pending(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()

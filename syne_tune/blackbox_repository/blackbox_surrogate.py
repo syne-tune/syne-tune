@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Optional, Any
 import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
@@ -104,14 +104,14 @@ class BlackboxSurrogate(Blackbox):
         self,
         X: pd.DataFrame,
         y: pd.DataFrame,
-        configuration_space: Dict[str, Any],
-        objectives_names: List[str],
+        configuration_space: dict[str, Any],
+        objectives_names: list[str],
         fidelity_space: Optional[dict] = None,
         fidelity_values: Optional[np.array] = None,
         surrogate=None,
         predict_curves: bool = False,
         num_seeds: int = 1,
-        fit_differences: Optional[List[str]] = None,
+        fit_differences: Optional[list[str]] = None,
         max_fit_samples: Optional[int] = None,
         name: Optional[str] = None,
     ):
@@ -352,7 +352,7 @@ class BlackboxSurrogate(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
+        configuration: dict[str, Any],
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> ObjectiveFunctionResult:
@@ -419,7 +419,7 @@ class BlackboxSurrogate(Blackbox):
 
     def hyperparameter_objectives_values(
         self, predict_curves: bool = False
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         raise NotImplementedError("This is a surrogate already!")
 
 
@@ -429,7 +429,7 @@ def add_surrogate(
     configuration_space: Optional[dict] = None,
     predict_curves: Optional[bool] = None,
     separate_seeds: bool = False,
-    fit_differences: Optional[List[str]] = None,
+    fit_differences: Optional[list[str]] = None,
 ):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful

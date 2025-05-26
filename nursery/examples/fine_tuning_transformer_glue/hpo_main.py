@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
 from benchmarking.benchmark_definitions import (
@@ -30,7 +30,7 @@ extra_args = [
 ]
 
 
-def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: dict[str, Any]) -> dict[str, Any]:
     # We need to change ``method_kwargs.config_space``, based on ``extra_args``
     new_method_kwargs = method_kwargs.copy()
     new_config_space = new_method_kwargs["config_space"].copy()

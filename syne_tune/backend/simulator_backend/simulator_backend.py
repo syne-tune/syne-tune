@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import timedelta
 import copy
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 from dataclasses import dataclass
 import subprocess
 
@@ -156,7 +156,7 @@ class SimulatorBackend(LocalBackend):
         logger.debug(msg)
 
     def start_trial(
-        self, config: Dict, checkpoint_trial_id: Optional[int] = None
+        self, config: dict, checkpoint_trial_id: Optional[int] = None
     ) -> Trial:
         # Overwritten to record the correct ``creation_time``
         trial_id = self.new_trial_id()
@@ -314,7 +314,7 @@ class SimulatorBackend(LocalBackend):
         self._time_keeper.advance(self._time_keeper.real_time_since_last_recent_exit())
 
     def fetch_status_results(
-        self, trial_ids: List[int]
+        self, trial_ids: list[int]
     ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         self._advance_by_outside_time()
         # Process all events in the past
@@ -370,7 +370,7 @@ class SimulatorBackend(LocalBackend):
         self._time_keeper.mark_exit()
         return trial_status_dict, results
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         """
         This is called by :meth:`start_trial` or :meth:`resume_trial`. We register a start
         event here. ``config`` can be ignored, it will be in
@@ -394,7 +394,7 @@ class SimulatorBackend(LocalBackend):
         logger.debug(f"Simulated time since start: {_time_start:.2f} secs")
         self._time_keeper.mark_exit()
 
-    def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+    def _all_trial_results(self, trial_ids: list[int]) -> list[TrialResult]:
         """
         Note: Since this is not used anymore in :meth:`fetch_results`, it can
         simply just return all registered trials which already have some
@@ -455,7 +455,7 @@ class SimulatorBackend(LocalBackend):
 
     def _run_job_and_collect_results(
         self, trial_id: int, config: Optional[dict] = None
-    ) -> (str, List[dict]):
+    ) -> (str, list[dict]):
         """
         Runs training evaluation script for trial ``trial_id``, using the config
         ``trial(trial_id).config``. This is a blocking call, we wait for the
@@ -506,6 +506,6 @@ class SimulatorBackend(LocalBackend):
         results = all_results[num_already_before:]
         return status, results
 
-    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def busy_trial_ids(self) -> list[tuple[int, str]]:
         self._process_events_until_now()
         return [(trial_id, Status.in_progress) for trial_id in self._busy_trial_ids]

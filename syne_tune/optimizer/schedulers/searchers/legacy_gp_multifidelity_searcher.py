@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.legacy_gp_searcher_factory import (
@@ -125,9 +125,9 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -176,12 +176,12 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         return self.config_space_ext.get(config, resource)
 
     def _metric_val_update(
-        self, crit_val: float, result: Dict[str, Any]
+        self, crit_val: float, result: dict[str, Any]
     ) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
-    def _trial_id_string(self, trial_id: str, result: Dict[str, Any]):
+    def _trial_id_string(self, trial_id: str, result: dict[str, Any]):
         """
         For multi-fidelity, we also want to output the resource level
         """
@@ -234,7 +234,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                     f"Score values computed at target_resource = {target_resource}"
                 )
 
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _postprocess_config(self, config: dict[str, Any]) -> dict[str, Any]:
         # If ``config`` is normal (not extended), nothing is removed
         return self.config_space_ext.remove_resource(config)
 

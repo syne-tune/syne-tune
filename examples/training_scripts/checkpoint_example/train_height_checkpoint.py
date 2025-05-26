@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 import json
 from pathlib import Path
 import os
@@ -25,7 +25,7 @@ METRIC_MODE = "min"
 MAX_RESOURCE_ATTR = "steps"
 
 
-def load_checkpoint(checkpoint_path: Path) -> Dict[str, Any]:
+def load_checkpoint(checkpoint_path: Path) -> dict[str, Any]:
     with open(checkpoint_path, "r") as f:
         return json.load(f)
 
@@ -62,7 +62,7 @@ def train_height_delta(step: int, width: float, height: float, value: float) -> 
 
 def height_config_space(
     max_steps: int, sleep_time: Optional[float] = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     kwargs = {"sleep_time": sleep_time} if sleep_time is not None else dict()
     return {
         MAX_RESOURCE_ATTR: max_steps,

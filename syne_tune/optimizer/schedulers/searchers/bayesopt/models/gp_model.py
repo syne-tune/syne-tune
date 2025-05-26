@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 import numpy as np
 import logging
 
@@ -85,7 +85,7 @@ class GaussProcPredictor(BasePredictor):
         self,
         state: TuningJobState,
         gpmodel: GPModel,
-        fantasy_samples: List[FantasizedPendingEvaluation],
+        fantasy_samples: list[FantasizedPendingEvaluation],
         active_metric: str = None,
         normalize_mean: float = 0.0,
         normalize_std: float = 1.0,
@@ -105,7 +105,7 @@ class GaussProcPredictor(BasePredictor):
         else:
             return super().hp_ranges_for_prediction()
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         predictions_list = []
         for post_mean, post_variance in self._gpmodel.predict(inputs):
             assert post_mean.shape[0] == inputs.shape[0], (
@@ -123,8 +123,8 @@ class GaussProcPredictor(BasePredictor):
         return predictions_list
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         poster_states = self.posterior_states
         assert (
             poster_states is not None
@@ -148,7 +148,7 @@ class GaussProcPredictor(BasePredictor):
         return isinstance(self._gpmodel, GPRegressionMCMC)
 
     @property
-    def posterior_states(self) -> Optional[List[PosteriorState]]:
+    def posterior_states(self) -> Optional[list[PosteriorState]]:
         return self._gpmodel.states
 
     def _current_best_filter_candidates(self, candidates):

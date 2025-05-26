@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 import pytest
 
@@ -59,7 +58,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import
 #
 # In fact, if EI is optimized starting at a point outside [0, 0.1]^2, the optimizer
 # returns with the starting point, and test_optimization_improves fails.
-def default_models(do_mcmc=True) -> List[GaussProcPredictor]:
+def default_models(do_mcmc=True) -> list[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]

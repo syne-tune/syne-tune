@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import List, Dict, Callable, Optional, Union, Any, Tuple
+from typing import Optional, Union, Any
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -35,7 +36,7 @@ class ExperimentResult:
 
     name: str
     results: pd.DataFrame
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     tuner: Tuner
     path: Path
 
@@ -53,7 +54,7 @@ class ExperimentResult:
 
     def plot_hypervolume(
         self,
-        metrics_to_plot: Union[List[int], List[str]] = None,
+        metrics_to_plot: Union[list[int], list[str]] = None,
         reference_point: np.ndarray = None,
         figure_path: str = None,
         **plt_kwargs,
@@ -176,16 +177,16 @@ class ExperimentResult:
         else:
             fig.show()
 
-    def metric_mode(self) -> Union[str, List[str]]:
+    def metric_mode(self) -> Union[str, list[str]]:
         return self.metadata["metric_mode"]
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self.metadata["metric_names"]
 
     def entrypoint_name(self) -> str:
         return self.metadata["entrypoint"]
 
-    def best_config(self, metric: Union[str, int] = 0) -> Dict[str, Any]:
+    def best_config(self, metric: Union[str, int] = 0) -> dict[str, Any]:
         """
         Return the best config found for the specified metric
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
@@ -204,7 +205,7 @@ class ExperimentResult:
         # Don't include internal fields
         return {k: v for k, v in res.items() if not k.startswith("st_")}
 
-    def _metric_name_mode(self, metric: Union[str, int]) -> Tuple[str, str]:
+    def _metric_name_mode(self, metric: Union[str, int]) -> tuple[str, str]:
         """
         Determine the name and its mode given ambiguous input.
         :param metric: Index or name of the selected metric
@@ -284,7 +285,7 @@ def _impute_filter(filt: Optional[PathOrExperimentFilter]) -> PathOrExperimentFi
 
 def get_metadata(
     path_filter: Optional[PathFilter] = None, root: Path = experiment_path()
-) -> Dict[str, dict]:
+) -> dict[str, dict]:
     """Load meta-data for a number of experiments
 
     :param path_filter: If passed then only experiments whose path matching
@@ -321,7 +322,7 @@ def list_experiments(
     experiment_filter: Optional[ExperimentFilter] = None,
     root: Path = experiment_path(),
     load_tuner: bool = False,
-) -> List[ExperimentResult]:
+) -> list[ExperimentResult]:
     """List experiments for which results are found
 
     :param path_filter: If passed then only experiments whose path matching
@@ -398,7 +399,7 @@ def load_experiments_df(
         df = experiment.results
         df["tuner_name"] = experiment.name
         for k, v in experiment.metadata.items():
-            if isinstance(v, List):
+            if isinstance(v, list):
                 if len(v) > 1:
                     for i, x in enumerate(v):
                         df[f"{k}-{i}"] = x

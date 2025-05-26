@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.legacy_baselines import BoTorch
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -168,9 +168,9 @@ class WarmStartBayesianOptimization(BoTorch):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[Any, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[Any, LegacyTransferLearningTaskEvaluations],
         num_warm_points: int,
         points_to_evaluate=[],
         sort_by_task_id=None,

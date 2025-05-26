@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 import pytest
 
@@ -42,7 +41,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import
 COST_METRIC_NAME = "cost_metric"
 
 
-def default_models(metric, do_mcmc=True) -> List[GaussProcPredictor]:
+def default_models(metric, do_mcmc=True) -> list[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]

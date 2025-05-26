@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Optional
 import logging
 
 from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
@@ -35,19 +35,19 @@ class RayTuneScheduler(TrialScheduler):
 
     class RandomSearch(RT_Searcher):
         def __init__(
-            self, config_space: Dict, points_to_evaluate: List[Dict], mode: str
+            self, config_space: dict, points_to_evaluate: list[dict], mode: str
         ):
             super().__init__(mode=mode)
             self.config_space = config_space
             self._points_to_evaluate = points_to_evaluate
 
-        def _next_initial_config(self) -> Optional[Dict]:
+        def _next_initial_config(self) -> Optional[dict]:
             if self._points_to_evaluate:
                 return self._points_to_evaluate.pop(0)
             else:
                 return None  # No more initial configs
 
-        def suggest(self, trial_id: str) -> Optional[Dict]:
+        def suggest(self, trial_id: str) -> Optional[dict]:
             config = self._next_initial_config()
             if config is None:
                 config = {
@@ -57,16 +57,16 @@ class RayTuneScheduler(TrialScheduler):
             return config
 
         def on_trial_complete(
-            self, trial_id: str, result: Optional[Dict] = None, error: bool = False
+            self, trial_id: str, result: Optional[dict] = None, error: bool = False
         ):
             pass
 
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         ray_scheduler=None,
         ray_searcher: Optional[RT_Searcher] = None,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
     ):
         super().__init__(config_space)
         if ray_scheduler is None:
@@ -114,21 +114,21 @@ class RayTuneScheduler(TrialScheduler):
             trial=trial,
         )
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         self._check_valid_result(result=result)
         self.searcher.on_trial_result(trial_id=str(trial.trial_id), result=result)
         return self.scheduler.on_trial_result(
             trial_runner=self.trial_runner_wrapper, trial=trial, result=result
         )
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def on_trial_complete(self, trial: Trial, result: dict):
         self._check_valid_result(result=result)
         self.searcher.on_trial_complete(trial_id=str(trial.trial_id), result=result)
         self.scheduler.on_trial_complete(
             trial_runner=self.trial_runner_wrapper, trial=trial, result=result
         )
 
-    def _check_valid_result(self, result: Dict):
+    def _check_valid_result(self, result: dict):
         for m in self.metric_names():
             assert m in result, (
                 f"metric {m} is not present in reported results {result},"
@@ -145,7 +145,7 @@ class RayTuneScheduler(TrialScheduler):
         config = self.searcher.suggest(trial_id=str(trial_id))
         return TrialSuggestion.start_suggestion(config)
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.scheduler.metric]
 
     def metric_mode(self) -> str:

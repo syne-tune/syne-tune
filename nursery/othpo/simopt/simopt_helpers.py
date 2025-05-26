@@ -1,6 +1,5 @@
 from simopt.base import Problem
 import numpy as np
-from typing import List
 
 
 def evaluate_problem_price(prob: Problem, xx, rand_gen, reps: int = 1):
@@ -39,7 +38,7 @@ def evaluate_problem_price(prob: Problem, xx, rand_gen, reps: int = 1):
 def plot_problem(
     ax,
     ii: int,
-    results: List[float],
+    results: list[float],
     task_num: int,
     N: int,
     num_cols: int,

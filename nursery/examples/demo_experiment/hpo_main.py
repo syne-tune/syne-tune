@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Any
 
 from baselines import methods
 from benchmark_definitions import benchmark_definitions
@@ -17,7 +17,7 @@ class RungLevelsExtraResults(ExtraResultsComposer):
     information normally not recorded and stored.
     """
 
-    def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner: Tuner) -> Optional[dict[str, Any]]:
         if not isinstance(tuner.scheduler, LegacyHyperbandScheduler):
             return None
         rung_information = tuner.scheduler.terminator.information_for_rungs()
@@ -27,7 +27,7 @@ class RungLevelsExtraResults(ExtraResultsComposer):
             if resource in RESOURCE_LEVELS
         }
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         return [f"num_at_level{r}" for r in RESOURCE_LEVELS]
 
 

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
@@ -104,7 +104,7 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     :type searcher_data: str, optional
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
@@ -206,7 +206,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type support_pause_resume: bool, optional
     """
 
-    def __init__(self, config_space: Dict[str, Any], **kwargs):
+    def __init__(self, config_space: dict[str, Any], **kwargs):
         TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(

@@ -1,4 +1,5 @@
-from typing import Callable, Tuple, List, Optional, Dict, Any
+from typing import Optional, Any
+from collections.abc import Callable
 from dataclasses import dataclass
 import numpy as np
 
@@ -66,7 +67,7 @@ class HyperTuneModelMixin:
         """
         return self._bracket_distribution
 
-    def hypertune_ensemble_distribution(self) -> Optional[Dict[int, float]]:
+    def hypertune_ensemble_distribution(self) -> Optional[dict[int, float]]:
         """
         Distribution [theta_r] which is used to create an ensemble predictive
         distribution fed into the acquisition function.
@@ -78,10 +79,10 @@ class HyperTuneModelMixin:
     def fit_distributions(
         self,
         poster_state: PerResourcePosteriorState,
-        data: Dict[str, Any],
-        resource_attr_range: Tuple[int, int],
+        data: dict[str, Any],
+        resource_attr_range: tuple[int, int],
         random_state: np.random.RandomState,
-    ) -> Optional[Dict[int, float]]:
+    ) -> Optional[dict[int, float]]:
         ensemble_distribution = None
         args = self.hypertune_distribution_args
         (
@@ -159,7 +160,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         self,
         kernel: KernelFunction,
         mean_factory: Callable[[int], MeanFunction],
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
         target_transform: Optional[ScalarTargetTransform] = None,
         separate_noise_variances: bool = False,
@@ -186,7 +187,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
             self, hypertune_distribution_args=hypertune_distribution_args
         )
 
-    def create_likelihood(self, rung_levels: List[int]):
+    def create_likelihood(self, rung_levels: list[int]):
         """
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.
@@ -206,13 +207,13 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         )
         self.reset_params()
 
-    def hypertune_ensemble_distribution(self) -> Optional[Dict[int, float]]:
+    def hypertune_ensemble_distribution(self) -> Optional[dict[int, float]]:
         if self._likelihood is not None:
             return self._likelihood.ensemble_distribution
         else:
             return None
 
-    def fit(self, data: Dict[str, Any]):
+    def fit(self, data: dict[str, Any]):
         super().fit(data)
         poster_state: IndependentGPPerResourcePosteriorState = self.states[0]
         ensemble_distribution = self.fit_distributions(
@@ -244,7 +245,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
     def __init__(
         self,
         kernel: KernelFunction,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
         mean: Optional[MeanFunction] = None,
         target_transform: Optional[ScalarTargetTransform] = None,
@@ -278,7 +279,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         self._likelihood = None
         self._rung_levels = None
 
-    def create_likelihood(self, rung_levels: List[int]):
+    def create_likelihood(self, rung_levels: list[int]):
         """
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.
@@ -297,13 +298,13 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         )
         self.reset_params()
 
-    def hypertune_ensemble_distribution(self) -> Optional[Dict[int, float]]:
+    def hypertune_ensemble_distribution(self) -> Optional[dict[int, float]]:
         if self._likelihood is not None:
             return self._likelihood.ensemble_distribution
         else:
             return None
 
-    def fit(self, data: Dict[str, Any]):
+    def fit(self, data: dict[str, Any]):
         super().fit(data)
         resource_attr_range = self._likelihood_kwargs["resource_attr_range"]
         poster_state = GaussProcPosteriorStateAndRungLevels(

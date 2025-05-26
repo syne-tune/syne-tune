@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 import logging
 
 from baselines import methods
@@ -6,7 +6,7 @@ from benchmark_definitions import benchmark_definitions
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     # The setup is the algorithm. No filtering
     return metadata["algorithm"]
 
@@ -14,7 +14,7 @@ def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
 SETUPS_RIGHT = ("ASHA", "SYNCHB", "BOHB")
 
 
-def metadata_to_subplot(metadata: Dict[str, Any]) -> Optional[int]:
+def metadata_to_subplot(metadata: dict[str, Any]) -> Optional[int]:
     return int(metadata["algorithm"] in SETUPS_RIGHT)
 
 

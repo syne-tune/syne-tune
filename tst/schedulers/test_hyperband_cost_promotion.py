@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from datetime import datetime
 
 from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
@@ -11,7 +11,7 @@ def _make_result(epoch, metric, cost):
     return dict(epoch=epoch, metric=metric, cost=cost)
 
 
-def _new_trial(trial_id: int, config: Dict[str, Any]):
+def _new_trial(trial_id: int, config: dict[str, Any]):
     return Trial(trial_id=trial_id, config=config, creation_time=datetime.now())
 
 

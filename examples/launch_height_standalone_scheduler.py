@@ -3,7 +3,7 @@ Example showing how to implement a new Scheduler.
 """
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional,Any
 
 import numpy as np
 
@@ -26,7 +26,7 @@ from examples.training_scripts.height_example.train_height import (
 
 class SimpleScheduler(LegacyTrialScheduler):
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, mode: Optional[str] = None
+        self, config_space: dict[str, Any], metric: str, mode: Optional[str] = None
     ):
         super(SimpleScheduler, self).__init__(config_space=config_space)
         self.metric = metric
@@ -42,7 +42,7 @@ class SimpleScheduler(LegacyTrialScheduler):
         }
         return TrialSuggestion.start_suggestion(config)
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         # Given a new result, we decide whether the trial should stop or continue.
         # In this case, we implement a naive strategy that stops if the result is worse than 80% of previous results.
         # This is a naive strategy as we do not account for the fact that trial improves with more steps.
@@ -66,7 +66,7 @@ class SimpleScheduler(LegacyTrialScheduler):
             )
             return SchedulerDecision.STOP
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
 

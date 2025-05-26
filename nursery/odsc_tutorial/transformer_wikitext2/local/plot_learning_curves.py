@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 import logging
 
 from transformer_wikitext2.baselines import methods
@@ -14,7 +14,7 @@ from syne_tune.experiments import (
 SETUPS = list(methods.keys())
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     return metadata["algorithm"]
 
 

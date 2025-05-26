@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, Any
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -70,9 +70,9 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
@@ -239,13 +239,13 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def _to_objective(self, result: Dict[str, Any]) -> float:
+    def _to_objective(self, result: dict[str, Any]) -> float:
         if self._mode == "min":
             return result[self._metric]
         else:
             return -result[self._metric]
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         self.X.append(self._to_feature(config=config))
         self.y.append(self._to_objective(result))
         if self._debug_log is not None:
@@ -257,7 +257,7 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def _get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def _get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         suggestion = self._next_initial_config()
         if suggestion is None:
             if self.y:
@@ -343,7 +343,7 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
         return suggestion
 
     def _check_data_shape_and_good_size(
-        self, data_shape: Tuple[int, int]
+        self, data_shape: tuple[int, int]
     ) -> Optional[int]:
         """
         Determine size of data for "good" model (the rest of the data is for the
@@ -365,7 +365,7 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
 
     def _train_kde(
         self, train_data: np.ndarray, train_targets: np.ndarray
-    ) -> Optional[Tuple[Any, Any]]:
+    ) -> Optional[tuple[Any, Any]]:
         train_data = train_data.reshape((train_targets.size, -1))
         n_good = self._check_data_shape_and_good_size(train_data.shape)
         if n_good is None:
@@ -388,5 +388,5 @@ class LegacyKernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
 
         return bad_kde, good_kde
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError

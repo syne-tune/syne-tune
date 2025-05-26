@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any, Tuple
+from typing import Optional, Any
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
@@ -86,7 +86,7 @@ def subsample(
     y: np.array,
     max_samples: Optional[int] = 10000,
     random_state: np.random.RandomState = None,
-) -> Tuple[pd.DataFrame, np.array]:
+) -> tuple[pd.DataFrame, np.array]:
     """
     Subsample both X and y with `max_samples` elements. If `max_samples` is not set then X and y are returned as such
     and if it is set, the index of X is reset.
@@ -134,9 +134,9 @@ class LegacyQuantileBasedSurrogateSearcher(StochasticSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         mode: Optional[str] = None,
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
@@ -171,10 +171,10 @@ class LegacyQuantileBasedSurrogateSearcher(StochasticSearcher):
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         pass
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError
 
     def get_config(self, **kwargs) -> Optional[dict]:

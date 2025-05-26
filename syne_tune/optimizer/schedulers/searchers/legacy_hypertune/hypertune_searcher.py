@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
@@ -84,7 +84,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
         """
         return self.hp_ranges
 
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _postprocess_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Different to :class:`GPMultiFidelitySearcher`, we need non-extended
         configs here.

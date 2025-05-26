@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Any, List, Union
+from typing import Optional, Any, Union
 import logging
 import copy
 from functools import partial
@@ -46,7 +46,7 @@ def _random_seed_from_generator(random_seed: int) -> int:
     return RandomSeedGenerator(random_seed)()
 
 
-def _assert_searcher_must_be(kwargs: Dict[str, Any], name: str):
+def _assert_searcher_must_be(kwargs: dict[str, Any], name: str):
     searcher = kwargs.get("searcher")
     assert searcher is None or searcher == name, f"Must have searcher='{name}'"
 
@@ -63,7 +63,7 @@ class RandomSearch(LegacyFIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
+    def __init__(self, config_space: dict[str, Any], metric: str, **kwargs):
         searcher_name = "random"
         _assert_searcher_must_be(kwargs, searcher_name)
         super(RandomSearch, self).__init__(
@@ -86,7 +86,7 @@ class GridSearch(LegacyFIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
+    def __init__(self, config_space: dict[str, Any], metric: str, **kwargs):
         searcher_name = "grid"
         _assert_searcher_must_be(kwargs, searcher_name)
         super(GridSearch, self).__init__(
@@ -109,7 +109,7 @@ class BayesianOptimization(LegacyFIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
+    def __init__(self, config_space: dict[str, Any], metric: str, **kwargs):
         searcher_name = "bayesopt"
         _assert_searcher_must_be(kwargs, searcher_name)
         super(BayesianOptimization, self).__init__(
@@ -120,7 +120,7 @@ class BayesianOptimization(LegacyFIFOScheduler):
         )
 
 
-def _assert_need_one(kwargs: Dict[str, Any], need_one: Optional[set] = None):
+def _assert_need_one(kwargs: dict[str, Any], need_one: Optional[set] = None):
     if need_one is None:
         need_one = {"max_t", "max_resource_attr"}
     assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
@@ -142,7 +142,7 @@ class ASHA(LegacyHyperbandScheduler):
     """
 
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+        self, config_space: dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
         _assert_need_one(kwargs)
         searcher_name = "random"
@@ -183,7 +183,7 @@ class MOBSTER(LegacyHyperbandScheduler):
     """
 
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+        self, config_space: dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
         _assert_need_one(kwargs)
         searcher_name = "bayesopt"
@@ -230,7 +230,7 @@ class HyperTune(LegacyHyperbandScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
-    def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         _assert_need_one(kwargs)
         searcher_name = "legacy_hypertune"
         _assert_searcher_must_be(kwargs, searcher_name)
@@ -314,7 +314,7 @@ class DyHPO(LegacyHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         probability_sh: Optional[float] = None,
@@ -364,7 +364,7 @@ class PASHA(LegacyHyperbandScheduler):
     """
 
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+        self, config_space: dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
         _assert_need_one(kwargs)
         super(PASHA, self).__init__(
@@ -400,7 +400,7 @@ class BOHB(LegacyHyperbandScheduler):
     """
 
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+        self, config_space: dict[str, Any], metric: str, resource_attr: str, **kwargs
     ):
         _assert_need_one(kwargs)
         searcher_name = "kde"
@@ -432,7 +432,7 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -469,7 +469,7 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -503,7 +503,7 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -544,7 +544,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -566,11 +566,11 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 
 def _create_searcher_kwargs(
-    config_space: Dict[str, Any],
-    metric: Union[str, List[str]],
+    config_space: dict[str, Any],
+    metric: Union[str, list[str]],
     random_seed: Optional[int],
-    kwargs: Dict[str, Any],
-) -> Dict[str, Any]:
+    kwargs: dict[str, Any],
+) -> dict[str, Any]:
     searcher_kwargs = dict(
         config_space=config_space,
         metric=metric,
@@ -598,7 +598,7 @@ class BORE(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -638,7 +638,7 @@ class ASHABORE(LegacyHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         random_seed: Optional[int] = None,
@@ -681,7 +681,7 @@ class BoTorch(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -726,7 +726,7 @@ class REA(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         population_size: int = 100,
         sample_size: int = 10,
@@ -748,10 +748,10 @@ class REA(LegacyFIFOScheduler):
 
 
 def create_gaussian_process_estimator(
-    config_space: Dict[str, Any],
+    config_space: dict[str, Any],
     metric: str,
     random_seed: Optional[int] = None,
-    search_options: Optional[Dict[str, Any]] = None,
+    search_options: Optional[dict[str, Any]] = None,
 ) -> Estimator:
     scheduler = BayesianOptimization(
         config_space=config_space,
@@ -794,11 +794,11 @@ class MORandomScalarizationBayesOpt(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str] = "min",
         random_seed: Optional[int] = None,
-        estimators: Optional[Dict[str, Estimator]] = None,
+        estimators: Optional[dict[str, Estimator]] = None,
         **kwargs,
     ):
         try:
@@ -867,9 +867,9 @@ class NSGA2(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str] = "min",
         population_size: int = 20,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -910,9 +910,9 @@ class MOREA(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str] = "min",
         population_size: int = 100,
         sample_size: int = 10,
         random_seed: Optional[int] = None,
@@ -952,9 +952,9 @@ class MOLinearScalarizationBayesOpt(LegacyLinearScalarizedScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        scalarization_weights: Optional[List[float]] = None,
+        config_space: dict[str, Any],
+        metric: list[str],
+        scalarization_weights: Optional[list[float]] = None,
         **kwargs,
     ):
         searcher_name = "bayesopt"
@@ -982,7 +982,7 @@ class ConstrainedBayesianOptimization(LegacyFIFOScheduler):
     """
 
     def __init__(
-        self, config_space: Dict[str, Any], metric: str, constraint_attr: str, **kwargs
+        self, config_space: dict[str, Any], metric: str, constraint_attr: str, **kwargs
     ):
         searcher_name = "bayesopt_constrained"
         _assert_searcher_must_be(kwargs, searcher_name)
@@ -1025,8 +1025,8 @@ class ZeroShotTransfer(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
@@ -1089,10 +1089,10 @@ class ASHACTS(LegacyHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str = "min",
         random_seed: Optional[int] = None,
         **kwargs,
@@ -1139,7 +1139,7 @@ class KDE(LegacyFIFOScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
+    def __init__(self, config_space: dict[str, Any], metric: str, **kwargs):
         searcher_name = "kde"
         _assert_searcher_must_be(kwargs, searcher_name)
         super(KDE, self).__init__(
@@ -1162,7 +1162,7 @@ class CQR(LegacyFIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         mode: str = "min",
         random_seed: Optional[int] = None,
@@ -1201,7 +1201,7 @@ class ASHACQR(LegacyHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         mode: str = "min",
@@ -1240,7 +1240,7 @@ try:
 
         def __init__(
             self,
-            config_space: Dict[str, Any],
+            config_space: dict[str, Any],
             metric: str,
             mode: str = "min",
             points_to_evaluate: Optional[list] = None,
@@ -1293,9 +1293,9 @@ try:
 
         def __init__(
             self,
-            config_space: Dict[str, Any],
-            metric: List[str],
-            mode: Union[List[str], str] = "min",
+            config_space: dict[str, Any],
+            metric: list[str],
+            mode: Union[list[str], str] = "min",
             random_seed: Optional[int] = None,
             **kwargs,
         ):

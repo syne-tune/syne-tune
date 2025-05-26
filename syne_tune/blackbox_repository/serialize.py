@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 import json
 
 from syne_tune.config_space import (
@@ -10,7 +10,7 @@ from syne_tune.util import dump_json_with_numpy
 
 
 def serialize_configspace(
-    path: str, configuration_space: Dict, fidelity_space: Optional[Dict] = None
+    path: str, configuration_space: dict, fidelity_space: Optional[dict] = None
 ):
     path = Path(path)
     dump_json_with_numpy(

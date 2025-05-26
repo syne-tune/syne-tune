@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.legacy_model_based_searcher import (
@@ -242,9 +242,9 @@ class GPFIFOSearcher(BayesianOptimizationSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):

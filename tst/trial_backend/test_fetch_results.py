@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Any
+from typing import Optional, Any
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -17,7 +17,7 @@ class DeterministicBackend(TrialBackend):
         self.timestamp = 0
 
     def generate_event(
-        self, trial_id: int, metrics: List[Dict], status: Optional[str] = None
+        self, trial_id: int, metrics: list[dict], status: Optional[str] = None
     ):
         for m in metrics:
             m[ST_WORKER_TIMESTAMP] = self.timestamp
@@ -37,25 +37,25 @@ class DeterministicBackend(TrialBackend):
                 training_end_time=None,
             )
 
-    def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+    def _all_trial_results(self, trial_ids: list[int]) -> list[TrialResult]:
         return [self.trialid_to_results[trial_id] for trial_id in trial_ids]
 
     def _resume_trial(self, trial_id: int):
         pass
 
-    def _pause_trial(self, trial_id: int, result: Dict[str, Any]):
+    def _pause_trial(self, trial_id: int, result: dict[str, Any]):
         pass
 
-    def _stop_trial(self, trial_id: int, result: Dict[str, Any]):
+    def _stop_trial(self, trial_id: int, result: dict[str, Any]):
         pass
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         pass
 
-    def stdout(self, trial_id: int) -> List[str]:
+    def stdout(self, trial_id: int) -> list[str]:
         return []
 
-    def stderr(self, trial_id: int) -> List[str]:
+    def stderr(self, trial_id: int) -> list[str]:
         return []
 
 

@@ -2,7 +2,7 @@ import copy
 import logging
 
 from collections import deque
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Any, Union
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PopulationElement:
-    result: Dict[str, Any] = None
+    result: dict[str, Any] = None
     score: int = 0
-    config: Dict[str, Any] = None
+    config: dict[str, Any] = None
 
 
 class LegacyRegularizedEvolution(StochasticSearcher):
@@ -49,8 +49,8 @@ class LegacyRegularizedEvolution(StochasticSearcher):
     def __init__(
         self,
         config_space,
-        metric: Union[List[str], str],
-        points_to_evaluate: Optional[List[dict]] = None,
+        metric: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict]] = None,
         population_size: int = 100,
         sample_size: int = 10,
         **kwargs,
@@ -79,7 +79,7 @@ class LegacyRegularizedEvolution(StochasticSearcher):
             if isinstance(domain, Domain) and len(domain) != 1
         ]
 
-    def _mutate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _mutate_config(self, config: dict[str, Any]) -> dict[str, Any]:
         child_config = copy.deepcopy(config)
         config_ms = self._hp_ranges.config_to_match_string(config)
         # Sample mutation until a different configuration is found
@@ -104,7 +104,7 @@ class LegacyRegularizedEvolution(StochasticSearcher):
 
         return child_config
 
-    def _sample_random_config(self) -> Dict[str, Any]:
+    def _sample_random_config(self) -> dict[str, Any]:
         return sample_random_configuration(self._hp_ranges, self.random_state)
 
     def get_config(self, **kwargs) -> Optional[dict]:
@@ -124,7 +124,7 @@ class LegacyRegularizedEvolution(StochasticSearcher):
 
         return config
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         score = result[self._metric]
 
         if self._mode == "max":
@@ -148,5 +148,5 @@ class LegacyRegularizedEvolution(StochasticSearcher):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError

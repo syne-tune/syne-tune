@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, Callable, Optional, Any
+from typing import Optional, Any
+from collections.abc import Callable
 
 import pandas as pd
 
@@ -67,9 +68,9 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
     def __init__(
         self,
         scheduler_fun: Callable[[dict, str, str], LegacyTrialScheduler],
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         mode: Optional[str] = None,
         num_hyperparameters_per_task: int = 1,
     ):
@@ -96,12 +97,12 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
 
     def _compute_box(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str,
         num_hyperparameters_per_task: int,
         metric: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
@@ -143,7 +144,7 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
     def on_trial_add(self, trial: Trial):
         self.scheduler.on_trial_add(trial)
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         self.scheduler.on_trial_complete(trial, result)
 
     def on_trial_remove(self, trial: Trial):
@@ -152,7 +153,7 @@ class LegacyBoundingBox(LegacyTransferLearningMixin, LegacyTrialScheduler):
     def on_trial_error(self, trial: Trial):
         self.scheduler.on_trial_error(trial)
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         return self.scheduler.on_trial_result(trial, result)
 
     def metric_mode(self) -> str:

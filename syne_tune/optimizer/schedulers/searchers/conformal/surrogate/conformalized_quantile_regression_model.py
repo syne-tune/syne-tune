@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, List, Dict
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -32,11 +32,11 @@ class ConformalQuantileCorrection:
 
 
 class ConformalizedGradientBoostingQuantileRegressor(GradientBoostingQuantileRegressor):
-    conformal_correction: Dict[float, ConformalQuantileCorrection] = None
+    conformal_correction: dict[float, ConformalQuantileCorrection] = None
 
     def __init__(
         self,
-        quantiles: Union[int, List[float]] = 9,
+        quantiles: Union[int, list[float]] = 9,
         valid_fraction: float = 0.10,
         verbose: bool = False,
         **kwargs

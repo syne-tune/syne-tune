@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -80,7 +80,7 @@ plot_range = {
 
 def generate_df_dict(
     tag=None, date_min=None, date_max=None, methods_to_show=None
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
         if methods_to_show is not None and not metadata["algorithm"] in methods_to_show:
@@ -161,7 +161,7 @@ def plot_result_benchmark(
     df_task,
     title: str,
     show_seeds: bool = False,
-    method_styles: Optional[Dict] = None,
+    method_styles: Optional[dict] = None,
     ax=None,
     methods_to_show: list = None,
 ):
@@ -253,7 +253,7 @@ def plot_result_benchmark(
 
 def plot_results(
     benchmarks_to_df,
-    method_styles: Optional[Dict] = None,
+    method_styles: Optional[dict] = None,
     prefix: str = "",
     title: str = None,
     ax=None,
@@ -350,7 +350,7 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
     return methods_to_show, np.stack(benchmark_results)
 
 
-def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
+def print_rank_table(benchmarks_to_df, methods_to_show: Optional[list[str]]):
     from sklearn.preprocessing import QuantileTransformer
     from benchmarking.nursery.benchmark_automl.results_analysis.utils import (
         compute_best_value_over_time,
@@ -407,7 +407,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
 
 
 def load_and_cache(
-    experiment_tag: Union[str, List[str]],
+    experiment_tag: Union[str, list[str]],
     load_cache_if_exists: bool = True,
     methods_to_show=None,
 ):

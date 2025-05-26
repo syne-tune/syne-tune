@@ -1,4 +1,5 @@
-from typing import List, Tuple, Iterator, Optional
+from typing import Optional
+from collections.abc import Iterator
 import logging
 from dataclasses import dataclass
 import numpy as np
@@ -102,7 +103,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     # model changes are managed by ``pending_candidate_state_transformer``. The
     # model has to be passed to both ``initial_candidates_scorer`` and
     # ``local_optimizer``.
-    def next_candidates(self) -> List[Configuration]:
+    def next_candidates(self) -> list[Configuration]:
         if self.greedy_batch_selection:
             # Select batch greedily, one candidate at a time, updating the
             # model in between
@@ -265,7 +266,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
 
 
 def _order_candidates(
-    candidates: List[Configuration],
+    candidates: list[Configuration],
     scoring_function: ScoringFunction,
     predictor: Optional[Predictor],
     with_scores: bool = False,
@@ -282,11 +283,11 @@ def _order_candidates(
 
 
 def _lazily_locally_optimize(
-    candidates: List[Configuration],
+    candidates: list[Configuration],
     local_optimizer: LocalOptimizer,
     hp_ranges: HyperparameterRanges,
     predictor: Optional[Predictor],
-) -> Iterator[Tuple[Configuration, Configuration]]:
+) -> Iterator[tuple[Configuration, Configuration]]:
     """
     Due to local deduplication we do not know in advance how many candidates
     we have to locally optimize, hence this helper to create a lazy generator
@@ -305,11 +306,11 @@ def _lazily_locally_optimize(
 # principle arise if ``sample_unique_candidates == False``. This does not work
 # if ``duplicate_detector`` is of type :class:`DuplicateDetectorNoDetection`.
 def _pick_from_locally_optimized(
-    candidates_with_optimization: Iterator[Tuple[Configuration, Configuration]],
+    candidates_with_optimization: Iterator[tuple[Configuration, Configuration]],
     exclusion_candidates: ExclusionList,
     num_candidates: int,
     duplicate_detector: DuplicateDetector,
-) -> List[Configuration]:
+) -> list[Configuration]:
     updated_excludelist = exclusion_candidates.copy()
     result = []
     for original_candidate, optimized_candidate in candidates_with_optimization:

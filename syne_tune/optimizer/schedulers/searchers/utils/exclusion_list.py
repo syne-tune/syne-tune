@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List, Union, Set
+from typing import Optional, Any, Union
 
 from syne_tune.config_space import config_space_size
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
@@ -27,7 +27,7 @@ class ExclusionList:
     def __init__(
         self,
         hp_ranges: HyperparameterRanges,
-        configurations: Optional[Union[List[Configuration], Set[str]]] = None,
+        configurations: Optional[Union[list[Configuration], set[str]]] = None,
     ):
         self.hp_ranges = hp_ranges
         keys = self.hp_ranges.internal_keys
@@ -71,13 +71,13 @@ class ExclusionList:
             self.excl_set
         ) >= self.configspace_size
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             "excl_set": list(self.excl_set),
             "keys": self.keys,
         }
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         self.keys = state["keys"]
         self.excl_set = set(state["excl_set"])
 

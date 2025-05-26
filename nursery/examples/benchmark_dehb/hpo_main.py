@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from baselines import methods
 from benchmark_definitions import benchmark_definitions
@@ -15,7 +15,7 @@ extra_args = [
 ]
 
 
-def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: dict[str, Any]) -> dict[str, Any]:
     if args.num_brackets is not None:
         new_dict = {
             "scheduler_kwargs": {"brackets": args.num_brackets},

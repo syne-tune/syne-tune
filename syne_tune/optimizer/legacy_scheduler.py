@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Any, Union
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import (
@@ -37,7 +37,7 @@ class LegacyTrialScheduler:
     :param config_space: Configuration spoce
     """
 
-    def __init__(self, config_space: Dict[str, Any]):
+    def __init__(self, config_space: dict[str, Any]):
         self.config_space = config_space
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
@@ -81,7 +81,7 @@ class LegacyTrialScheduler:
                 )
         return ret_val
 
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _postprocess_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Post-processes a config as returned by a searcher
 
         * Adding parameters which are constant, therefore do not feature
@@ -96,7 +96,7 @@ class LegacyTrialScheduler:
         new_config.update(cast_config_values(config, config_space=self.config_space))
         return new_config
 
-    def _preprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _preprocess_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Pre-processes a config before passing it to a searcher
 
         * Removing parameters which are constant in ``config_space`` (these do
@@ -143,7 +143,7 @@ class LegacyTrialScheduler:
         """
         pass
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
@@ -157,7 +157,7 @@ class LegacyTrialScheduler:
         """
         return SchedulerDecision.CONTINUE
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Notification for the completion of trial.
 
         Note that :meth:`on_trial_result` is called with the same result before.
@@ -179,15 +179,15 @@ class LegacyTrialScheduler:
         """
         pass
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         """
-        :return: List of metric names. The first one is the target
+        :return: list of metric names. The first one is the target
             metric optimized over, unless the scheduler is a genuine
             multi-objective metric (for example, for sampling the Pareto front)
         """
         raise NotImplementedError()
 
-    def metric_mode(self) -> Union[str, List[str]]:
+    def metric_mode(self) -> Union[str, list[str]]:
         """
         :return: "min" if target metric is minimized, otherwise "max".
             Here, "min" should be the default. For a genuine multi-objective
@@ -198,7 +198,7 @@ class LegacyTrialScheduler:
         else:
             raise NotImplementedError
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

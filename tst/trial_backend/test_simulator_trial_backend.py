@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import math
 import pytest
 
@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
-def _compare_results(res_local: Dict[str, Any], res_simul: Dict[str, Any], num: int):
+def _compare_results(res_local: dict[str, Any], res_simul: dict[str, Any], num: int):
     for key in (ST_TRIAL_ID, ST_DECISION, "epoch", "mean_loss"):
         rloc = res_local[key]
         rsim = res_simul[key]

@@ -2,7 +2,7 @@ import logging
 import numpy as np
 
 from copy import deepcopy
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class BaseSearcher:
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         random_seed: int = None,
     ):
         self.config_space = config_space
@@ -34,7 +34,7 @@ class BaseSearcher:
         else:
             self.random_seed = random_seed
 
-    def _next_points_to_evaluate(self) -> Optional[Dict[str, Any]]:
+    def _next_points_to_evaluate(self) -> Optional[dict[str, Any]]:
         """
         :return: Next entry from remaining ``points_to_evaluate`` (popped
             from front), or None
@@ -44,7 +44,7 @@ class BaseSearcher:
         else:
             return None  # No more initial configs
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> Optional[dict[str, Any]]:
         """Suggest a new configuration.
 
         Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
@@ -63,8 +63,8 @@ class BaseSearcher:
     def on_trial_result(
         self,
         trial_id: int,
-        config: Dict[str, Any],
-        metrics: List[float],
+        config: dict[str, Any],
+        metrics: list[float],
     ):
         """Inform searcher about result
 
@@ -95,8 +95,8 @@ class BaseSearcher:
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
-        metrics: List[float],
+        config: dict[str, Any],
+        metrics: list[float],
     ):
         """Inform searcher about result
 

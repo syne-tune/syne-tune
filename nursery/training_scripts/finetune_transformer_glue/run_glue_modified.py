@@ -8,7 +8,7 @@ import os
 import random
 import sys
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 
 import numpy as np
 import datasets
@@ -188,7 +188,7 @@ class ReportBackMetrics(transformers.trainer_callback.TrainerCallback):
 # [ 3]
 def additional_syne_tune_metrics(
     model, tokenizer, train_dataset, data_args, syne_tune_args
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Additional metrics are total number of trainable model parameters, and
     prediction latency of the model. The latter is estimated by running a

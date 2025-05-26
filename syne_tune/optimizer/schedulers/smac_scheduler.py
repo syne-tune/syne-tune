@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 
 from ConfigSpace import Configuration
 from smac import Scenario, HyperparameterOptimizationFacade
@@ -20,7 +20,7 @@ from syne_tune.config_space import Domain, Integer, is_log_space, Float
 
 
 def to_smac_configspace(
-    config_space: Dict[str, Domain], random_seed: int
+    config_space: dict[str, Domain], random_seed: int
 ) -> CS.ConfigurationSpace:
     cs = CS.ConfigurationSpace(seed=random_seed)
     for hp_name, hp in config_space.items():
@@ -60,7 +60,7 @@ def to_smac_configspace(
 class SMACScheduler(TrialScheduler):
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         do_minimize: Optional[bool] = True,
         points_to_evaluate=None,
@@ -110,7 +110,7 @@ class SMACScheduler(TrialScheduler):
         )
         self.trial_info = {}
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         info = self.trial_info[trial.trial_id]
         cost = result[self.metric]
         if not self.do_minimize:
@@ -145,10 +145,10 @@ class SMACScheduler(TrialScheduler):
         # Avoid serialization issues with swig
         return None
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

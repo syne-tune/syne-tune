@@ -1,4 +1,5 @@
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Any
+from collections.abc import Callable
 
 from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
     HyperbandRemoveCheckpointsCallback,
@@ -10,7 +11,7 @@ from syne_tune.tuner_callback import TunerCallback
 
 
 def create_callback_for_checkpoint_removal(
-    callback_kwargs: Dict[str, Any],
+    callback_kwargs: dict[str, Any],
     stop_criterion: Callable[[TuningStatus], bool],
 ) -> Optional[TunerCallback]:
     if isinstance(stop_criterion, StoppingCriterion):

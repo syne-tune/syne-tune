@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict, Tuple, Optional, List
+from typing import Optional
 
 import dill
 import matplotlib
@@ -57,7 +57,7 @@ benchmark_names = {
 
 def plot_result_benchmark(
     t_range: np.array,
-    method_dict: Dict[str, np.array],
+    method_dict: dict[str, np.array],
     title: str,
     rename_dict: dict,
     ax=None,
@@ -110,7 +110,7 @@ def plot_result_benchmark(
 
 
 def plot_task_performance_over_time(
-    benchmark_results: Dict[str, Tuple[np.array, Dict[str, np.array]]],
+    benchmark_results: dict[str, tuple[np.array, dict[str, np.array]]],
     rename_dict: dict,
     result_folder: Path,
     title: str = None,
@@ -147,7 +147,7 @@ def plot_task_performance_over_time(
 
 def load_and_cache(
     path: Path,
-    methods: Optional[List[str]] = None,
+    methods: Optional[list[str]] = None,
     load_cache_if_exists: bool = True,
     num_time_steps=100,
     max_seed=10,
@@ -181,7 +181,7 @@ def plot_ranks(
     title: str,
     rename_dict: dict,
     result_folder: Path,
-    methods_to_show: List[str],
+    methods_to_show: list[str],
 ):
     plt.figure()
     # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
@@ -206,10 +206,10 @@ def plot_ranks(
 
 
 def stack_benchmark_results(
-    benchmark_results_dict: Dict[str, Tuple[np.array, Dict[str, np.array]]],
-    methods_to_show: Optional[List[str]],
-    benchmark_families: List[str],
-) -> Dict[str, np.array]:
+    benchmark_results_dict: dict[str, tuple[np.array, dict[str, np.array]]],
+    methods_to_show: Optional[list[str]],
+    benchmark_families: list[str],
+) -> dict[str, np.array]:
     """
     Stack benchmark results between benchmarks of the same family.
     :param benchmark_results_dict:
@@ -259,9 +259,9 @@ def stack_benchmark_results(
 
 
 def generate_rank_results(
-    benchmark_families: List[str],
-    stacked_benchmark_results: Dict[str, np.array],
-    methods_to_show: Optional[List[str]],
+    benchmark_families: list[str],
+    stacked_benchmark_results: dict[str, np.array],
+    methods_to_show: Optional[list[str]],
     rename_dict: dict,
     result_folder: Path,
 ):
