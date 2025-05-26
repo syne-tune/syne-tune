@@ -1,4 +1,6 @@
 from __future__ import annotations
+from typing_extensions import TypeAlias
+
 from collections import defaultdict
 
 from datetime import datetime
@@ -12,10 +14,10 @@ from syne_tune.constants import ST_WORKER_TIMESTAMP
 logger = logging.getLogger(__name__)
 
 
-TrialAndStatusInformation = dict[int, tuple[Trial, str]]
+TrialAndStatusInformation: TypeAlias = dict[int, tuple[Trial, str]]
 
 
-TrialIdAndResultList = list[tuple[int, dict]]
+TrialIdAndResultList: TypeAlias = list[tuple[int, dict]]
 
 
 BUSY_STATUS = {Status.in_progress, Status.stopping}
