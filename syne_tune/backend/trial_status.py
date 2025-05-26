@@ -1,4 +1,5 @@
 # requires python 3.7
+from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
