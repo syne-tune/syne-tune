@@ -30,6 +30,4 @@ def searcher_factory(
     assert (
         searcher_name in searcher_dict
     ), f"Searcher name must be one of {list(searcher_dict.keys())}, got {searcher_name}"
-    return searcher_dict[searcher_name](
-        config_space=config_space, **searcher_kwargs
-    )
+    return searcher_dict[searcher_name](config_space=config_space, **searcher_kwargs)
