@@ -14,7 +14,7 @@ from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regre
     ConformalQuantileRegression,
 )
 
-searcher_cls_dict = {
+searcher_dict = {
     "random_search": RandomSearcher,
     "bore": Bore,
     "kde": KernelDensityEstimator,
@@ -28,8 +28,8 @@ def searcher_factory(
     searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
     assert (
-        searcher_name in searcher_cls_dict
-    ), f"Searcher name must be one of {list(searcher_cls_dict.keys())}, got {searcher_name}"
-    return searcher_cls_dict[searcher_name](
+        searcher_name in searcher_dict
+    ), f"Searcher name must be one of {list(searcher_dict.keys())}, got {searcher_name}"
+    return searcher_dict[searcher_name](
         config_space=config_space, **searcher_kwargs
     )
