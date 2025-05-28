@@ -1,4 +1,5 @@
-from typing import List, Tuple, Callable, Optional, Dict, Any
+from typing import Optional, Any
+from collections.abc import Callable
 import numpy as np
 
 try:
@@ -46,8 +47,8 @@ class NonLinearCostModel(CostModel):
         return INTERNAL_COST_NAME
 
     def transform_dataset(
-        self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> Dict[str, Any]:
+        self, dataset: list[tuple[Configuration, float]], num_data0: int, res_min: int
+    ) -> dict[str, Any]:
         """
         Transforms dataset (see :meth:`_data_for_c1_regression`) into a dataset
         representation (dict), which is used as ``kwargs`` in :meth:`fit_regressor`.
@@ -72,7 +73,7 @@ class NonLinearCostModel(CostModel):
         """
         raise NotImplementedError
 
-    def predict_c1_values(self, candidates: List[Configuration]):
+    def predict_c1_values(self, candidates: list[Configuration]):
         """
         :param candidates: Test configs
         :return: Corresponding ``c1`` values
@@ -120,7 +121,7 @@ class NonLinearCostModel(CostModel):
                     pass
         _, self.b0, self.regr_model = best[0]
 
-    def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
+    def sample_joint(self, candidates: list[Configuration]) -> list[CostValue]:
         assert self.b0 is not None, "Must call 'update' before 'sample_joint'"
         c1_vals = self.predict_c1_values(candidates)
         c0_vals = np.full(len(c1_vals), self.b0)
@@ -188,8 +189,8 @@ class ScikitLearnCostModel(NonLinearCostModel):
         self.model_type = model_type
 
     def transform_dataset(
-        self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> Dict[str, Any]:
+        self, dataset: list[tuple[Configuration, float]], num_data0: int, res_min: int
+    ) -> dict[str, Any]:
         num_hps = len(self.hp_ranges)
         num_data = len(dataset)
         features = np.zeros((num_data, num_hps))
@@ -225,7 +226,7 @@ class ScikitLearnCostModel(NonLinearCostModel):
         crit_val = (np.sum(resvec) + b0 * num_data0 / res_min) / res_min
         return crit_val, model
 
-    def predict_c1_values(self, candidates: List[Configuration]):
+    def predict_c1_values(self, candidates: list[Configuration]):
         features1 = self.hp_ranges.to_ndarray_matrix(candidates, categ_onehot=False)
         c1_vals = self.regr_model.predict(features1).reshape((-1,))
         return c1_vals
@@ -248,7 +249,7 @@ class UnivariateSplineCostModel(NonLinearCostModel):
     def __init__(
         self,
         scalar_attribute: Callable[[Configuration], float],
-        input_range: Tuple[float, float],
+        input_range: tuple[float, float],
         spline_degree: int = 3,
     ):
         """
@@ -268,8 +269,8 @@ class UnivariateSplineCostModel(NonLinearCostModel):
         self.spline_degree = spline_degree
 
     def transform_dataset(
-        self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> Dict[str, Any]:
+        self, dataset: list[tuple[Configuration, float]], num_data0: int, res_min: int
+    ) -> dict[str, Any]:
         # We combine duplicates in the second part of the dataset
         config_lst, target_lst = zip(*dataset[:num_data0])
         config_lst = list(config_lst)
@@ -348,7 +349,7 @@ class UnivariateSplineCostModel(NonLinearCostModel):
         crit_val = (np.sum(resvec) + b0 * num_data0 / res_min) / res_min
         return crit_val, model
 
-    def predict_c1_values(self, candidates: List[Configuration]):
+    def predict_c1_values(self, candidates: list[Configuration]):
         features1 = np.array([self.scalar_attribute(config) for config in candidates])
         c1_vals = self.regr_model(features1).reshape((-1,))
         return c1_vals

@@ -3,7 +3,7 @@ import string
 from collections.abc import Iterable
 from itertools import groupby
 import random
-from typing import Dict, Any, List, Union, Optional
+from typing import Any, Union, Optional
 
 import numpy as np
 
@@ -50,10 +50,10 @@ class LinearScalarizedScheduler(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metrics: List[str],
+        config_space: dict[str, Any],
+        metrics: list[str],
         do_minimize: Optional[bool] = True,
-        scalarization_weights: Union[np.ndarray, List[float]] = None,
+        scalarization_weights: Union[np.ndarray, list[float]] = None,
         random_seed: int = None,
         **base_scheduler_kwargs,
     ):
@@ -88,7 +88,7 @@ class LinearScalarizedScheduler(TrialScheduler):
             **base_scheduler_kwargs,
         )
 
-    def _scalarized_metric(self, result: Dict[str, Any]) -> float:
+    def _scalarized_metric(self, result: dict[str, Any]) -> float:
         mo_results = np.array([result[item] for item in self.metrics])
         return np.sum(np.multiply(mo_results, self.scalarization_weights))
 
@@ -110,7 +110,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         """
         return self.base_scheduler.on_trial_error(trial)
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
         See the docstring of the chosen base_scheduler for details
         """
@@ -120,7 +120,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         }
         return self.base_scheduler.on_trial_result(trial, local_results)
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Notification for the completion of trial.
         See the docstring of the chosen base_scheduler for details
         """
@@ -136,7 +136,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         """
         return self.base_scheduler.on_trial_remove(trial)
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata of the scheduler
         """
@@ -148,5 +148,5 @@ class LinearScalarizedScheduler(TrialScheduler):
         metadata["scalarized_metric"] = self.single_objective_metric
         return metadata
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self.metrics

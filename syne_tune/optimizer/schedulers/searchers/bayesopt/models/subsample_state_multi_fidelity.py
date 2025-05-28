@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional
 import copy
 from numpy.random import RandomState
 from operator import itemgetter
@@ -19,11 +19,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 from syne_tune.util import is_positive_integer
 
 
-ObservedData = List[Tuple[int, int, float]]
+ObservedData = list[tuple[int, int, float]]
 
 
 def _extract_observations(
-    trials_evaluations: List[TrialEvaluations],
+    trials_evaluations: list[TrialEvaluations],
 ) -> ObservedData:
     """
     Maps ``trials_evaluations`` to list of tuples :math:`(i, r, y_{i r})`, where
@@ -45,7 +45,7 @@ def _extract_observations(
     return all_data
 
 
-def _create_trials_evaluations(data: ObservedData) -> List[TrialEvaluations]:
+def _create_trials_evaluations(data: ObservedData) -> list[TrialEvaluations]:
     """Inverse of :func:`_extract_observations`
 
     :param data: List of tuples
@@ -166,7 +166,7 @@ class SubsampleMultiFidelityStateConverter(StateForModelConverter):
 
 
 def _sparsify_at_most_one_per_trial_and_group(
-    data: ObservedData, max_size: int, rung_levels: List[int]
+    data: ObservedData, max_size: int, rung_levels: list[int]
 ) -> ObservedData:
     r"""
     Define groups :math:`G_j = \{r_j + 1,\dots, r_j\}`, where math:`[r_j]` is

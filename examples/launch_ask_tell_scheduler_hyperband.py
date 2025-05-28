@@ -13,7 +13,6 @@ This is an extension of launch_ask_tell_scheduler.py to run multi-fidelity metho
 """
 
 import logging
-from typing import Tuple
 
 import numpy as np
 
@@ -49,7 +48,7 @@ def get_objective():
 
 def run_hyperband_step(
     scheduler: AskTellScheduler, trial_suggestion: Trial, max_steps: int, metric: str
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     for step in range(1, max_steps):
         test_result = target_function(**trial_suggestion.config, step=step)
         decision = scheduler.bscheduler.on_trial_result(

@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 import numpy as np
 import copy
 
@@ -98,7 +98,7 @@ def evaluate_blackbox(bb_func, inputs: np.ndarray) -> np.ndarray:
 # blackbox are done. This avoids silly errors.
 def sample_data(
     bb_cls, num_train: int, num_grid: int, expand_datadct: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     bb_func = bb_cls()
     ss_limits = bb_func.search_space
     num_dims = len(ss_limits)
@@ -126,7 +126,7 @@ def sample_data(
     return data
 
 
-def expand_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def expand_data(data: dict[str, Any]) -> dict[str, Any]:
     """
     Appends derived entries to data dict, which have non-elementary types.
     """
@@ -147,7 +147,7 @@ def expand_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
 # Recall that inputs in data are encoded, so we have to decode them to their
 # native ranges for ``trials_evaluations``
-def data_to_state(data: Dict[str, Any]) -> TuningJobState:
+def data_to_state(data: dict[str, Any]) -> TuningJobState:
     configs, cs = decode_inputs(data["train_inputs"], data["ss_limits"])
     config_for_trial = {
         str(trial_id): config for trial_id, config in enumerate(configs)
@@ -163,7 +163,7 @@ def data_to_state(data: Dict[str, Any]) -> TuningJobState:
     )
 
 
-def decode_inputs(inputs: np.ndarray, ss_limits) -> (List[Configuration], Dict):
+def decode_inputs(inputs: np.ndarray, ss_limits) -> (list[Configuration], dict):
     cs_names = [f"x{i}" for i in range(len(ss_limits))]
     cs = {
         name: uniform(lower=lims["min"], upper=lims["max"])

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import numpy as np
 import itertools
 import logging
@@ -18,7 +18,7 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
 
-def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
+def parse_args(methods: dict[str, Any], benchmark_definitions: dict[str, Any]):
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
@@ -72,7 +72,7 @@ def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
     return args, method_names, benchmark_names, seeds
 
 
-def main(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
+def main(methods: dict[str, Any], benchmark_definitions: dict[str, Any]):
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions
     )

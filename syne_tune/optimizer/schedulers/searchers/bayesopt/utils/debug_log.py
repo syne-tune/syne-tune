@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 import logging
 import numpy as np
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 __all__ = ["DebugLogPrinter"]
 
 
-def _param_dict_to_str(params: Dict[str, Any]) -> str:
+def _param_dict_to_str(params: dict[str, Any]) -> str:
     parts = []
     for name, param in params.items():
         if isinstance(param, float):
@@ -62,7 +62,7 @@ class DebugLogPrinter:
         msg = "\n".join(entries)
         self.block_info["final_config"] = msg
 
-    def _observed_trial_ids(self, state: TuningJobState) -> List[str]:
+    def _observed_trial_ids(self, state: TuningJobState) -> list[str]:
         trial_ids = []
         for ev in state.trials_evaluations:
             trial_id = ev.trial_id
@@ -75,7 +75,7 @@ class DebugLogPrinter:
                     trial_ids.append(trial_id)
         return trial_ids
 
-    def _pending_trial_ids(self, state: TuningJobState) -> List[str]:
+    def _pending_trial_ids(self, state: TuningJobState) -> list[str]:
         trial_ids = []
         for ev in state.pending_evaluations:
             trial_id = ev.trial_id
@@ -100,7 +100,7 @@ class DebugLogPrinter:
         msg = "Targets: " + str(targets.reshape((-1,)))
         self.block_info["targets"] = msg
 
-    def set_model_params(self, params: Dict[str, Any]):
+    def set_model_params(self, params: dict[str, Any]):
         assert self.get_config_type == "BO", "Need to be in 'BO' block"
         msg = "Model params: " + _param_dict_to_str(params)
         self.block_info["params"] = msg

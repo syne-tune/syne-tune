@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
@@ -34,7 +33,7 @@ from syne_tune.util import experiment_path
     ],
 )
 def test_experiment_path(
-    tuner_name: str, local_path: str, env: Dict, expected_path: str
+    tuner_name: str, local_path: str, env: dict, expected_path: str
 ):
     try:
         env_prev = os.environ.copy()

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Any
+from typing import Optional, Any
 
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
@@ -24,14 +24,14 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quan
 
 @dataclass
 class MethodArguments:
-    config_space: Dict[str, Any]
+    config_space: dict[str, Any]
     metric: str
     mode: str
     random_seed: int
     resource_attr: str
     max_t: Optional[int] = None
     max_resource_attr: Optional[str] = None
-    transfer_learning_evaluations: Optional[Dict] = None
+    transfer_learning_evaluations: Optional[dict] = None
     use_surrogates: bool = False
 
 
@@ -53,7 +53,7 @@ class Methods:
 
 def _max_resource_attr_or_max_t(
     args: MethodArguments, max_t_name: str = "max_t"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if args.max_resource_attr is not None:
         return {"max_resource_attr": args.max_resource_attr}
     else:
@@ -61,7 +61,7 @@ def _max_resource_attr_or_max_t(
         return {max_t_name: args.max_t}
 
 
-def search_options(args: MethodArguments) -> Dict[str, Any]:
+def search_options(args: MethodArguments) -> dict[str, Any]:
     return {"debug_log": False}
 
 

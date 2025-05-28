@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import Optional
 import numpy as np
 from collections import Counter
 import pytest
@@ -25,7 +25,7 @@ def _ask_for_slots(
     level: int,
     slot_index: int,
     trial_ids: list,
-) -> (List[SlotInRung], int):
+) -> (list[SlotInRung], int):
     slots = []
     for trial_id in trial_ids:
         slot_in_rung = bracket.next_free_slot()
@@ -45,9 +45,9 @@ def _ask_for_slots(
 
 def _send_results(
     bracket: SynchronousHyperbandBracket,
-    slots: List[SlotInRung],
-    all_results: List[Tuple[int, float]],
-    trials_not_promoted: Optional[List[int]],
+    slots: list[SlotInRung],
+    all_results: list[tuple[int, float]],
+    trials_not_promoted: Optional[list[int]],
 ):
     trials_n_p = None
     for slot_in_rung in slots:
@@ -160,7 +160,7 @@ def test_hyperband_bracket():
 
 def _send_result(
     bracket_manager: SynchronousHyperbandBracketManager,
-    slots: List[Tuple[int, SlotInRung]],
+    slots: list[tuple[int, SlotInRung]],
     next_trial_id: int,
     random_state: np.random.RandomState,
 ) -> int:

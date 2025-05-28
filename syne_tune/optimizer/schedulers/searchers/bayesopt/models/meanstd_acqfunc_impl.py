@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Set, List, Tuple
+from typing import Optional
 import logging
 import itertools
 
@@ -241,7 +241,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     def _head_needs_current_best(self) -> bool:
         return True
 
-    def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
+    def _output_to_keys_predict(self) -> dict[str, set[str]]:
         """
         The cost model may be deterministic, as the acquisition function
         only needs the mean.
@@ -321,7 +321,7 @@ class ConstraintCurrentBestProvider(CurrentBestProvider):
     Here, ``current_best`` depends on two predictors, for active and constraint metric.
     """
 
-    def __init__(self, current_best_list: List[np.ndarray], num_samples_active: int):
+    def __init__(self, current_best_list: list[np.ndarray], num_samples_active: int):
         list_size = len(current_best_list)
         assert list_size > 0 and list_size % num_samples_active == 0
         self._active_and_constraint_current_best = [
@@ -329,7 +329,7 @@ class ConstraintCurrentBestProvider(CurrentBestProvider):
         ]
         self._num_samples_active = num_samples_active
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> Optional[np.ndarray]:
         flat_pos = positions[1] * self._num_samples_active + positions[0]
         return self._active_and_constraint_current_best[flat_pos]
 

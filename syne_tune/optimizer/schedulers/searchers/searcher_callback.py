@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -68,7 +68,7 @@ class StoreResultsAndModelParamsCallback(StoreResultsCallback):
         self._searcher = _get_model_based_searcher(tuner)
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         result = _extended_result(self._searcher, result)
         super().on_trial_result(trial, status, result, decision)
@@ -92,7 +92,7 @@ class SimulatorAndModelParamsCallback(SimulatorCallback):
         self._searcher = _get_model_based_searcher(tuner)
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         result = _extended_result(self._searcher, result)
         super().on_trial_result(trial, status, result, decision)

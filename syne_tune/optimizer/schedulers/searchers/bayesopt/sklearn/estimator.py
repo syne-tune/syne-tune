@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
@@ -28,13 +28,13 @@ class SKLearnEstimator:
         """
         raise NotImplementedError
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         :return: Current model hyperparameters
         """
         return dict()  # Default (estimator has no hyperparameters)
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         """
         :param param_dict: New model hyperparameters
         """

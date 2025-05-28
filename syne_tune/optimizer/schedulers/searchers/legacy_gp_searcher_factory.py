@@ -1,4 +1,4 @@
-from typing import Set, Optional, Dict, Any
+from typing import Optional, Any
 import logging
 from functools import partial
 
@@ -205,7 +205,7 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
 
 def _create_gp_estimator(
     gpmodel,
-    result: Dict[str, Any],
+    result: dict[str, Any],
     hp_ranges_for_prediction: Optional[HyperparameterRanges],
     active_metric: Optional[str],
     **kwargs,
@@ -547,7 +547,7 @@ def _create_acq_function(**kwargs):
     return acquisition_function_factory(name, **af_kwargs)
 
 
-def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
+def gp_fifo_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`,
@@ -578,7 +578,7 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     return dict(**result, acquisition_class=_create_acq_function(**kwargs))
 
 
-def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
+def gp_multifidelity_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`,
@@ -617,7 +617,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     return kwargs_int
 
 
-def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
+def hypertune_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_hypertune.HyperTuneSearcher._create_internal`,
@@ -638,7 +638,7 @@ def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
     return gp_multifidelity_searcher_factory(**kwargs, is_hypertune=True)
 
 
-def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
+def constrained_gp_fifo_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_constrained.ConstrainedGPFIFOSearcher._create_internal`,
@@ -689,7 +689,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
 
 
-def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
+def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -745,7 +745,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
 
 
-def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
+def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -809,7 +809,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
 
 
-def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
+def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.legacy_cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
@@ -872,12 +872,12 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
 
 
 def _common_defaults(
-    kwargs: Dict[str, Any],
+    kwargs: dict[str, Any],
     is_hyperband: bool,
     is_multi_output: bool = False,
     is_hypertune: bool = False,
     is_restrict_configs: bool = False,
-) -> (Set[str], dict, dict):
+) -> (set[str], dict, dict):
     mandatory = set()
 
     default_options = {
@@ -981,7 +981,7 @@ def _common_defaults(
     return mandatory, default_options, constraints
 
 
-def gp_fifo_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict):
+def gp_fifo_searcher_defaults(kwargs: dict[str, Any]) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -999,8 +999,8 @@ def gp_fifo_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict):
 
 
 def gp_multifidelity_searcher_defaults(
-    kwargs: Dict[str, Any]
-) -> (Set[str], dict, dict):
+    kwargs: dict[str, Any]
+) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -1017,7 +1017,7 @@ def gp_multifidelity_searcher_defaults(
     )
 
 
-def hypertune_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict):
+def hypertune_searcher_defaults(kwargs: dict[str, Any]) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -1036,8 +1036,8 @@ def hypertune_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict
 
 
 def constrained_gp_fifo_searcher_defaults(
-    kwargs: Dict[str, Any]
-) -> (Set[str], dict, dict):
+    kwargs: dict[str, Any]
+) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults` to be applied to ``search_options`` for
@@ -1055,8 +1055,8 @@ def constrained_gp_fifo_searcher_defaults(
 
 
 def cost_aware_gp_fifo_searcher_defaults(
-    kwargs: Dict[str, Any]
-) -> (Set[str], dict, dict):
+    kwargs: dict[str, Any]
+) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -1075,8 +1075,8 @@ def cost_aware_gp_fifo_searcher_defaults(
 
 
 def cost_aware_gp_multifidelity_searcher_defaults(
-    kwargs: Dict[str, Any]
-) -> (Set[str], dict, dict):
+    kwargs: dict[str, Any]
+) -> (set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`

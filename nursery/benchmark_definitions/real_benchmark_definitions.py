@@ -1,5 +1,3 @@
-from typing import Dict
-
 from syne_tune.experiments.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.benchmark_definitions.distilbert_on_imdb import (
     distilbert_imdb_benchmark,
@@ -26,7 +24,7 @@ from benchmarking.benchmark_definitions.transformer_wikitext2 import (
 
 def real_benchmark_definitions(
     sagemaker_backend: bool = False, **kwargs
-) -> Dict[str, RealBenchmarkDefinition]:
+) -> dict[str, RealBenchmarkDefinition]:
     result = {
         "resnet_cifar10": resnet_cifar10_benchmark(
             sagemaker_backend=sagemaker_backend, **kwargs

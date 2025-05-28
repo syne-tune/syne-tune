@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Any, Union
 import logging
 import numpy as np
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 100
 
 
-def extract_random_seed(**kwargs) -> (int, Dict[str, Any]):
+def extract_random_seed(**kwargs) -> (int, dict[str, Any]):
     key = "random_seed_generator"
     generator = kwargs.get(key)
     if generator is not None:
@@ -34,7 +34,7 @@ def sample_random_configuration(
     hp_ranges: HyperparameterRanges,
     random_state: np.random.RandomState,
     exclusion_list: Optional[ExclusionList] = None,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[dict[str, Any]]:
     """
     Samples a configuration from ``config_space`` at random.
 
@@ -73,9 +73,9 @@ class StochasticSearcher(LegacyBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: Union[List[str], str],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        metric: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -87,13 +87,13 @@ class StochasticSearcher(LegacyBaseSearcher):
         random_seed, _ = extract_random_seed(**kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return dict(
             super().get_state(),
             random_state=self.random_state.get_state(),
         )
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         super()._restore_from_state(state)
         self.random_state.set_state(state["random_state"])
 
@@ -102,10 +102,10 @@ class StochasticSearcher(LegacyBaseSearcher):
 
     def _filter_points_to_evaluate(
         self,
-        restrict_configurations: List[Dict[str, Any]],
+        restrict_configurations: list[dict[str, Any]],
         hp_ranges: HyperparameterRanges,
         allow_duplicates: bool,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Used to support ``restrict_configurations`` in subclasses. Configs in
         ``_points_to_evaluate`` are removed if not in ``restrict_configurations``.
@@ -195,11 +195,11 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: Union[List[str], str],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        metric: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         allow_duplicates: Optional[bool] = None,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -231,20 +231,20 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
     def allow_duplicates(self) -> bool:
         return self._allow_duplicates
 
-    def should_not_suggest(self, config: Dict[str, Any]) -> bool:
+    def should_not_suggest(self, config: dict[str, Any]) -> bool:
         """
         :param config: Configuration
         :return: :meth:`get_config` should not suggest this configuration?
         """
         return self._excl_list.contains(config)
 
-    def _get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def _get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         """
         Child classes implement this instead of :meth:`get_config`.
         """
         raise NotImplementedError
 
-    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def get_config(self, **kwargs) -> Optional[dict[str, Any]]:
         new_config = self._get_config(**kwargs)
         if not self._allow_duplicates and new_config is not None:
             self._excl_list.add(new_config)
@@ -266,7 +266,7 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
 
     def _get_random_config(
         self, exclusion_list: Optional[ExclusionList] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Child classes should use this helper method in order to draw a configuration at
         random.
@@ -288,7 +288,7 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
 
     def _get_random_config_from_restrict_configurations(
         self, exclusion_list: ExclusionList
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         config = None
         if self._restrict_configurations:
             for _ in range(MAX_RETRIES):
@@ -310,7 +310,7 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
     def register_pending(
         self,
         trial_id: str,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         milestone: Optional[int] = None,
     ):
         super().register_pending(trial_id, config, milestone)
@@ -328,7 +328,7 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
             # Blacklist this configuration
             self._excl_list.add(self._config_for_trial_id[trial_id])
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         state = super().get_state()
         state["excl_list"] = self._excl_list.get_state()
         if self._allow_duplicates:
@@ -337,7 +337,7 @@ class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
             state["restrict_configurations"] = self._restrict_configurations
         return state
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         super()._restore_from_state(state)
         self._excl_list = ExclusionList(self._hp_ranges)
         self._excl_list.clone_from_state(state["excl_list"])

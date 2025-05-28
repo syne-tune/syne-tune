@@ -1,5 +1,7 @@
 from collections import Counter
-from typing import Callable, Dict, Any
+from collections.abc import Callable
+from typing import Any
+
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
@@ -41,7 +43,7 @@ SUPPORTED_INITIAL_SCORING = {"thompson_indep", "acq_func"}
 DEFAULT_INITIAL_SCORING = "thompson_indep"
 
 
-def encode_state(state: TuningJobState) -> Dict[str, Any]:
+def encode_state(state: TuningJobState) -> dict[str, Any]:
     trials_evaluations = [
         {"trial_id": x.trial_id, "metrics": x.metrics} for x in state.trials_evaluations
     ]
@@ -61,7 +63,7 @@ def encode_state(state: TuningJobState) -> Dict[str, Any]:
 
 
 def decode_state(
-    enc_state: Dict[str, Any], hp_ranges: HyperparameterRanges
+    enc_state: dict[str, Any], hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     trials_evaluations = [
         TrialEvaluations(**x) for x in enc_state["trials_evaluations"]
@@ -80,9 +82,9 @@ def decode_state(
 
 def _get_trial_id(
     hp_ranges: HyperparameterRanges,
-    config: Dict[str, Any],
-    config_for_trial: Dict[str, Any],
-    trial_for_config: Dict[str, Any],
+    config: dict[str, Any],
+    config_for_trial: dict[str, Any],
+    trial_for_config: dict[str, Any],
 ) -> str:
     match_str = hp_ranges.config_to_match_string(config, skip_last=True)
     trial_id = trial_for_config.get(match_str)
@@ -94,7 +96,7 @@ def _get_trial_id(
 
 
 def decode_state_from_old_encoding(
-    enc_state: Dict[str, Any], hp_ranges: HyperparameterRanges
+    enc_state: dict[str, Any], hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     """
     Decodes ``TuningJobState`` from encoding done for the old definition of
@@ -223,7 +225,7 @@ SUPPORTED_RESOURCE_FOR_ACQUISITION = {"bohb", "first", "final"}
 
 
 def resource_for_acquisition_factory(
-    kwargs: Dict[str, Any], hp_ranges: HyperparameterRanges
+    kwargs: dict[str, Any], hp_ranges: HyperparameterRanges
 ) -> ResourceForAcquisitionMap:
     resource_acq = kwargs.get("resource_acq", "bohb")
     assert (

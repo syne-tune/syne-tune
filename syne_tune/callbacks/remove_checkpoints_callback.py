@@ -1,4 +1,5 @@
-from typing import List, Optional, Callable
+from typing import Optional
+from collections.abc import Callable
 
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.tuning_status import TuningStatus
@@ -36,7 +37,7 @@ class DefaultRemoveCheckpointsSchedulerMixin(RemoveCheckpointsSchedulerMixin):
     scheduler has to implement :meth:`trials_checkpoints_can_be_removed`.
     """
 
-    def trials_checkpoints_can_be_removed(self) -> List[int]:
+    def trials_checkpoints_can_be_removed(self) -> list[int]:
         """
         Supports the general case (see header comment).
         This method returns IDs of paused trials for which checkpoints can safely

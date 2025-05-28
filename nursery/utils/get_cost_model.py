@@ -1,8 +1,8 @@
-from typing import Tuple, Dict, Any
+from typing import Any
 
 
 def get_cost_model_for_batch_size(
-    params: Dict[str, Any], batch_size_key: str, batch_size_range: Tuple[int, int]
+    params: dict[str, Any], batch_size_key: str, batch_size_range: tuple[int, int]
 ):
     """
     Returns cost model depending on the batch size only.

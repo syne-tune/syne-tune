@@ -2,7 +2,8 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple, Any, Union
+from typing import Optional, Any, Union
+from collections.abc import Callable
 
 import dill as dill
 
@@ -131,7 +132,7 @@ class Tuner:
         tuner_name: Optional[str] = None,
         asynchronous_scheduling: bool = True,
         wait_trial_completion_when_stopping: bool = False,
-        callbacks: Optional[List[TunerCallback]] = None,
+        callbacks: Optional[list[TunerCallback]] = None,
         metadata: Optional[dict] = None,
         suffix_tuner_name: bool = True,
         save_tuner: bool = True,
@@ -183,7 +184,7 @@ class Tuner:
         self.status_printer = None
         self._initialize_early_checkpoint_removal()
 
-    def _init_callbacks(self, callbacks: Optional[List[TunerCallback]]):
+    def _init_callbacks(self, callbacks: Optional[list[TunerCallback]]):
         if callbacks is None:
             callbacks = [self._default_callback()]
         else:
@@ -194,7 +195,7 @@ class Tuner:
                     "None of the callbacks provided are of type StoreResultsCallback. "
                     "This means no tuning results will be written."
                 )
-        self.callbacks: List[TunerCallback] = callbacks
+        self.callbacks: list[TunerCallback] = callbacks
 
     def _initialize_early_checkpoint_removal(self):
         """
@@ -366,7 +367,7 @@ class Tuner:
             callback.on_tuning_sleep(self.sleep_time)
 
     @staticmethod
-    def _set_metadata(metadata: Dict[str, Any], name: str, value):
+    def _set_metadata(metadata: dict[str, Any], name: str, value):
         if name in metadata:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
@@ -375,7 +376,7 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def _enrich_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
         """
         :param metadata: Original metadata
         :return: ``metadata`` enriched by default entries
@@ -398,7 +399,7 @@ class Tuner:
         )
 
     def _process_new_results(
-        self, running_trials_ids: Set[int]
+        self, running_trials_ids: set[int]
     ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         """Communicates new results from the backend to the scheduler
 
@@ -442,7 +443,7 @@ class Tuner:
 
         return done_trials_statuses, new_results
 
-    def _schedule_new_tasks(self, running_trials_ids: Set[int]):
+    def _schedule_new_tasks(self, running_trials_ids: set[int]):
         """Schedules new tasks if resources are available or sleep.
 
         Note: If ``start_jobs_without_delay`` is False, we ask the backend for
@@ -531,7 +532,7 @@ class Tuner:
                 callback.on_resume_trial(trial)
             return trial
 
-    def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
+    def _handle_failure(self, done_trials_statuses: dict[int, tuple[Trial, str]]):
         logger.error(f"Stopped as {self.max_failures} failures were reached")
         for trial_id, (_, status) in done_trials_statuses.items():
             if status == Status.failed:
@@ -681,7 +682,7 @@ class Tuner:
 
     def best_config(
         self, metric: Optional[Union[str, int]] = 0
-    ) -> Tuple[int, Dict[str, Any]]:
+    ) -> tuple[int, dict[str, Any]]:
         """
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
             default to 0 - first metric defined in the Scheduler

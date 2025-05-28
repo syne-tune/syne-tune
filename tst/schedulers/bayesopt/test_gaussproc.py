@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 import pytest
 
@@ -258,7 +257,7 @@ def test_gp_fantasizing():
     assert np.allclose(grads, grads2)
 
 
-def default_models() -> List[GaussProcPredictor]:
+def default_models() -> list[GaussProcPredictor]:
     hp_ranges = _simple_hp_ranges()
     X = [
         (0.0, 0.0),

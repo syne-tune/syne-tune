@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, List
+from typing import Optional
 
 import numpy as np
 
@@ -78,7 +78,7 @@ class LegacyMedianStoppingRule(LegacyTrialScheduler):
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         return self.scheduler._suggest(trial_id=trial_id)
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         new_metric = result[self.metric]
         if self.mode == "max":
             new_metric *= -1
@@ -123,7 +123,7 @@ class LegacyMedianStoppingRule(LegacyTrialScheduler):
             return True
         return False
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self.scheduler.metric_names()
 
     def metric_mode(self) -> str:

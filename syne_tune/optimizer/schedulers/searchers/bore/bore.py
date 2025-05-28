@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import time
 import xgboost
 import logging
@@ -58,8 +58,8 @@ class Bore(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         random_seed: int = None,
         gamma: Optional[float] = 0.25,
         calibrate: Optional[bool] = False,
@@ -244,7 +244,7 @@ class Bore(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
         resource_level: int = None,
     ):

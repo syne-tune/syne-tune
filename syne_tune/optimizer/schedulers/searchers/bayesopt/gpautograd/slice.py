@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, List
+from collections.abc import Callable
 import numpy as np
 from numpy.random import RandomState
 
@@ -40,7 +40,7 @@ class SliceSampler:
 
     def sample(
         self, init_sample: np.ndarray, num_samples: int, burn: int, thin: int
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         samples = []
         next_sample = init_sample
         for _ in range(num_samples):
@@ -60,7 +60,7 @@ def slice_sampler_step_out(
     scale: float,
     sliced_log_density: Callable[[float], float],
     random_state: RandomState,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     r = random_state.rand()
     lower_bound = -r * scale
     upper_bound = lower_bound + scale

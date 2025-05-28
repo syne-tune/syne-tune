@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Any, Union
 import logging
 
 import numpy as np
@@ -66,12 +66,12 @@ class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict]] = None,
         allow_duplicates: bool = False,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[list[dict[str, Any]]] = None,
         num_init_random: int = 3,
         no_fantasizing: bool = False,
         max_num_observations: Optional[int] = 200,
@@ -105,7 +105,7 @@ class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher
         if "random_seed" in kwargs:
             random.manual_seed(kwargs["random_seed"])
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         trial_id = int(trial_id)
 
         observations = []
@@ -120,7 +120,7 @@ class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher
         if trial_id in self.pending_trials:
             self.pending_trials.remove(trial_id)
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError
 
     def num_suggestions(self):
@@ -275,7 +275,7 @@ class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[dict]):
+    def _config_to_feature_matrix(self, configs: list[dict]):
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
@@ -301,21 +301,21 @@ class LegacyExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher
         else:
             return self._get_random_config()
 
-    def _configs_with_results(self) -> List[dict]:
+    def _configs_with_results(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if not trial in self.pending_trials
         ]
 
-    def _configs_pending(self) -> List[dict]:
+    def _configs_pending(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if trial in self.pending_trials
         ]
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self._metric]
 
     def metric_mode(self) -> str:

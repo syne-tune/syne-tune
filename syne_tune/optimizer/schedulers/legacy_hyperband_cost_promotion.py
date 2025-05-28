@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Optional, Any
 import logging
 
 from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import Rung
@@ -67,8 +67,8 @@ class CostPromotionRungSystem(PromotionRungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -80,7 +80,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         )
         self._cost_attr = cost_attr
 
-    def _find_promotable_trial(self, rung: Rung) -> Optional[Tuple[str, int]]:
+    def _find_promotable_trial(self, rung: Rung) -> Optional[tuple[str, int]]:
         """
         The promotability condition depends on the cost values (see header
         comment).
@@ -100,7 +100,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         return result
 
     def _register_metrics_at_rung_level(
-        self, trial_id: str, result: Dict[str, Any], rung: Rung
+        self, trial_id: str, result: dict[str, Any], rung: Rung
     ):
         assert trial_id not in rung  # Sanity check
         rung.add(

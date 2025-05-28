@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import Optional
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager import (
     SynchronousHyperbandBracketManager,
@@ -28,7 +28,7 @@ class DifferentialEvolutionHyperbandBracketManager(SynchronousHyperbandBracketMa
 
     def __init__(
         self,
-        rungs_first_bracket: List[Tuple[int, int]],
+        rungs_first_bracket: list[tuple[int, int]],
         mode: str,
         num_brackets_per_iteration: Optional[int] = None,
     ):

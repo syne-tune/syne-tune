@@ -1,4 +1,5 @@
-from typing import Tuple, List, Iterable, Dict, Optional, Any
+from typing import Optional, Any
+from collections.abc import Iterable
 import numpy as np
 from numpy.random import RandomState
 
@@ -14,7 +15,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import (
 )
 
 
-def _filter_constant_hyperparameters(config_space: Dict[str, Any]) -> Dict[str, Any]:
+def _filter_constant_hyperparameters(config_space: dict[str, Any]) -> dict[str, Any]:
     nonconst_keys = set(non_constant_hyperparameter_keys(config_space))
     return {k: v for k, v in config_space.items() if k in nonconst_keys}
 
@@ -65,11 +66,11 @@ class HyperparameterRanges:
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         name_last_pos: Optional[str] = None,
         value_for_last_pos=None,
         active_config_space: Optional[dict] = None,
-        prefix_keys: Optional[List[str]] = None,
+        prefix_keys: Optional[list[str]] = None,
     ):
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
@@ -77,7 +78,7 @@ class HyperparameterRanges:
         self._set_internal_keys(prefix_keys)
         self._set_active_config_space(active_config_space)
 
-    def _set_internal_keys(self, prefix_keys: Optional[List[str]]):
+    def _set_internal_keys(self, prefix_keys: Optional[list[str]]):
         keys = sorted(self.config_space.keys())
         if prefix_keys is not None:
             pk_set = set(prefix_keys)
@@ -94,7 +95,7 @@ class HyperparameterRanges:
             keys = keys[:pos] + keys[(pos + 1) :] + [self.name_last_pos]
         self._internal_keys = keys
 
-    def _set_active_config_space(self, active_config_space: Dict[str, Any]):
+    def _set_active_config_space(self, active_config_space: dict[str, Any]):
         if active_config_space is None:
             self.active_config_space = dict()
             self._config_space_for_sampling = self.config_space
@@ -105,7 +106,7 @@ class HyperparameterRanges:
                 self.config_space, **active_config_space
             )
 
-    def _assert_sub_config_space(self, active_config_space: Dict[str, Any]):
+    def _assert_sub_config_space(self, active_config_space: dict[str, Any]):
         for k, v in active_config_space.items():
             assert (
                 k in self.config_space
@@ -121,11 +122,11 @@ class HyperparameterRanges:
                 assert check, f"active_config_space[{k}] has different {name}"
 
     @property
-    def internal_keys(self) -> List[str]:
+    def internal_keys(self) -> list[str]:
         return self._internal_keys
 
     @property
-    def config_space_for_sampling(self) -> Dict[str, Any]:
+    def config_space_for_sampling(self) -> dict[str, Any]:
         return self._config_space_for_sampling
 
     def to_ndarray(self, config: Configuration) -> np.ndarray:
@@ -164,7 +165,7 @@ class HyperparameterRanges:
         raise NotImplementedError
 
     @property
-    def encoded_ranges(self) -> Dict[str, Tuple[int, int]]:
+    def encoded_ranges(self) -> dict[str, tuple[int, int]]:
         """
         Encoded ranges are ``[0, 1]`` or closed subintervals thereof, in case
         ``active_config_space`` is used.
@@ -205,10 +206,10 @@ class HyperparameterRanges:
 
     def _random_configs(
         self, random_state: RandomState, num_configs: int
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         return [self._random_config(random_state) for _ in range(num_configs)]
 
-    def random_configs(self, random_state, num_configs: int) -> List[Configuration]:
+    def random_configs(self, random_state, num_configs: int) -> list[Configuration]:
         """Draws random configurations
 
         :param random_state: Random state
@@ -220,7 +221,7 @@ class HyperparameterRanges:
             for config in self._random_configs(random_state, num_configs)
         ]
 
-    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+    def get_ndarray_bounds(self) -> list[tuple[float, float]]:
         """
         :return: List of ``(lower, upper)`` bounds for each dimension in
             encoded vector representation.
@@ -237,8 +238,8 @@ class HyperparameterRanges:
         return len(self.config_space)
 
     def filter_for_last_pos_value(
-        self, configs: List[Configuration]
-    ) -> List[Configuration]:
+        self, configs: list[Configuration]
+    ) -> list[Configuration]:
         """
         If ``is_attribute_fixed``, ``configs`` is filtered by removing
         entries whose ``name_last_pos attribute`` value is different from
@@ -258,9 +259,9 @@ class HyperparameterRanges:
     def config_to_tuple(
         self,
         config: Configuration,
-        keys: Optional[List[str]] = None,
+        keys: Optional[list[str]] = None,
         skip_last: bool = False,
-    ) -> Tuple[Hyperparameter, ...]:
+    ) -> tuple[Hyperparameter, ...]:
         """
         :param config: Configuration
         :param keys: Overrides ``_internal_keys``
@@ -277,8 +278,8 @@ class HyperparameterRanges:
 
     def tuple_to_config(
         self,
-        config_tpl: Tuple[Hyperparameter, ...],
-        keys: Optional[List[str]] = None,
+        config_tpl: tuple[Hyperparameter, ...],
+        keys: Optional[list[str]] = None,
         skip_last: bool = False,
     ) -> Configuration:
         """Reverse of :meth:`config_to_tuple`.
@@ -299,7 +300,7 @@ class HyperparameterRanges:
     def config_to_match_string(
         self,
         config: Configuration,
-        keys: Optional[List[str]] = None,
+        keys: Optional[list[str]] = None,
         skip_last: bool = False,
     ) -> str:
         """

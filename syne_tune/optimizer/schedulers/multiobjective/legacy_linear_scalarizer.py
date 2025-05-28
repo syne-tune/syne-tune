@@ -1,9 +1,9 @@
 import logging
 import string
-from collections.abc import Iterable
+from collections.abc import Iterable, Callable
 from itertools import groupby
 import random
-from typing import Dict, Any, List, Union, Callable, Optional
+from typing import Any, Union, Optional
 
 import numpy as np
 
@@ -51,10 +51,10 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        mode: Union[List[str], str] = "min",
-        scalarization_weights: Union[np.ndarray, List[float]] = None,
+        config_space: dict[str, Any],
+        metric: list[str],
+        mode: Union[list[str], str] = "min",
+        scalarization_weights: Union[np.ndarray, list[float]] = None,
         base_scheduler_factory: Callable[[Any], LegacyTrialScheduler] = None,
         **base_scheduler_kwargs,
     ):
@@ -98,7 +98,7 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
             **base_scheduler_kwargs,
         )
 
-    def _scalarized_metric(self, result: Dict[str, Any]) -> float:
+    def _scalarized_metric(self, result: dict[str, Any]) -> float:
         if isinstance(self.base_scheduler, LegacyFIFOScheduler):
             LegacyFIFOScheduler._check_keys_of_result(result, self.metric_names())
 
@@ -123,7 +123,7 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
         """
         return self.base_scheduler.on_trial_error(trial)
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
         See the docstring of the chosen base_scheduler for details
         """
@@ -133,7 +133,7 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
         }
         return self.base_scheduler.on_trial_result(trial, local_results)
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Notification for the completion of trial.
         See the docstring of the chosen base_scheduler for details
         """
@@ -149,26 +149,26 @@ class LegacyLinearScalarizedScheduler(LegacyTrialScheduler):
         """
         return self.base_scheduler.on_trial_remove(trial)
 
-    def trials_checkpoints_can_be_removed(self) -> List[int]:
+    def trials_checkpoints_can_be_removed(self) -> list[int]:
         """
         See the docstring of the chosen base_scheduler for details
         :return: IDs of paused trials for which checkpoints can be removed
         """
         return self.base_scheduler.trials_checkpoints_can_be_removed()
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         """
         :return: List of metric names.
         """
         return self.metric
 
-    def metric_mode(self) -> Union[str, List[str]]:
+    def metric_mode(self) -> Union[str, list[str]]:
         """
         :return: "min" if target metric is minimized, otherwise "max".
         """
         return self.mode
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata of the scheduler
         """

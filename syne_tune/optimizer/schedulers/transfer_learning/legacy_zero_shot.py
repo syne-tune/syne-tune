@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any
+from typing import Optional, Any
 
 import pandas as pd
 import xgboost
@@ -44,9 +44,9 @@ class LegacyZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
         use_surrogates: bool = False,
@@ -108,10 +108,10 @@ class LegacyZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
 
     def _create_surrogate_transfer_learning_evaluations(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         metric: str,
-    ) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
+    ) -> dict[str, LegacyTransferLearningTaskEvaluations]:
         """
         Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
         """
@@ -165,7 +165,7 @@ class LegacyZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
             self._ranks = self._update_ranks()
         return best_config.to_dict()
 
-    def _sample_random_config(self, config_space: Dict[str, Any]) -> Dict[str, Any]:
+    def _sample_random_config(self, config_space: dict[str, Any]) -> dict[str, Any]:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in config_space.items()
@@ -175,6 +175,6 @@ class LegacyZeroShotTransfer(LegacyTransferLearningMixin, StochasticSearcher):
         return self._scores.rank(axis=1)
 
     def _update(
-        self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]
+        self, trial_id: str, config: dict[str, Any], result: dict[str, Any]
     ) -> None:
         pass

@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Tuple
+from typing import Any
 from numpy.random import RandomState
 import logging
 from collections import Counter
@@ -82,8 +82,8 @@ class DyHPORungSystem(PromotionRungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -113,7 +113,7 @@ class DyHPORungSystem(PromotionRungSystem):
         self._schedule_records = []
 
     @staticmethod
-    def _check_rung_levels(rung_levels: List[int]):
+    def _check_rung_levels(rung_levels: list[int]):
         if len(rung_levels) > 1:
             rmin = rung_levels[0]
             step = rung_levels[1] - rmin
@@ -126,7 +126,7 @@ class DyHPORungSystem(PromotionRungSystem):
                     f"{rung_levels} is not recommended"
                 )
 
-    def _paused_trials_and_milestones(self) -> List[Tuple[str, int, int]]:
+    def _paused_trials_and_milestones(self) -> list[tuple[str, int, int]]:
         """
         Return list of all trials which are paused. Entries are
         ``(trial_id, pos, resource)``, where ``pos`` is the position of the trial
@@ -147,7 +147,7 @@ class DyHPORungSystem(PromotionRungSystem):
             next_level = level
         return paused_trials
 
-    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> dict[str, Any]:
         """
         The main decision making happens here. We collect ``(trial_id, resource)``
         for all paused trials and call ``searcher``. The searcher scores all
@@ -212,14 +212,14 @@ class DyHPORungSystem(PromotionRungSystem):
         return ret_dict
 
     @property
-    def schedule_records(self) -> List[Tuple[str, int, int]]:
+    def schedule_records(self) -> list[tuple[str, int, int]]:
         return self._schedule_records
 
     @staticmethod
-    def summary_schedule_keys() -> List[str]:
+    def summary_schedule_keys() -> list[str]:
         return [key for key, _ in _SUMMARY_SCHEDULE_RECORDS]
 
-    def summary_schedule_records(self) -> Dict[str, Any]:
+    def summary_schedule_records(self) -> dict[str, Any]:
         histogram = Counter([x[1] for x in self._schedule_records])
         return {name: histogram[value] for name, value in _SUMMARY_SCHEDULE_RECORDS}
 

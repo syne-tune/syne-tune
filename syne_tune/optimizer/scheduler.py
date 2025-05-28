@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 
 from syne_tune.backend.trial_status import Trial
 
@@ -52,7 +52,7 @@ class TrialSuggestion:
 
     @staticmethod
     def start_suggestion(
-        config: Dict[str, Any], checkpoint_trial_id: Optional[int] = None
+        config: dict[str, Any], checkpoint_trial_id: Optional[int] = None
     ) -> "TrialSuggestion":
         """Suggestion to start new trial
 
@@ -158,7 +158,7 @@ class TrialScheduler:
     def on_trial_error(self, trial: Trial):
         pass
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
@@ -172,7 +172,7 @@ class TrialScheduler:
         """
         return SchedulerDecision.CONTINUE
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Notification for the completion of trial.
 
         Note that :meth:`on_trial_result` is called with the same result before.
@@ -194,7 +194,7 @@ class TrialScheduler:
         """
         pass
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

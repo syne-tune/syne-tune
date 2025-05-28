@@ -1,4 +1,5 @@
-from typing import Callable, Optional, List, Dict, Any
+from typing import Optional, Any
+from collections.abc import Callable
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 from numpy.random import RandomState
@@ -50,14 +51,14 @@ class GPRegressionMCMC(GaussianProcessModel):
         self.build_kernel = build_kernel
 
     @property
-    def states(self) -> Optional[List[GaussProcPosteriorState]]:
+    def states(self) -> Optional[list[GaussProcPosteriorState]]:
         return self._states
 
     @property
     def number_samples(self) -> int:
         return self.mcmc_config.n_samples
 
-    def fit(self, data: Dict[str, Any]):
+    def fit(self, data: dict[str, Any]):
         features, targets = self._check_features_targets(
             features=data["features"], targets=data["targets"]
         )
@@ -96,7 +97,7 @@ class GPRegressionMCMC(GaussianProcessModel):
         )
         self._states = self._create_posterior_states(self.samples, features, targets)
 
-    def recompute_states(self, data: Dict[str, Any]):
+    def recompute_states(self, data: dict[str, Any]):
         """
         Supports fantasizing, in that targets can be a matrix. Then,
         ycols = targets.shape[1] must be a multiple of self.number_samples.

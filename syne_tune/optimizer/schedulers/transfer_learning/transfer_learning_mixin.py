@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
@@ -8,8 +8,8 @@ from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_eva
 class TransferLearningMixin:
     def __init__(
         self,
-        config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        config_space: dict,
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
         metric: str,
         random_seed: int = None,
         **kwargs,
@@ -31,8 +31,8 @@ class TransferLearningMixin:
 
     def _check_consistency(
         self,
-        config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        config_space: dict,
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
     ):
         for task, evals in transfer_learning_evaluations.items():
             for key in config_space.keys():
@@ -47,10 +47,10 @@ class TransferLearningMixin:
 
     def top_k_hyperparameter_configurations_per_task(
         self,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
         num_hyperparameters_per_task: int,
         do_minimize: bool = False,
-    ) -> Dict[str, List[Dict[str, Any]]]:
+    ) -> dict[str, list[dict[str, Any]]]:
         """
         Returns the best hyperparameter configurations for each task.
         :param transfer_learning_evaluations: Set of candidates to choose from.

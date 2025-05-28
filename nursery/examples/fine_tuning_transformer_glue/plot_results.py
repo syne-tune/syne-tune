@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
 from benchmarking.benchmark_definitions import (
@@ -14,7 +14,7 @@ from syne_tune.experiments import (
 SETUPS = list(methods.keys())
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     # The setup is the algorithm. No filtering
     return metadata["algorithm"]
 

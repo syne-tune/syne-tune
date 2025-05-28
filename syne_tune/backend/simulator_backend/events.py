@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Optional, Any
 import heapq
 
 
@@ -51,10 +51,10 @@ class OnTrialResultEvent(Event):
 
     """
 
-    result: Dict[str, Any]
+    result: dict[str, Any]
 
 
-EventHeapType = List[Tuple[float, int, Event]]
+EventHeapType = list[tuple[float, int, Event]]
 
 
 class SimulatorState:
@@ -97,7 +97,7 @@ class SimulatorState:
         ]
         heapq.heapify(self.event_heap)
 
-    def next_until(self, time_until: float) -> Optional[Tuple[float, Event]]:
+    def next_until(self, time_until: float) -> Optional[tuple[float, Event]]:
         """
         Returns (and pops) event on top of heap, if event time is <=
         ``time_until``. Otherwise, returns None.

@@ -1,6 +1,3 @@
-from typing import List
-
-
 class MultiFidelitySchedulerMixin:
     """
     Declares properties which are required for multi-fidelity schedulers.
@@ -21,7 +18,7 @@ class MultiFidelitySchedulerMixin:
         raise NotImplementedError
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         """
         :return: Rung levels (positive int; increasing), may or may not
             include ``max_resource_level``

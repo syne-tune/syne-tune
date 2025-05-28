@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quan
 class QuantileRegressionSurrogateModel(SurrogateModel):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         mode: str,
         random_state: Optional[np.random.RandomState] = None,
         max_fit_samples: Optional[int] = None,

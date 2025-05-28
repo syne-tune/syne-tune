@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 
 from syne_tune.optimizer.schedulers.searchers.legacy_gp_fifo_searcher import (
     GPFIFOSearcher,
@@ -92,9 +92,9 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         **kwargs,
     ):
         assert kwargs.get("cost_attr") is not None, (

@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 from itertools import product
-from typing import Optional, List, Dict, Union, Any
+from typing import Optional, Union, Any
 
 import numpy as np
 
@@ -41,13 +41,13 @@ class LegacyRandomSearcher(StochasticAndFilterDuplicatesSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: Union[List[str], str],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        metric: Union[list[str], str],
+        points_to_evaluate: Optional[list[dict]] = None,
         debug_log: Union[bool, DebugLogPrinter] = False,
         resource_attr: Optional[str] = None,
         allow_duplicates: Optional[bool] = None,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[list[dict[str, Any]]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -112,7 +112,7 @@ class LegacyRandomSearcher(StochasticAndFilterDuplicatesSearcher):
             logger.warning(msg)
         return new_config
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         if self._debug_log is not None:
             if self._resource_attr is not None:
                 # For HyperbandScheduler, also add the resource attribute
@@ -126,7 +126,7 @@ class LegacyRandomSearcher(StochasticAndFilterDuplicatesSearcher):
                 msg += f"{result[self._metric]:.3f}"
             logger.info(msg)
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         new_searcher = LegacyRandomSearcher(
             self.config_space,
             metric=self._metric,
@@ -171,10 +171,10 @@ class GridSearcher(StochasticSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
-        num_samples: Optional[Dict[str, int]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
+        num_samples: Optional[dict[str, int]] = None,
         shuffle_config: bool = True,
         allow_duplicates: bool = False,
         **kwargs,
@@ -198,7 +198,7 @@ class GridSearcher(StochasticSearcher):
         self._all_initial_configs = ExclusionList(self._hp_ranges)
 
     def _validate_config_space(
-        self, config_space: Dict[str, Any], num_samples: Optional[Dict[str, int]]
+        self, config_space: dict[str, Any], num_samples: Optional[dict[str, int]]
     ):
         """
         Validates ``config_space`` from two aspects: first, that all
@@ -337,7 +337,7 @@ class GridSearcher(StochasticSearcher):
                 self._all_initial_configs = ExclusionList(self._hp_ranges)
         return candidate
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         state = dict(
             super().get_state(),
             next_index=self._next_index,
@@ -345,7 +345,7 @@ class GridSearcher(StochasticSearcher):
         )
         return state
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         new_searcher = GridSearcher(
             config_space=self.config_space,
             num_samples=self.num_samples,
@@ -355,11 +355,11 @@ class GridSearcher(StochasticSearcher):
         new_searcher._restore_from_state(state)
         return new_searcher
 
-    def _restore_from_state(self, state: Dict[str, Any]):
+    def _restore_from_state(self, state: dict[str, Any]):
         super()._restore_from_state(state)
         self._next_index = state["next_index"]
         self._all_initial_configs = ExclusionList(self._hp_ranges)
         self._all_initial_configs.clone_from_state(state["all_initial_configs"])
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         pass

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 
 import numpy as np
 
@@ -36,13 +36,13 @@ class SKLearnPredictorWrapper(BasePredictor):
         super().__init__(state, active_metric)
         self.sklearn_predictor = sklearn_predictor
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         means, stddevs = self.sklearn_predictor.predict(X=inputs)
         return [{"mean": means, "std": stddevs}]
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         r"""
         Computes the gradient :math:`\nabla f(x)` for an acquisition
         function :math:`f(x)`, where :math:`x` is a single input point. This
@@ -81,10 +81,10 @@ class SKLearnEstimatorWrapper(Estimator):
         self.sklearn_estimator = sklearn_estimator
         self.target_metric = active_metric
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self.sklearn_estimator.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.sklearn_estimator.set_params(param_dict)
 
     def fit_from_state(self, state: TuningJobState, update_params: bool) -> Predictor:

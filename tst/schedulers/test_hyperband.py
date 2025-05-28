@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Dict, Tuple, Any
+from typing import Optional, Any
 import pytest
 import numpy as np
 
@@ -30,7 +30,7 @@ def _make_result(epoch, metric):
     return dict(epoch=epoch, metric=metric)
 
 
-def _new_trial(trial_id: int, config: Dict[str, Any]):
+def _new_trial(trial_id: int, config: dict[str, Any]):
     return Trial(trial_id=trial_id, config=config, creation_time=datetime.now())
 
 
@@ -40,7 +40,7 @@ class MyRandomSearcher(LegacyRandomSearcher):
         self._pending_records = []
 
     def register_pending(
-        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+        self, trial_id: str, config: Optional[dict] = None, milestone=None
     ):
         self._pending_records.append((trial_id, config, milestone))
 
@@ -50,7 +50,7 @@ class MyRandomSearcher(LegacyRandomSearcher):
         return result
 
 
-def _should_be(record: Tuple, trial_id: int, milestone: int, config_none: bool):
+def _should_be(record: tuple, trial_id: int, milestone: int, config_none: bool):
     assert record[0] == str(trial_id) and record[2] == milestone, (
         record,
         trial_id,

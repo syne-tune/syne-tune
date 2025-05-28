@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional
 import copy
 from numpy.random import RandomState
 from operator import itemgetter
@@ -15,11 +15,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 )
 
 
-ObservedData = List[Tuple[int, float]]
+ObservedData = list[tuple[int, float]]
 
 
 def _extract_observations(
-    trials_evaluations: List[TrialEvaluations],
+    trials_evaluations: list[TrialEvaluations],
 ) -> ObservedData:
     """
     Maps ``trials_evaluations`` to list of tuples :math:`(i, y_i)`, where
@@ -34,7 +34,7 @@ def _extract_observations(
     ]
 
 
-def _create_trials_evaluations(data: ObservedData) -> List[TrialEvaluations]:
+def _create_trials_evaluations(data: ObservedData) -> list[TrialEvaluations]:
     """Inverse of :func:`_extract_observations`
 
     :param data: List of tuples

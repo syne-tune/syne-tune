@@ -4,7 +4,7 @@ import logging
 import numpy as np
 
 from collections import deque
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 from dataclasses import dataclass
 
 from syne_tune.config_space import config_space_size, non_constant_hyperparameter_keys
@@ -19,16 +19,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PopulationElement:
     score: float = 0
-    config: Dict[str, Any] = None
-    results: List[float] = None
+    config: dict[str, Any] = None
+    results: list[float] = None
 
 
 def mutate_config(
-    config: Dict[str, Any],
-    config_space: Dict[str, Any],
+    config: dict[str, Any],
+    config_space: dict[str, Any],
     rng: np.random.RandomState,
     num_try: int = 1000,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
 
     child_config = copy.deepcopy(config)
     hp_name = rng.choice(non_constant_hyperparameter_keys(config_space))
@@ -44,8 +44,8 @@ def mutate_config(
 
 
 def sample_random_config(
-    config_space: Dict[str, Any], rng: np.random.RandomState
-) -> Dict[str, Any]:
+    config_space: dict[str, Any], rng: np.random.RandomState
+) -> dict[str, Any]:
     return {
         k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()
     }
@@ -76,7 +76,7 @@ class RegularizedEvolution(SingleObjectiveBaseSearcher):
     def __init__(
         self,
         config_space,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         population_size: int = 100,
         sample_size: int = 10,
         random_seed: int = None,
@@ -118,7 +118,7 @@ class RegularizedEvolution(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         # Add element to the population

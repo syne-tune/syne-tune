@@ -1,5 +1,3 @@
-from typing import Dict
-
 from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
@@ -13,7 +11,7 @@ from syne_tune import StoppingCriterion, Tuner
 
 def load_transfer_learning_evaluations(
     blackbox_name: str, test_task: str, metric: str
-) -> Dict[str, LegacyTransferLearningTaskEvaluations]:
+) -> dict[str, LegacyTransferLearningTaskEvaluations]:
     bb_dict = load_blackbox(blackbox_name)
     metric_index = [
         i

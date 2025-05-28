@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 import logging
 
 import numpy as np
@@ -58,8 +58,8 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict]] = None,
         num_init_random: int = 3,
         no_fantasizing: bool = False,
         max_num_observations: Optional[int] = 200,
@@ -87,7 +87,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         trial_id = int(trial_id)
@@ -222,7 +222,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
+    def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
@@ -230,14 +230,14 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     def objectives(self):
         return np.array(list(self.trial_observations.values()))
 
-    def _configs_with_results(self) -> List[dict]:
+    def _configs_with_results(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if not trial in self.pending_trials
         ]
 
-    def _configs_pending(self) -> List[dict]:
+    def _configs_pending(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()

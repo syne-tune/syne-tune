@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -24,9 +24,9 @@ class LegacyTransferLearningTaskEvaluations:
             (num_evals, num_seeds, num_fidelities, num_objectives)
     """
 
-    configuration_space: Dict
+    configuration_space: dict
     hyperparameters: pd.DataFrame
-    objectives_names: List[str]
+    objectives_names: list[str]
     objectives_evaluations: np.array
 
     def __post_init__(self):
@@ -56,7 +56,7 @@ class LegacyTransferLearningTaskEvaluations:
 
     def top_k_hyperparameter_configurations(
         self, k: int, mode: str, objective: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Returns the best k hyperparameter configurations.
         :param k: The number of top hyperparameters to return.
@@ -83,9 +83,9 @@ class LegacyTransferLearningTaskEvaluations:
 class LegacyTransferLearningMixin:
     def __init__(
         self,
-        config_space: Dict,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
-        metric_names: List[str],
+        config_space: dict,
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
+        metric_names: list[str],
         **kwargs,
     ):
         """
@@ -104,9 +104,9 @@ class LegacyTransferLearningMixin:
 
     def _check_consistency(
         self,
-        config_space: Dict,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
-        metric_names: List[str],
+        config_space: dict,
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
+        metric_names: list[str],
     ):
         for task, evals in transfer_learning_evaluations.items():
             for key in config_space.keys():
@@ -119,16 +119,16 @@ class LegacyTransferLearningMixin:
                 f"evaluations objectives {evals.objectives_names}"
             )
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self._metric_names
 
     def top_k_hyperparameter_configurations_per_task(
         self,
-        transfer_learning_evaluations: Dict[str, LegacyTransferLearningTaskEvaluations],
+        transfer_learning_evaluations: dict[str, LegacyTransferLearningTaskEvaluations],
         num_hyperparameters_per_task: int,
         mode: str,
         metric: str,
-    ) -> Dict[str, List[Dict[str, Any]]]:
+    ) -> dict[str, list[dict[str, Any]]]:
         """
         Returns the best hyperparameter configurations for each task.
         :param transfer_learning_evaluations: Set of candidates to choose from.

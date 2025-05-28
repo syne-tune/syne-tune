@@ -6,7 +6,7 @@ from operator import itemgetter
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Optional, Any
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
@@ -57,7 +57,7 @@ class LocalBackend(TrialBackend):
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
         num_gpus_per_trial: int = 1,
-        gpus_to_use: Optional[List[int]] = None,
+        gpus_to_use: Optional[list[int]] = None,
     ):
         super(LocalBackend, self).__init__(
             delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
@@ -152,7 +152,7 @@ class LocalBackend(TrialBackend):
                 # Nothing to rotate over
                 self.rotate_gpus = False
 
-    def _gpus_for_new_trial(self) -> List[int]:
+    def _gpus_for_new_trial(self) -> list[int]:
         """
         Selects ``num_gpus_per_trial`` GPUs for trial to be scheduled on. GPUs
         not assigned to other running trials have precedence. Ties are resolved
@@ -184,7 +184,7 @@ class LocalBackend(TrialBackend):
             self.gpu_times_assigned[gpu] += 1
         return res_gpu
 
-    def _schedule(self, trial_id: int, config: Dict[str, Any]):
+    def _schedule(self, trial_id: int, config: dict[str, Any]):
         self._prepare_for_schedule()
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
@@ -216,7 +216,7 @@ class LocalBackend(TrialBackend):
                 )
         self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
-    def _allocate_gpu(self, trial_id: int, env: Dict[str, Any]):
+    def _allocate_gpu(self, trial_id: int, env: dict[str, Any]):
         if self.rotate_gpus:
             gpus = self._gpus_for_new_trial()
             if self.gpus_to_use is not None:
@@ -233,7 +233,7 @@ class LocalBackend(TrialBackend):
         if self.rotate_gpus and trial_id in self.trial_gpu:
             del self.trial_gpu[trial_id]
 
-    def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+    def _all_trial_results(self, trial_ids: list[int]) -> list[TrialResult]:
         res = []
         for trial_id in trial_ids:
             trial_path = self.trial_path(trial_id)
@@ -329,7 +329,7 @@ class LocalBackend(TrialBackend):
                 else:
                     return Status.failed
 
-    def _get_busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def _get_busy_trial_ids(self) -> list[tuple[int, str]]:
         busy_list = []
         for trial_id in self._busy_trial_id_candidates:
             status = self._read_status(trial_id)
@@ -337,7 +337,7 @@ class LocalBackend(TrialBackend):
                 busy_list.append((trial_id, status))
         return busy_list
 
-    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def busy_trial_ids(self) -> list[tuple[int, str]]:
         # Note that at this point, ``self._busy_trial_id_candidates`` contains
         # trials whose jobs have been busy in the past, but they may have
         # stopped or terminated since. We query the current status for all
@@ -350,11 +350,11 @@ class LocalBackend(TrialBackend):
         else:
             return []
 
-    def stdout(self, trial_id: int) -> List[str]:
+    def stdout(self, trial_id: int) -> list[str]:
         with open(self.trial_path(trial_id=trial_id) / "std.out", "r") as f:
             return f.readlines()
 
-    def stderr(self, trial_id: int) -> List[str]:
+    def stderr(self, trial_id: int) -> list[str]:
         with open(self.trial_path(trial_id=trial_id) / "std.err", "r") as f:
             return f.readlines()
 

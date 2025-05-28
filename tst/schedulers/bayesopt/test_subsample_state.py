@@ -1,4 +1,4 @@
-from typing import Tuple, List, Optional, Dict, Any
+from typing import Optional, Any
 import pytest
 from operator import itemgetter
 from numpy.random import RandomState
@@ -28,7 +28,7 @@ from syne_tune.optimizer.schedulers.utils.successive_halving import (
 
 
 def _state_from_data(
-    data: List[Tuple[int, int]], hp_ranges: HyperparameterRanges
+    data: list[tuple[int, int]], hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     trial_ids = set(i for i, _ in data)
     config_for_trial = {str(trial_id): dict() for trial_id in trial_ids}
@@ -41,7 +41,7 @@ def _state_from_data(
     )
 
 
-def _data_from_state(state: TuningJobState) -> List[Tuple[int, int]]:
+def _data_from_state(state: TuningJobState) -> list[tuple[int, int]]:
     return [(i, r) for i, r, _ in _extract_observations(state.trials_evaluations)]
 
 
@@ -238,8 +238,8 @@ def test_cap_size_tuning_job_state(data, result_part, max_size):
 
 
 def _partition_wrt_rung_levels(
-    data: List[Tuple[int, int]], rung_levels: List[int]
-) -> List[List[Tuple[int, int]]]:
+    data: list[tuple[int, int]], rung_levels: list[int]
+) -> list[list[tuple[int, int]]]:
     r"""
     Partitions ``data`` into parts according to :math:`r_j < r \le r_{j+1}`,
     where :math:`[r_j]` is ``rung_levels``.
@@ -256,8 +256,8 @@ def _partition_wrt_rung_levels(
 
 
 def _sparsify_at_most_one_per_trial(
-    data: List[Tuple[int, int]], target_size: Optional[int]
-) -> List[Tuple[int, int]]:
+    data: list[tuple[int, int]], target_size: Optional[int]
+) -> list[tuple[int, int]]:
     """
     Filters ``data`` so that for every trial ID :math:`i` in ``data``, only
     the entry with the largest resource :math:`r` is retained. If ``target_size``
@@ -285,8 +285,8 @@ def _sparsify_at_most_one_per_trial(
 
 
 def _sparsify_data(
-    data: List[Tuple[int, int]], max_size: int, rung_levels: List[int]
-) -> List[Tuple[int, int]]:
+    data: list[tuple[int, int]], max_size: int, rung_levels: list[int]
+) -> list[tuple[int, int]]:
     """
     Does the same as
     :func:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state.sparsify_tuning_job_state`,
@@ -315,8 +315,8 @@ def _sparsify_data(
 
 
 def _error_message_comparison(
-    data1: List[Tuple[int, int]],
-    data2: List[Tuple[int, int]],
+    data1: list[tuple[int, int]],
+    data2: list[tuple[int, int]],
 ) -> str:
     parts = [
         f"{x}   {y}"
@@ -331,7 +331,7 @@ def _random_data(
     random_state: RandomState,
     r_min: Optional[int] = None,
     r_step: Optional[int] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     # Create data at random
     num_trials = random_state.randint(low=1, high=30)
     if r_min is None:
@@ -410,8 +410,8 @@ def test_sparsify_tuning_job_state():
 
 
 def _sparsify_data_simple(
-    data: List[Tuple[int, int]], max_size: int, rung_levels: List[int]
-) -> List[Tuple[int, int]]:
+    data: list[tuple[int, int]], max_size: int, rung_levels: list[int]
+) -> list[tuple[int, int]]:
     """
     Different to :func:`_sparsify_data` above, data for trial :math:`i` is
     given for resource levels :math:`1, 2, \dots, r_i`.
@@ -486,7 +486,7 @@ def test_sparsify_tuning_job_state_simple():
 
 
 def _state_from_data_singlefid(
-    data: List[Tuple[int, float]], hp_ranges: HyperparameterRanges
+    data: list[tuple[int, float]], hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     trial_ids = set(i for i, _ in data)
     config_for_trial = {str(trial_id): dict() for trial_id in trial_ids}
@@ -499,7 +499,7 @@ def _state_from_data_singlefid(
     )
 
 
-def _data_from_state_singlefid(state: TuningJobState) -> List[Tuple[int, float]]:
+def _data_from_state_singlefid(state: TuningJobState) -> list[tuple[int, float]]:
     return _extract_observations_singlefid(state.trials_evaluations)
 
 

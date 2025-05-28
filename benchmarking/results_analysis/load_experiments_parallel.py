@@ -3,7 +3,6 @@ import logging
 from collections import defaultdict
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -153,7 +152,7 @@ def load_benchmark_results(
     max_seed: int = None,
     experiment_filter=None,
     engine: str = "joblib",
-) -> Dict[str, Tuple[np.array, Dict[str, np.array]]]:
+) -> dict[str, tuple[np.array, dict[str, np.array]]]:
     """
     :param path: where results are stored
     :param methods: list of methods to consider

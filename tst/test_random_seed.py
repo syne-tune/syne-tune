@@ -1,4 +1,3 @@
-from typing import Dict
 import pytest
 import itertools
 import logging
@@ -26,7 +25,7 @@ class StoreConfigCallback(TunerCallback):
     def _to_tuple(self, config):
         return tuple(config[k] for k in self._keys)
 
-    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         config = self._reduce(trial.config)
         key = self._to_tuple(config)
         if key not in self._configs_set:

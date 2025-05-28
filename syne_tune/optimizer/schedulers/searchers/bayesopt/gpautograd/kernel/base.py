@@ -1,6 +1,6 @@
 import autograd.numpy as anp
 from autograd.tracer import getval
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     INITIAL_COVARIANCE_SCALE,
@@ -142,7 +142,7 @@ class SquaredDistance(Block):
 
         return anp.abs(D)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         Parameter keys are "inv_bw<k> "if ``dimension > 1``, and "inv_bw" if
         ``dimension == 1``.
@@ -156,7 +156,7 @@ class SquaredDistance(Block):
                 for k in range(inverse_bandwidths.size)
             }
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         dimension = self.encoding.dimension
         if dimension == 1:
             inverse_bandwidths = [param_dict["inv_bw"]]
@@ -272,13 +272,13 @@ class Matern52(KernelFunction):
         assert self.has_covariance_scale, "covariance_scale is fixed to 1"
         self.encoding.set(self.covariance_scale_internal, covariance_scale)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         result = self.squared_distance.get_params()
         if self.has_covariance_scale:
             result["covariance_scale"] = self.get_covariance_scale()
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.squared_distance.set_params(param_dict)
         if self.has_covariance_scale:
             self.set_covariance_scale(param_dict["covariance_scale"])

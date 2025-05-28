@@ -1,4 +1,5 @@
-from typing import Optional, Callable
+from typing import Optional
+from collections.abc import Callable
 
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.tuning_status import TuningStatus

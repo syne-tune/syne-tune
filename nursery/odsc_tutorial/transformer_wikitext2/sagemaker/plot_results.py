@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 import logging
 
 from transformer_wikitext2.benchmark_definitions import benchmark_definitions
@@ -12,7 +12,7 @@ TMLR10_SETUPS = [
 ]
 
 
-def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
+def metadata_to_setup(metadata: dict[str, Any]) -> Optional[str]:
     return f"{metadata['n_workers']} workers"
 
 

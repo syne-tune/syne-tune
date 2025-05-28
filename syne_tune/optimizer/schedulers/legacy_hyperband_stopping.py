@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any, Optional
 from sortedcontainers import SortedList
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class Rung:
         level: int,
         prom_quant: float,
         mode: str,
-        data: Optional[List[RungEntry]] = None,
+        data: Optional[list[RungEntry]] = None,
     ):
         self.level = level
         assert 0 < prom_quant < 1
@@ -96,7 +96,7 @@ class Rung:
         return g * values[1] + (1 - g) * values[0]
 
 
-PausedTrialsResult = List[Tuple[str, int, float, int]]
+PausedTrialsResult = list[tuple[str, int, float, int]]
 
 
 class RungSystem:
@@ -120,8 +120,8 @@ class RungSystem:
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -139,7 +139,7 @@ class RungSystem:
             for x, y in reversed(list(zip(rung_levels, promote_quantiles)))
         ]
 
-    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> dict[str, Any]:
         """Called when new task is to be scheduled.
 
         For a promotion-based rung system, check whether any trial can be
@@ -178,8 +178,8 @@ class RungSystem:
         pass
 
     def on_task_report(
-        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
-    ) -> Dict[str, Any]:
+        self, trial_id: str, result: dict[str, Any], skip_rungs: int
+    ) -> dict[str, Any]:
         """Called when a trial reports metric results.
 
         Returns dict with keys "milestone_reached" (trial reaches its milestone),
@@ -214,13 +214,13 @@ class RungSystem:
             else self._max_t
         )
 
-    def _milestone_rungs(self, skip_rungs: int) -> List[Rung]:
+    def _milestone_rungs(self, skip_rungs: int) -> list[Rung]:
         if skip_rungs > 0:
             return self._rungs[:(-skip_rungs)]
         else:
             return self._rungs
 
-    def get_milestones(self, skip_rungs: int) -> List[int]:
+    def get_milestones(self, skip_rungs: int) -> list[int]:
         """
         :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
@@ -230,9 +230,9 @@ class RungSystem:
         milestone_rungs = self._milestone_rungs(skip_rungs)
         return [x.level for x in milestone_rungs]
 
-    def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, List[RungEntry]]]:
+    def snapshot_rungs(self, skip_rungs: int) -> list[tuple[int, list[RungEntry]]]:
         """
-        A snapshot is a list of rung levels with entries ``(level, data)``,
+        A snapshot is a List of rung levels with entries ``(level, data)``,
         ordered from top to bottom (largest rung first).
 
         :param skip_rungs: This number of the smallest rung levels are not
@@ -274,7 +274,7 @@ class RungSystem:
         """
         return []
 
-    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+    def information_for_rungs(self) -> list[tuple[int, int, float]]:
         """
         :return: List of ``(resource, num_entries, prom_quant)``, where
             ``resource`` is a rung level, ``num_entries`` the number of entries
@@ -323,12 +323,12 @@ class StoppingRungSystem(RungSystem):
             return True
         return metric_val <= cutoff if self._mode == "min" else metric_val >= cutoff
 
-    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> dict[str, Any]:
         return dict()
 
     def on_task_report(
-        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
-    ) -> Dict[str, Any]:
+        self, trial_id: str, result: dict[str, Any], skip_rungs: int
+    ) -> dict[str, Any]:
         resource = result[self._resource_attr]
         metric_val = result[self._metric]
         if resource == self._max_t:

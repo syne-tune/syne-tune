@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
@@ -58,15 +58,15 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         estimator: SKLearnEstimator,
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[list[dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):

@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 
 import numpy as np
 
@@ -83,7 +83,7 @@ class MedianStoppingRule(TrialScheduler):
     def suggest(self) -> Optional[TrialSuggestion]:
         return self.scheduler.suggest()
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         new_metric = result[self.metric] * self.metric_multiplier
 
         time_step = result[self.resource_attr]
@@ -127,7 +127,7 @@ class MedianStoppingRule(TrialScheduler):
             return True
         return False
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

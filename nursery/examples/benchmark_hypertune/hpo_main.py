@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from baselines import methods
 from benchmark_definitions import benchmark_definitions
@@ -21,7 +21,7 @@ extra_args = [
 ]
 
 
-def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: dict[str, Any]) -> dict[str, Any]:
     if method.startswith("HYPERTUNE"):
         scheduler_kwargs = {
             "search_options": {"hypertune_distribution_num_samples": args.num_samples},

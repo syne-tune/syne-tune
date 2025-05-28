@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, Any
 
 from syne_tune.optimizer.schedulers.legacy_hyperband_stopping import (
     RungEntry,
@@ -52,8 +52,8 @@ class PromotionRungSystem(RungSystem):
 
     def __init__(
         self,
-        rung_levels: List[int],
-        promote_quantiles: List[float],
+        rung_levels: list[int],
+        promote_quantiles: list[float],
         metric: str,
         mode: str,
         resource_attr: str,
@@ -71,7 +71,7 @@ class PromotionRungSystem(RungSystem):
         # is required for ``on_task_report`` to properly report ``ignore_data``.
         self._running = dict()
 
-    def _find_promotable_trial(self, rung: Rung) -> Optional[Tuple[str, int]]:
+    def _find_promotable_trial(self, rung: Rung) -> Optional[tuple[str, int]]:
         """
         Check whether any not yet promoted entry in ``rung`` is
         promotable, i.e. it lies left of (or is equal to) the pivot.
@@ -129,7 +129,7 @@ class PromotionRungSystem(RungSystem):
         """
         return self._max_t
 
-    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> dict[str, Any]:
         """
         Used to implement
         :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
@@ -190,14 +190,14 @@ class PromotionRungSystem(RungSystem):
         self._running[trial_id] = {"milestone": milestone, "resume_from": resume_from}
 
     def _register_metrics_at_rung_level(
-        self, trial_id: str, result: Dict[str, Any], rung: Rung
+        self, trial_id: str, result: dict[str, Any], rung: Rung
     ):
         assert trial_id not in rung  # Sanity check
         rung.add(PromotionRungEntry(trial_id=trial_id, metric_val=result[self._metric]))
 
     def on_task_report(
-        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
-    ) -> Dict[str, Any]:
+        self, trial_id: str, result: dict[str, Any], skip_rungs: int
+    ) -> dict[str, Any]:
         """
         Decision on whether task may continue (``task_continues=True``), or
         should be paused (``task_continues=False``).

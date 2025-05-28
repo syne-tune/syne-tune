@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Union, List
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 @dataclass
 class QuantileRegressorPredictions:
-    quantiles: List[float]
+    quantiles: list[float]
     results_stacked: np.ndarray
 
     def results(self, quantile: float) -> np.ndarray:
@@ -25,7 +25,7 @@ class QuantileRegressorPredictions:
 
     @classmethod
     def from_quantile_results(
-        cls, quantiles: List[float], results: Dict[float, np.ndarray]
+        cls, quantiles: list[float], results: dict[float, np.ndarray]
     ):
         listres = [results[item] for item in quantiles]
         results_stacked = np.stack(listres, axis=1)
@@ -43,7 +43,7 @@ class QuantileRegressorPredictions:
 
 
 class QuantileRegressor:
-    quantiles: List[float]
+    quantiles: list[float]
 
     def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
         raise NotImplementedError()
@@ -52,7 +52,7 @@ class QuantileRegressor:
 class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegressor):
     def __init__(
         self,
-        quantiles: Union[int, List[float]] = 5,
+        quantiles: Union[int, list[float]] = 5,
         verbose: bool = False,
         valid_fraction: float = 0.0,
         **kwargs,

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 import numpy as np
 
 from syne_tune.blackbox_repository.blackbox import Blackbox, ObjectiveFunctionResult
@@ -31,7 +31,7 @@ class HeightExampleBlackbox(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
+        configuration: dict[str, Any],
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> ObjectiveFunctionResult:

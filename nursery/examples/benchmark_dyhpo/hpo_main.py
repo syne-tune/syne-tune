@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 
 from baselines import methods
 from benchmark_definitions import benchmark_definitions
@@ -36,7 +36,7 @@ extra_args = [
 ]
 
 
-def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: dict[str, Any]) -> dict[str, Any]:
     scheduler_kwargs = dict()
     if method.startswith("DYHPO"):
         if args.rung_increment is not None:
@@ -57,7 +57,7 @@ def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[st
 
 
 class DyHPOExtraResults(ExtraResultsComposer):
-    def __call__(self, tuner: "Tuner") -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner: "Tuner") -> Optional[dict[str, Any]]:
         # Only for DyHPO
         result = None
         scheduler = tuner.scheduler
@@ -68,7 +68,7 @@ class DyHPOExtraResults(ExtraResultsComposer):
             result = scheduler.terminator._rung_systems[0].summary_schedule_records()
         return result
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         return DyHPORungSystem.summary_schedule_keys()
 
 

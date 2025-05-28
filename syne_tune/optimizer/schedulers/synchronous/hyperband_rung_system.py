@@ -1,11 +1,11 @@
-from typing import List, Tuple, Optional
+from typing import Optional
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-RungSystemsPerBracket = List[List[Tuple[int, int]]]
+RungSystemsPerBracket = list[list[tuple[int, int]]]
 
 
 class SynchronousHyperbandRungSystem:

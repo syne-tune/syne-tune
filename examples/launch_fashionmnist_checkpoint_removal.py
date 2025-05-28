@@ -1,7 +1,7 @@
 """
 Example for speculative checkpoint removal with asynchronous multi-fidelity
 """
-from typing import Optional, Dict, Any, List
+from typing import Optional, Any
 import logging
 
 from syne_tune.backend import LocalBackend
@@ -23,11 +23,11 @@ from benchmarking.benchmark_definitions.mlp_on_fashionmnist import (
 # This is used to monitor what the checkpoint removal mechanism is doing, and
 # writing out results. This is optional, the mechanism works without this.
 class CPRemovalExtraResults(ExtraResultsComposer):
-    def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner: Tuner) -> Optional[dict[str, Any]]:
         callback = find_first_of_type(tuner.callbacks, HyperbandRemoveCheckpointsCommon)
         return None if callback is None else callback.extra_results()
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         return HyperbandRemoveCheckpointsCommon.extra_results_keys()
 
 

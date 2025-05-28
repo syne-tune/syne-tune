@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional
 
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
@@ -18,7 +18,7 @@ class MethodArguments:
     mode: str
     random_seed: int
     resource_attr: str
-    points_to_evaluate: List[dict]
+    points_to_evaluate: list[dict]
     max_t: Optional[int] = None
     max_resource_attr: Optional[str] = None
     use_surrogates: bool = False

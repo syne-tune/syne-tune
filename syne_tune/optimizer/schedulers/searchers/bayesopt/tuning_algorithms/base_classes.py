@@ -1,15 +1,9 @@
 from typing import (
-    List,
-    Iterable,
-    Tuple,
     Optional,
-    Set,
-    Dict,
     Union,
-    Iterator,
-    Callable,
     Any,
 )
+from collections.abc import Iterable, Iterator, Callable
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
@@ -49,7 +43,7 @@ def assign_active_metric(predictor, active_metric):
 
 
 class NextCandidatesAlgorithm:
-    def next_candidates(self) -> List[Configuration]:
+    def next_candidates(self) -> list[Configuration]:
         raise NotImplementedError
 
 
@@ -72,7 +66,7 @@ class Predictor:
             active_metric = INTERNAL_METRIC_NAME
         self.active_metric = active_metric
 
-    def keys_predict(self) -> Set[str]:
+    def keys_predict(self) -> set[str]:
         """Keys of signals returned by :meth:`predict`.
 
         Note: In order to work with :class:`AcquisitionFunction` implementations,
@@ -85,7 +79,7 @@ class Predictor:
         """
         return {"mean", "std"}
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         """
         Returns signals which are statistics of the predictive distribution at
         input points ``inputs``. By default:
@@ -114,7 +108,7 @@ class Predictor:
 
     def predict_candidates(
         self, candidates: Iterable[Configuration]
-    ) -> List[Dict[str, np.ndarray]]:
+    ) -> list[dict[str, np.ndarray]]:
         """Convenience variant of :meth:`predict`
 
         :param candidates: List of configurations
@@ -124,7 +118,7 @@ class Predictor:
             self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
         )
 
-    def current_best(self) -> List[np.ndarray]:
+    def current_best(self) -> list[np.ndarray]:
         """
         Returns the so-called incumbent, to be used in acquisition functions
         such as expected improvement. This is the minimum of predictive means
@@ -144,8 +138,8 @@ class Predictor:
         raise NotImplementedError
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         r"""
         Computes the gradient :math:`\nabla_x f(x)` for an acquisition
         function :math:`f(x)`, where :math:`x` is a single input point. This
@@ -169,7 +163,7 @@ class Predictor:
 # This is needed for multi-output BO methods such as legacy_constrained BO, where each output
 # is associated to a predictor. This type includes the Union with the standard
 # Predictor type for backward compatibility.
-OutputPredictor = Union[Predictor, Dict[str, Predictor]]
+OutputPredictor = Union[Predictor, dict[str, Predictor]]
 
 
 class ScoringFunction:
@@ -190,7 +184,7 @@ class ScoringFunction:
         self,
         candidates: Iterable[Configuration],
         predictor: Optional[OutputPredictor] = None,
-    ) -> List[float]:
+    ) -> list[float]:
         """
         :param candidates: Configurations for which scores are to be computed
         :param predictor: Overrides default  predictor
@@ -221,7 +215,7 @@ class AcquisitionFunction(ScoringFunction):
 
     def compute_acq_with_gradient(
         self, input: np.ndarray, predictor: Optional[OutputPredictor] = None
-    ) -> Tuple[float, np.ndarray]:
+    ) -> tuple[float, np.ndarray]:
         r"""
         For a single input point :math:`x`, compute acquisition function value
         :math:`f(x)` and gradient :math:`\nabla_x f(x)`.
@@ -236,7 +230,7 @@ class AcquisitionFunction(ScoringFunction):
         self,
         candidates: Iterable[Configuration],
         predictor: Optional[OutputPredictor] = None,
-    ) -> List[float]:
+    ) -> list[float]:
         if predictor is None:
             predictor = self.predictor
         if isinstance(predictor, dict):
@@ -312,7 +306,7 @@ class CandidateGenerator:
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         """
         :param num_cands: Number of candidates to generate
         :param exclusion_list: If given, these candidates must not be returned

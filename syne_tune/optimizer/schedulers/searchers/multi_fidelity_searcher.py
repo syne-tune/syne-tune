@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-from typing import Dict, Any, Optional, List, Union
+from typing import Any, Optional, Union
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -30,9 +30,9 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[list[dict]] = None,
         random_seed: Optional[int] = None,
         searcher_kwargs: dict[str, Any] = None,
     ):
@@ -61,7 +61,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
             )
         )
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> Optional[dict[str, Any]]:
         """Suggest a new configuration.
 
         Note: Query :meth:`_next_points_to_evaluate` for initial configs to return
@@ -92,7 +92,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     def on_trial_result(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
         resource_level: int,
     ):
@@ -111,7 +111,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
         resource_level: int,
     ):

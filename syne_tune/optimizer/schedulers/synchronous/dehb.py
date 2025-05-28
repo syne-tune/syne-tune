@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, Any
 import logging
 import numpy as np
 from dataclasses import dataclass
@@ -221,8 +221,8 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        rungs_first_bracket: List[Tuple[int, int]],
+        config_space: dict[str, Any],
+        rungs_first_bracket: list[tuple[int, int]],
         num_brackets_per_iteration: Optional[int] = None,
         **kwargs,
     ):
@@ -231,7 +231,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
 
     def _create_internal(
         self,
-        rungs_first_bracket: List[Tuple[int, int]],
+        rungs_first_bracket: list[tuple[int, int]],
         num_brackets_per_iteration: Optional[int] = None,
         **kwargs,
     ):
@@ -291,7 +291,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         self._rung_levels = [level for _, level in rungs_first_bracket]
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         return self._rung_levels
 
     @property
@@ -526,7 +526,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         result_failed.metric_val = np.NAN
         self.bracket_manager.on_result((ext_slot.bracket_id, result_failed))
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             ext_slot = self._trial_to_pending_slot[trial_id]
@@ -577,7 +577,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         return trial_decision
 
     def _extract_from_result(
-        self, trial_id: int, result: Dict[str, Any]
+        self, trial_id: int, result: dict[str, Any]
     ) -> (float, int):
         metric_vals = []
         for name in (self.metric, self._resource_attr):
@@ -659,7 +659,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
             logger.info(msg)
         return self._de_mutation(parent_trial_ids)
 
-    def _de_mutation(self, parent_trial_ids: List[int]) -> np.ndarray:
+    def _de_mutation(self, parent_trial_ids: list[int]) -> np.ndarray:
         """
         Corresponds to rand/1 mutation strategy of DE.
         """
@@ -740,7 +740,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
                 "on_trial_error call is ignored"
             )
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:

@@ -1,7 +1,7 @@
 # This file has been taken from Ray. The reason for reusing the file is to be able to support the same API when
 # defining search space while avoiding to have Ray as a required dependency. We may want to add functionality in the
 # future.
-from typing import Dict, Any, Union, Optional, List
+from typing import Any, Union, Optional
 from numbers import Real
 import numpy as np
 import logging
@@ -24,7 +24,7 @@ from syne_tune.util import is_integer
 logger = logging.getLogger(__name__)
 
 
-def fit_to_regular_grid(x: np.ndarray) -> Dict[str, float]:
+def fit_to_regular_grid(x: np.ndarray) -> dict[str, float]:
     r"""
     Computes the least squares fit of :math:`a * j + b` to ``x[j]``, where
     :math:`j = 0,\dots, n-1`. Returns the LS estimate of ``a``, ``b``, and the
@@ -179,10 +179,10 @@ def convert_domain(domain: Domain, name: Optional[str] = None) -> Domain:
 
 
 def streamline_config_space(
-    config_space: Dict[str, Any],
-    exclude_names: Optional[List[str]] = None,
+    config_space: dict[str, Any],
+    exclude_names: Optional[list[str]] = None,
     verbose: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Given a configuration space ``config_space``, this function returns a new
     configuration space where some domains may have been replaced by approximately

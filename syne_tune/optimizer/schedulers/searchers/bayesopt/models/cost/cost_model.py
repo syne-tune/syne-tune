@@ -1,4 +1,3 @@
-from typing import List
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
@@ -80,7 +79,7 @@ class CostModel:
         """
         pass
 
-    def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
+    def sample_joint(self, candidates: list[Configuration]) -> list[CostValue]:
         """
         Draws cost values :math:`(c_0(x), c_1(x))` for candidates (non-extended).
 
@@ -120,11 +119,11 @@ class CostModel:
 
     def predict_times(
         self,
-        candidates: List[Configuration],
-        resources: List[int],
-        cost_values: List[CostValue],
+        candidates: list[Configuration],
+        resources: list[int],
+        cost_values: list[CostValue],
         start_time: float = 0,
-    ) -> List[float]:
+    ) -> list[float]:
         """
         Given configs :math:`x`, resource values :math:`r` and cost values returned
         by :meth:`sample_joint`, compute time predictions for when each config

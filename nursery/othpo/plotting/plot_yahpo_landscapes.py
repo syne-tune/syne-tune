@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import numpy as np
-from typing import List
 import sys
 from pathlib import Path
 
@@ -21,7 +20,7 @@ def plot_hp_perf(
     scenario: str,
     instance: str,
     metric: str,
-    train_fracs: List[float],
+    train_fracs: list[float],
     x_par,
     y_par,
     log_x=True,

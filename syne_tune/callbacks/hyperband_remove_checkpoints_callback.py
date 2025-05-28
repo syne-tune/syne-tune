@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any, Optional
 import numpy as np
 import logging
 import time
@@ -40,7 +40,7 @@ class BetaBinomialEstimator:
         self._num_one = 0
         self._num_total = 0
 
-    def update(self, data: List[bool]):
+    def update(self, data: list[bool]):
         self._num_one += sum(data)
         self._num_total += len(data)
 
@@ -154,7 +154,7 @@ class HyperbandRemoveCheckpointsCommon(TunerCallback):
         self,
         paused_trials_with_checkpoints: PausedTrialsResult,
         num_to_remove: int,
-    ) -> List[TrialInformation]:
+    ) -> list[TrialInformation]:
         """
         Determine trials to be removed in :meth:`on_loop_end`.
         :param paused_trials_with_checkpoints: Paused trials with checkpoints
@@ -184,13 +184,13 @@ class HyperbandRemoveCheckpointsCommon(TunerCallback):
                 )
             logger.info("\n".join(msg_parts))
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         trial_id = str(trial.trial_id)
         self._trial_status[trial_id] = TrialStatus.STOPPED_OR_COMPLETED
         self._trials_with_checkpoints_removed.pop(trial_id, None)
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         trial_id = str(trial.trial_id)
         if decision == SchedulerDecision.CONTINUE:
@@ -217,14 +217,14 @@ class HyperbandRemoveCheckpointsCommon(TunerCallback):
             self._trials_resumed_without_checkpoint.append((trial_id, level))
             del self._trials_with_checkpoints_removed[trial_id]
 
-    def trials_resumed_without_checkpoint(self) -> List[Tuple[str, int]]:
+    def trials_resumed_without_checkpoint(self) -> list[tuple[str, int]]:
         """
         :return: List of ``(trial_id, level)`` for trials which were resumed, even
             though their checkpoint was removed
         """
         return self._trials_resumed_without_checkpoint
 
-    def extra_results(self) -> Dict[str, Any]:
+    def extra_results(self) -> dict[str, Any]:
         """
         :return: Dictionary containing information which can be appended to
             results written out
@@ -239,7 +239,7 @@ class HyperbandRemoveCheckpointsCommon(TunerCallback):
         }
 
     @staticmethod
-    def extra_results_keys() -> List[str]:
+    def extra_results_keys() -> list[str]:
         return ["num_checkpoints_removed", "num_trials_resumed", "cost_resources"]
 
 
@@ -340,7 +340,7 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
 
     def _prepare_score_inputs(
         self, trials_to_score: PausedTrialsResult
-    ) -> (List[str], np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+    ) -> (list[str], np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
         info_rungs = self._scheduler.terminator.information_for_rungs()
         lens_rung = {r: n for r, n, _ in info_rungs}
         prom_quants_rung = {r: alpha for r, _, alpha in info_rungs}
@@ -367,7 +367,7 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
 
     def _compute_scores(
         self, trials_to_score: PausedTrialsResult, time_ratio: float
-    ) -> List[TrialInformation]:
+    ) -> list[TrialInformation]:
         r"""
         Computes scores for paused trials in ``trials_to_score``, with entries
         ``(trial_id, rank, metric_val, level)``. These are approximations of
@@ -429,14 +429,14 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
         self,
         paused_trials_with_checkpoints: PausedTrialsResult,
         num_to_remove: int,
-    ) -> List[TrialInformation]:
+    ) -> list[TrialInformation]:
         time_ratio = self._get_time_ratio()
         # logger.info(f"*** Time ratio beta = {time_ratio}")
         # self._log_estimator_status()
         scores = self._compute_scores(paused_trials_with_checkpoints, time_ratio)
         return sorted(scores, key=lambda trial: trial.score_val)[:num_to_remove]
 
-    def _update_estimators(self, trial_id: str, result: Dict[str, Any]):
+    def _update_estimators(self, trial_id: str, result: dict[str, Any]):
         metric_val = float(result[self._metric])
         level = int(result[self._resource_attr])
         # Paused trials with checkpoints at rung level ``level``. If ``level`` is
@@ -456,7 +456,7 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
                 estimator.update(data)
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         super().on_trial_result(trial, status, result, decision)
         trial_id = str(trial.trial_id)
@@ -510,7 +510,7 @@ class HyperbandRemoveCheckpointsBaselineCallback(HyperbandRemoveCheckpointsCommo
         self,
         paused_trials_with_checkpoints: PausedTrialsResult,
         num_to_remove: int,
-    ) -> List[TrialInformation]:
+    ) -> list[TrialInformation]:
         terminator = self._scheduler.terminator
         info_rungs = terminator.information_for_rungs()
         lens_rung = {r: n for r, n, _ in info_rungs}

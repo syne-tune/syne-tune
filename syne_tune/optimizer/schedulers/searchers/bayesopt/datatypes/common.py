@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional, List
+from typing import Union, Optional
 from dataclasses import dataclass
 import numpy as np
 
@@ -14,7 +14,7 @@ def dictionarize_objective(x):
     return {INTERNAL_METRIC_NAME: x}
 
 
-MetricValues = Union[float, Dict[str, float]]
+MetricValues = Union[float, dict[str, float]]
 
 
 @dataclass
@@ -26,7 +26,7 @@ class TrialEvaluations:
     """
 
     trial_id: str
-    metrics: Dict[str, MetricValues]
+    metrics: dict[str, MetricValues]
 
     def num_cases(
         self, metric_name: str = INTERNAL_METRIC_NAME, resource: Optional[int] = None
@@ -52,7 +52,7 @@ class TrialEvaluations:
 
     def _map_value_for_matching(
         self, value: MetricValues
-    ) -> (Optional[List[str]], np.ndarray):
+    ) -> (Optional[list[str]], np.ndarray):
         if isinstance(value, dict):
             keys = list(sorted(value.keys()))
             vals = np.array(value[k] for k in keys)
@@ -106,7 +106,7 @@ class FantasizedPendingEvaluation(PendingEvaluation):
     def __init__(
         self,
         trial_id: str,
-        fantasies: Dict[str, np.ndarray],
+        fantasies: dict[str, np.ndarray],
         resource: Optional[int] = None,
     ):
         super().__init__(trial_id, resource)

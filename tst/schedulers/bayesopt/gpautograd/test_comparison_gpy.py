@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any
+from typing import Any
 import numpy as np
 import pickle
 import tempfile
@@ -86,10 +86,10 @@ def download(url, path=None, overwrite=False):
 # Note: Instead of a ScalarMeanFunction, we use a ZeroMeanFunction here. This
 # is because it is too annoying to make GPy use such a mean function
 def fit_predict_ours(
-    data: Dict[str, Any],
+    data: dict[str, Any],
     random_seed: int,
     optimization_config: OptimizationConfig,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     # Create surrogate model
     num_dims = len(data["ss_limits"])
     _gpmodel = GaussianProcessRegression(
@@ -113,8 +113,8 @@ def fit_predict_ours(
 # GPy as a dependency of the tests. With GPy 1.9.9, it can be executed to generate
 # the numerical values that are tested in the main testing function ``test_comparison_gpy``
 def fit_predict_gpy(
-    data: Dict[str, Any], random_seed: int, optimization_config: OptimizationConfig
-) -> Dict[str, Any]:
+    data: dict[str, Any], random_seed: int, optimization_config: OptimizationConfig
+) -> dict[str, Any]:
     import GPy  # Needs GPy to be installed
 
     assert GPy.__version__ == "1.9.9"
@@ -174,7 +174,7 @@ def fit_predict_gpy(
     return {"means": means, "stddevs": stddevs}
 
 
-def _plot_comparison(y_list: List[np.ndarray]):
+def _plot_comparison(y_list: list[np.ndarray]):
     import matplotlib.pyplot as plt
 
     yshape = y_list[0].shape
@@ -191,9 +191,9 @@ def _plot_comparison(y_list: List[np.ndarray]):
 # Note: this function is not ran by the tests but can be executed separately
 # to get a visual interpretation, see ``test_comparison_gpy``
 def plot_predictions(
-    data: Dict[str, Any],
-    pred_ours: Dict[str, Any],
-    pred_gpy: Dict[str, Any],
+    data: dict[str, Any],
+    pred_ours: dict[str, Any],
+    pred_gpy: dict[str, Any],
     title: str,
 ):
     import matplotlib.pyplot as plt

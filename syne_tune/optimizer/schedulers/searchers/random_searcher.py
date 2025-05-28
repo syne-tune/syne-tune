@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -26,8 +26,8 @@ class RandomSearcher(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict]] = None,
         random_seed: int = None,
     ):
         super().__init__(
@@ -55,8 +55,8 @@ class MultiObjectiveRandomSearcher(BaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: Optional[list[dict]] = None,
         random_seed: int = None,
     ):
         super().__init__(

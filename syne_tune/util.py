@@ -8,9 +8,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Optional, Dict, Any, Iterable
-from typing import Tuple, Union, List
-
+from typing import Optional, Any, Union
+from collections.abc import Iterable
 import numpy as np
 
 from syne_tune.constants import (
@@ -143,7 +142,7 @@ def catchtime(name: str) -> float:
         print(f"Time for {name}: {perf_counter() - start:.4f} secs")
 
 
-def is_increasing(lst: List[Union[float, int]]) -> bool:
+def is_increasing(lst: list[Union[float, int]]) -> bool:
     """
     :param lst: List of float or int entries
     :return: Is ``lst`` strictly increasing?
@@ -151,7 +150,7 @@ def is_increasing(lst: List[Union[float, int]]) -> bool:
     return all(x < y for x, y in zip(lst, lst[1:]))
 
 
-def is_positive_integer(lst: List[int]) -> bool:
+def is_positive_integer(lst: list[int]) -> bool:
     """
     :param lst: List of int entries
     :return: Are all entries of ``lst`` of type ``int`` and positive?
@@ -192,7 +191,7 @@ def dump_json_with_numpy(
         return None
 
 
-def dict_get(params: Dict[str, Any], key: str, default: Any) -> Any:
+def dict_get(params: dict[str, Any], key: str, default: Any) -> Any:
     """
     Returns ``params[key]`` if this exists and is not None, and ``default`` otherwise.
     Note that this is not the same as ``params.get(key, default)``. Namely, if ``params[key]``
@@ -208,10 +207,10 @@ def dict_get(params: Dict[str, Any], key: str, default: Any) -> Any:
 
 
 def recursive_merge(
-    a: Dict[str, Any],
-    b: Dict[str, Any],
-    stop_keys: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    a: dict[str, Any],
+    b: dict[str, Any],
+    stop_keys: Optional[list[str]] = None,
+) -> dict[str, Any]:
     """
     Merge dictionaries ``a`` and ``b``, where ``b`` takes precedence. We
     typically use this to modify a dictionary ``a``, so ``b`` is smaller
@@ -260,8 +259,8 @@ def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
 
 
 def metric_name_mode(
-    metric_names: List[str], metric_mode: Union[str, List[str]], metric: Union[str, int]
-) -> Tuple[str, str]:
+    metric_names: list[str], metric_mode: Union[str, list[str]], metric: Union[str, int]
+) -> tuple[str, str]:
     """
     Retrieve the metric mode given a metric queried by either index or name.
     :param metric_names: metrics names defined in a scheduler

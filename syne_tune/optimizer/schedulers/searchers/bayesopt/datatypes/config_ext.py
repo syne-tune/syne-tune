@@ -1,4 +1,3 @@
-from typing import Tuple
 import copy
 
 from syne_tune.config_space import randint
@@ -29,7 +28,7 @@ class ExtendedConfiguration:
         self,
         hp_ranges: HyperparameterRanges,
         resource_attr_key: str,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
     ):
         assert resource_attr_range[0] >= 1
         assert resource_attr_range[1] >= resource_attr_range[0]

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import argparse
 import json
 
@@ -14,7 +14,7 @@ def add_config_json_to_argparse(parser: argparse.ArgumentParser):
     parser.add_argument(f"--{ST_CONFIG_JSON_FNAME_ARG}", type=str)
 
 
-def load_config_json(args: Dict[str, Any]) -> Dict[str, Any]:
+def load_config_json(args: dict[str, Any]) -> dict[str, Any]:
     """
     Loads configuration from JSON file and returns the union with ``args``.
 

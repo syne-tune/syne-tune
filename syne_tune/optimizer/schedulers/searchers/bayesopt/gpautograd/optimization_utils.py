@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import numpy as np
 from scipy import optimize
 from autograd import value_and_grad
@@ -31,7 +31,7 @@ STARTING_POINT_RANDOMIZATION_STD = 1.0
 
 
 class ParamVecDictConverter:
-    def __init__(self, param_dict: Dict[str, Any]):
+    def __init__(self, param_dict: dict[str, Any]):
         self.param_dict = param_dict
         self.names = sorted(
             [name for name, value in param_dict.items() if value is not None]

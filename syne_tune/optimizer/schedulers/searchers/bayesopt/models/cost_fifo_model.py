@@ -1,4 +1,3 @@
-from typing import Dict, List, Set
 import numpy as np
 import logging
 
@@ -55,10 +54,10 @@ class CostFixedResourcePredictor(BasePredictor):
         self._num_samples = num_samples
 
     @staticmethod
-    def keys_predict() -> Set[str]:
+    def keys_predict() -> set[str]:
         return {"mean"}
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         # Inputs are encoded. For cost models, need to decode them back
         # to candidates (not necessarily differentiable)
         # Note: Both ``inputs`` and ``hp_ranges`` may correspond to extended
@@ -84,20 +83,20 @@ class CostFixedResourcePredictor(BasePredictor):
         return [{"mean": np.mean(prediction_list, axis=0)}]
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         """
         The gradient contribution through the cost model is blocked.
 
         """
         return [np.zeros_like(input)]
 
-    def predict_mean_current_candidates(self) -> List[np.ndarray]:
+    def predict_mean_current_candidates(self) -> list[np.ndarray]:
         raise NotImplementedError()
 
     # We currently do not support cost models for the primary metric to be
     # optimized
-    def current_best(self) -> List[np.ndarray]:
+    def current_best(self) -> list[np.ndarray]:
         raise NotImplementedError()
 
 

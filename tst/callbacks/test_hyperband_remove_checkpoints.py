@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any
+from typing import Any
 import numpy as np
 from scipy.special import betainc
 
@@ -12,7 +12,7 @@ from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
 
 def _q_vals_betainc(
     l_val: int, p_val: float
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     u_vals = np.arange(5)
     cdf_vals = betainc(
         np.maximum(l_val - u_vals, 1e-7), u_vals + 1, np.array([1 - p_val])
@@ -23,8 +23,8 @@ def _q_vals_betainc(
 
 
 def _q_vals(
-    n_val: int, p_val: float, s_pos: int, i_pos: int, extra: Dict[str, Any]
-) -> Tuple[float, float, float, float, float]:
+    n_val: int, p_val: float, s_pos: int, i_pos: int, extra: dict[str, Any]
+) -> tuple[float, float, float, float, float]:
     r"""
     Probabilities of binomial :math:`\mathrm{bin}(l, p)` to be equal to
     ``0, 1, 2, 3, 4``.
@@ -45,7 +45,7 @@ def _q_vals(
     return q0, q1, q2, q3, q4
 
 
-def _append_column(m_vals: List[np.ndarray], i: int, col: np.ndarray):
+def _append_column(m_vals: list[np.ndarray], i: int, col: np.ndarray):
     num_m = len(m_vals)
     col = col.reshape((-1, 1))
     if i >= num_m:
@@ -56,7 +56,7 @@ def _append_column(m_vals: List[np.ndarray], i: int, col: np.ndarray):
 
 
 def compute_probability_resumed(
-    l_ind: List[int], p_val: float, s_pos: int, extra: Dict[str, Any]
+    l_ind: list[int], p_val: float, s_pos: int, extra: dict[str, Any]
 ) -> float:
     """
     Here, ``l_ind`` must have length 5

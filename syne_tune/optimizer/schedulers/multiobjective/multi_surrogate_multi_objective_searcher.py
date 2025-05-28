@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Any, Union
 
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
@@ -58,16 +58,16 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: List[str],
-        estimators: Dict[str, Estimator],
-        mode: Union[List[str], str] = "min",
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        metric: list[str],
+        estimators: dict[str, Estimator],
+        mode: Union[list[str], str] = "min",
+        points_to_evaluate: Optional[list[dict[str, Any]]] = None,
         scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[list[dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):
@@ -119,7 +119,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
             mode = self._mode
         self._metric_to_internal_signs = [-1 if m == "max" else 1 for m in mode]
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         # Gather metrics
         metrics = {
             name: result[name] * self._metric_to_internal_signs[pos]

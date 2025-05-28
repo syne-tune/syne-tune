@@ -1,4 +1,5 @@
-from typing import Iterable, List, Optional, Iterator
+from typing import Optional
+from collections.abc import Iterable, Iterator
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 import logging
@@ -48,7 +49,7 @@ class IndependentThompsonSampling(ScoringFunction):
         self,
         candidates: Iterable[Configuration],
         predictor: Optional[Predictor] = None,
-    ) -> List[float]:
+    ) -> list[float]:
         if predictor is None:
             predictor = self.predictor
         predictions_list = predictor.predict_candidates(candidates)
@@ -159,7 +160,7 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         if exclusion_list is None:
             return self.hp_ranges.random_configs(self.random_state, num_cands)
         else:
@@ -198,7 +199,7 @@ def generate_unique_candidates(
     candidates_generator: CandidateGenerator,
     num_candidates: int,
     exclusion_candidates: ExclusionList,
-) -> List[Configuration]:
+) -> list[Configuration]:
     exclusion_candidates = exclusion_candidates.copy()  # Copy
     result = []
     num_results = 0
@@ -249,7 +250,7 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
 
     def __init__(
         self,
-        base_set: List[Configuration],
+        base_set: list[Configuration],
         random_state: np.random.RandomState,
         ext_config: Optional[Configuration] = None,
     ):
@@ -267,7 +268,7 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
             config = self._extend_configs([self.base_set[pos]])[0]
             yield config
 
-    def _extend_configs(self, configs: List[Configuration]) -> List[Configuration]:
+    def _extend_configs(self, configs: list[Configuration]) -> list[Configuration]:
         if self._ext_config is None:
             return configs
         else:
@@ -275,7 +276,7 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         if num_cands >= self.num_base:
             if exclusion_list is None:
                 configs = self.base_set.copy()

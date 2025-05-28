@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Callable, Union
+from typing import Optional, Union
+from collections.abc import Callable
 import logging
 import copy
 
@@ -40,7 +41,7 @@ def _assert_same_keys(dict1, dict2):
 # multi-output case
 
 SkipOptimizationOutputPredicate = Union[
-    SkipOptimizationPredicate, Dict[str, SkipOptimizationPredicate]
+    SkipOptimizationPredicate, dict[str, SkipOptimizationPredicate]
 ]
 
 
@@ -127,7 +128,7 @@ class ModelStateTransformer:
                     for output_name in estimator.keys()
                 }
             else:
-                assert isinstance(skip_optimization, Dict), (
+                assert isinstance(skip_optimization, dict), (
                     f"{skip_optimization} must be a Dict, consistently "
                     f"with {estimator}."
                 )

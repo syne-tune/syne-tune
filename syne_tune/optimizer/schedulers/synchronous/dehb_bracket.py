@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
     SynchronousBracket,
@@ -21,7 +21,7 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
 
     def __init__(
         self,
-        rungs: List[Tuple[int, int]],
+        rungs: list[tuple[int, int]],
         mode: str,
     ):
         self.assert_check_rungs(rungs)
@@ -36,7 +36,7 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
 
     def _current_rung_and_level(
         self,
-    ) -> (List[Tuple[Optional[int], Optional[float]]], int):
+    ) -> (list[tuple[Optional[int], Optional[float]]], int):
         return self._rungs[self.current_rung]
 
     def size_of_current_rung(self) -> int:
@@ -46,7 +46,7 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
         rung, _ = self._rungs[rung_index]
         return rung[slot_index][0]
 
-    def top_list_for_previous_rung(self) -> List[int]:
+    def top_list_for_previous_rung(self) -> list[int]:
         """
         Returns list of trial_ids corresponding to best scoring entries
         in rung below the currently active one (which must not be the base
@@ -58,5 +58,5 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
             rung=previous_rung, new_len=self.size_of_current_rung(), mode=self._mode
         )[0]
 
-    def _promote_trials_at_rung_complete(self) -> List[int]:
+    def _promote_trials_at_rung_complete(self) -> list[int]:
         return []

@@ -2,7 +2,8 @@ import hashlib
 import logging
 import types
 from pathlib import Path
-from typing import Callable, Dict, Optional, Any
+from typing import Optional, Any
+from collections.abc import Callable
 
 import dill
 
@@ -67,7 +68,7 @@ class PythonBackend(LocalBackend):
     def __init__(
         self,
         tune_function: Callable,
-        config_space: Dict[str, object],
+        config_space: dict[str, object],
         rotate_gpus: bool = True,
         delete_checkpoints: bool = False,
     ):
@@ -96,7 +97,7 @@ class PythonBackend(LocalBackend):
                 f"Path {self.local_path} already exists, make sure you have a unique tuner name."
             )
 
-    def _schedule(self, trial_id: int, config: Dict[str, Any]):
+    def _schedule(self, trial_id: int, config: dict[str, Any]):
         if not (self.tune_function_path / "tune_function.dill").exists():
             self.save_tune_function(self.tune_function)
         config = config.copy()

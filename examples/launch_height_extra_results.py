@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 from pathlib import Path
 import logging
 
@@ -17,7 +17,7 @@ from syne_tune import Tuner, StoppingCriterion
 # We would like to extract some extra information from the scheduler during the
 # experiment. To this end, we implement a class for extracting this information
 class DyHPOExtraResults(ExtraResultsComposer):
-    def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner: Tuner) -> Optional[dict[str, Any]]:
         scheduler = tuner.scheduler
         assert isinstance(scheduler, DyHPO)  # sanity check
         # :class:`~syne_tune.optimizer.schedulers.searchers.legacy_dyhpo.hyperband_dyhpo.DyHPORungSystem`
@@ -25,7 +25,7 @@ class DyHPOExtraResults(ExtraResultsComposer):
         # ``on_task_schedule``
         return scheduler.terminator._rung_systems[0].summary_schedule_records()
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         return DyHPORungSystem.summary_schedule_keys()
 
 

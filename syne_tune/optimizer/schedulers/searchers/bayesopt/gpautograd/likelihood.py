@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Tuple, Any
+from typing import Optional, Any
 import numpy as np
 import autograd.numpy as anp
 from numpy.random import RandomState
@@ -40,20 +40,20 @@ class MarginalLikelihood(Block):
     Interface for marginal likelihood of Gaussian-linear model.
     """
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         raise NotImplementedError
 
-    def forward(self, data: Dict[str, Any]):
+    def forward(self, data: dict[str, Any]):
         return self.get_posterior_state(data).neg_log_likelihood()
 
-    def param_encoding_pairs(self) -> List[tuple]:
+    def param_encoding_pairs(self) -> list[tuple]:
         """
         Return a list of tuples with the Gluon parameters of the likelihood
         and their respective encodings
         """
         raise NotImplementedError
 
-    def box_constraints_internal(self) -> Dict[str, Tuple[float, float]]:
+    def box_constraints_internal(self) -> dict[str, tuple[float, float]]:
         """
         :return: Box constraints for all the underlying parameters
         """
@@ -68,10 +68,10 @@ class MarginalLikelihood(Block):
     def get_noise_variance(self, as_ndarray=False):
         raise NotImplementedError
 
-    def get_params(self) -> Dict[str, np.ndarray]:
+    def get_params(self) -> dict[str, np.ndarray]:
         raise NotImplementedError
 
-    def set_params(self, param_dict: Dict[str, np.ndarray]):
+    def set_params(self, param_dict: dict[str, np.ndarray]):
         raise NotImplementedError
 
     def reset_params(self, random_state: RandomState):
@@ -85,7 +85,7 @@ class MarginalLikelihood(Block):
         # defaults to ``np.random.uniform``, whose seed we do not control).
         self.initialize(init=random_state.uniform, force_reinit=True)
 
-    def data_precomputations(self, data: Dict[str, Any], overwrite: bool = False):
+    def data_precomputations(self, data: dict[str, Any], overwrite: bool = False):
         """
         Some models require precomputations based on ``data``. Precomputed
         variables are appended to ``data``. This is done only if not already
@@ -96,7 +96,7 @@ class MarginalLikelihood(Block):
         """
         pass
 
-    def on_fit_start(self, data: Dict[str, Any]):
+    def on_fit_start(self, data: dict[str, Any]):
         """
         Called at the beginning of ``fit``.
 
@@ -160,7 +160,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         )
 
     @staticmethod
-    def assert_data_entries(data: Dict[str, Any]):
+    def assert_data_entries(data: dict[str, Any]):
         features = data.get("features")
         targets = data.get("targets")
         assert (
@@ -175,7 +175,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             + f"(received {features.shape[0]} and {targets.shape[0]})"
         )
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         self.assert_data_entries(data)
         targets = self.target_transform(data["targets"])
         return GaussProcPosteriorState(
@@ -186,21 +186,21 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             noise_variance=self._noise_variance(),
         )
 
-    def forward(self, data: Dict[str, Any]):
+    def forward(self, data: dict[str, Any]):
         return self.get_posterior_state(
             data
         ).neg_log_likelihood() + self.target_transform.negative_log_jacobian(
             data["targets"]
         )
 
-    def _components(self) -> List[Tuple[str, MeanFunction]]:
+    def _components(self) -> list[tuple[str, MeanFunction]]:
         return [
             ("kernel_", self.kernel),
             ("mean_", self.mean),
             ("ytrans_", self.target_transform),
         ]
 
-    def param_encoding_pairs(self) -> List[tuple]:
+    def param_encoding_pairs(self) -> list[tuple]:
         _param_encoding_pairs = [(self.noise_variance_internal, self.encoding_noise)]
         for _, component in self._components():
             _param_encoding_pairs.extend(component.param_encoding_pairs())
@@ -213,13 +213,13 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
     def _set_noise_variance(self, val: float):
         self.encoding_noise.set(self.noise_variance_internal, val)
 
-    def get_params(self) -> Dict[str, np.ndarray]:
+    def get_params(self) -> dict[str, np.ndarray]:
         result = {"noise_variance": self.get_noise_variance()}
         for pref, func in self._components():
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict: Dict[str, np.ndarray]):
+    def set_params(self, param_dict: dict[str, np.ndarray]):
         for pref, func in self._components():
             len_pref = len(pref)
             stripped_dict = {
@@ -228,7 +228,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def on_fit_start(self, data: Dict[str, Any]):
+    def on_fit_start(self, data: dict[str, Any]):
         self.assert_data_entries(data)
         targets = data["targets"]
         assert (

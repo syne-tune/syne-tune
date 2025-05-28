@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.backend.trial_backend import (
@@ -56,7 +56,7 @@ class TunerCallback:
         """
         pass
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Called when a trial completes (``Status.completed``)
 
         The arguments here also have been passed to ``scheduler.on_trial_complete``,
@@ -68,7 +68,7 @@ class TunerCallback:
         pass
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         """Called when a new result (reported by a trial) is observed
 

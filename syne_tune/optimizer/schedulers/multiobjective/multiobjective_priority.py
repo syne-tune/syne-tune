@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 import numpy as np
 from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import (
@@ -7,7 +7,7 @@ from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import
 
 
 class MOPriority:
-    def __init__(self, metrics: Optional[List[str]] = None):
+    def __init__(self, metrics: Optional[list[str]] = None):
         """
         :param metrics: name of the objectives, optional if not passed anonymous names are created when seeing the
         first objectives to rank.
@@ -33,7 +33,7 @@ class MOPriority:
 
 class LinearScalarizationPriority(MOPriority):
     def __init__(
-        self, metrics: Optional[List[str]] = None, weights: Optional[np.array] = None
+        self, metrics: Optional[list[str]] = None, weights: Optional[np.array] = None
     ):
         """
         A simple multiobjective scalarization strategy that do a weighed sum to assign a priority to the objectives.
@@ -58,7 +58,7 @@ class LinearScalarizationPriority(MOPriority):
 
 
 class FixedObjectivePriority(MOPriority):
-    def __init__(self, metrics: Optional[List[str]] = None, dim: Optional[int] = None):
+    def __init__(self, metrics: Optional[list[str]] = None, dim: Optional[int] = None):
         """
         Optimizes a fixed objective, the first one by default.
         :param metrics:
@@ -74,7 +74,7 @@ class FixedObjectivePriority(MOPriority):
 class NonDominatedPriority(MOPriority):
     def __init__(
         self,
-        metrics: Optional[List[str]] = None,
+        metrics: Optional[list[str]] = None,
         dim: Optional[int] = 0,
         max_num_samples: Optional[int] = None,
     ):

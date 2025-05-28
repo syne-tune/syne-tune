@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Dict, Tuple, Optional, Set, List
+from typing import Optional
 from dataclasses import dataclass
 import itertools
 
@@ -20,9 +20,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 # :class:`Predictor`.
 # Note: List sizes of different entries can be different. MCMC averaging
 # is done over the Cartesian product of these lists.
-PredictionsPerOutput = Dict[str, List[Dict[str, np.ndarray]]]
+PredictionsPerOutput = dict[str, list[dict[str, np.ndarray]]]
 
-SamplePredictionsPerOutput = Dict[str, Dict[str, np.ndarray]]
+SamplePredictionsPerOutput = dict[str, dict[str, np.ndarray]]
 
 
 @dataclass
@@ -45,12 +45,12 @@ class CurrentBestProvider:
     ``(0, 0, ..., 0)``).
     """
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> Optional[np.ndarray]:
         raise NotImplementedError
 
 
 class NoneCurrentBestProvider(CurrentBestProvider):
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> Optional[np.ndarray]:
         return None
 
 
@@ -60,13 +60,13 @@ class ActiveMetricCurrentBestProvider(CurrentBestProvider):
     active metric only.
     """
 
-    def __init__(self, active_metric_current_best: List[np.ndarray]):
+    def __init__(self, active_metric_current_best: list[np.ndarray]):
         self._active_metric_current_best = [
             v.reshape((1, -1)) for v in active_metric_current_best
         ]
         self._constant_list = len(active_metric_current_best) == 1
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> Optional[np.ndarray]:
         pos = positions[0] if not self._constant_list else 0
         return self._active_metric_current_best[pos]
 
@@ -94,7 +94,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         if isinstance(predictor, Predictor):
             # Ignore active_metric
             predictor = dictionarize_objective(predictor)
-        assert isinstance(predictor, Dict)
+        assert isinstance(predictor, dict)
         self.predictor = predictor
         self.predictor_output_names = sorted(predictor.keys())
         self.active_metric = assign_active_metric(predictor, active_metric)
@@ -109,7 +109,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         self._check_keys_predict_of_predictors()
         self._current_bests = None
 
-    def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
+    def _output_to_keys_predict(self) -> dict[str, set[str]]:
         """
         Required ``keys_predict`` for each output model. The default requires
         each output model to return "mean" and "std".
@@ -218,8 +218,8 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
     @staticmethod
     def _add_head_gradients(
-        grad1: Dict[str, np.ndarray], grad2: Optional[Dict[str, np.ndarray]]
-    ) -> Dict[str, np.ndarray]:
+        grad1: dict[str, np.ndarray], grad2: Optional[dict[str, np.ndarray]]
+    ) -> dict[str, np.ndarray]:
         if grad2 is None:
             return grad1
         else:

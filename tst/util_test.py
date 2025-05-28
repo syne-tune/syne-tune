@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 import tempfile
 import time
 
@@ -34,7 +34,7 @@ from examples.training_scripts.height_example.blackbox_height import (
 class TestPredictor(SKLearnPredictor):
     def predict(
         self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones(nexamples), np.ones(nexamples)
 
