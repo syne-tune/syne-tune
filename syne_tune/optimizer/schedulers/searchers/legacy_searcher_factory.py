@@ -62,9 +62,9 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
     scheduler = kwargs.get("scheduler")
     model = kwargs.get("model", "gp_multitask")
     if searcher_name == "random":
-        searcher = LegacyRandomSearcher
+        searcher_cls = LegacyRandomSearcher
     elif searcher_name == "grid":
-        searcher = GridSearcher
+        searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
             from syne_tune.optimizer.schedulers.searchers.kde.legacy_kde_searcher import (
@@ -77,10 +77,10 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
             raise
 
         if scheduler == "fifo":
-            searcher = LegacyKernelDensityEstimator
+            searcher_cls = LegacyKernelDensityEstimator
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
-            searcher = LegacyMultiFidelityKernelDensityEstimator
+            searcher_cls = LegacyMultiFidelityKernelDensityEstimator
     elif searcher_name == "cqr":
         try:
             from syne_tune.optimizer.schedulers.searchers.conformal.legacy_surrogate_searcher import (
@@ -88,7 +88,7 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
             )
         except ImportError:
             raise
-        searcher = LegacySurrogateSearcher
+        searcher_cls = LegacySurrogateSearcher
     elif searcher_name == "botorch":
         try:
             from syne_tune.optimizer.schedulers.searchers.botorch import (
@@ -97,7 +97,7 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
         except ImportError:
             raise
 
-        searcher = BoTorchSearcher
+        searcher_cls = BoTorchSearcher
         supported_schedulers = {"fifo"}
     else:
         gp_searchers = {
@@ -133,7 +133,7 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
 
         if searcher_name == "bayesopt":
             if scheduler == "fifo":
-                searcher = GPFIFOSearcher
+                searcher_cls = GPFIFOSearcher
             else:
                 supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
                 if (
@@ -147,22 +147,22 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
                         "obtained with model = gp_expdecay, but computations "
                         "are faster then."
                     )
-                searcher = GPMultiFidelitySearcher
+                searcher_cls = GPMultiFidelitySearcher
         elif searcher_name == "legacy_hypertune":
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
-            searcher = HyperTuneSearcher
+            searcher_cls = HyperTuneSearcher
         elif searcher_name == "bayesopt_constrained":
             supported_schedulers = {"fifo"}
-            searcher = ConstrainedGPFIFOSearcher
+            searcher_cls = ConstrainedGPFIFOSearcher
         elif searcher_name == "legacy_dyhpo":
             supported_schedulers = {"hyperband_dyhpo", "hyperband_legacy_dyhpo"}
-            searcher = DynamicHPOSearcher
+            searcher_cls = DynamicHPOSearcher
         else:  # bayesopt_cost
             if scheduler == "fifo":
-                searcher = CostAwareGPFIFOSearcher
+                searcher_cls = CostAwareGPFIFOSearcher
             else:
                 supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
-                searcher = CostAwareGPMultiFidelitySearcher
+                searcher_cls = CostAwareGPMultiFidelitySearcher
 
     if supported_schedulers is not None:
         assert scheduler is not None, "Scheduler must set search_options['scheduler']"
@@ -170,5 +170,5 @@ def legacy_searcher_factory(searcher_name: str, **kwargs) -> LegacyBaseSearcher:
             f"Searcher '{searcher_name}' only works with schedulers "
             + f"{supported_schedulers} (not with '{scheduler}')"
         )
-    searcher = searcher(**kwargs)
+    searcher = searcher_cls(**kwargs)
     return searcher
