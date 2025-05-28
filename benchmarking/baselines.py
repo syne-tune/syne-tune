@@ -143,6 +143,7 @@ if __name__ == "__main__":
         "nas201-cifar10",
         "lcbench-Fashion-MNIST",
         "tabrepo-RandomForest-2dplanes",
+        "hpob_5636_3492",
     ]
     for benchmark_name in benchmarks:
         benchmark = benchmark_definitions[benchmark_name]
@@ -152,7 +153,10 @@ if __name__ == "__main__":
             dataset=benchmark.dataset_name,
         )
         points_to_evaluate = [
-            {k: v.sample() for k, v in backend.blackbox.configuration_space.items()}
+            {
+                k: v.sample() if hasattr(v, "sample") else v
+                for k, v in backend.blackbox.configuration_space.items()
+            }
             for _ in range(4)
         ]
         print(f"Checking initialization of {list(methods.keys())[::-1]}")
