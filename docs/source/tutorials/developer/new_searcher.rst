@@ -48,7 +48,7 @@ generic scheduler is calling it.
 The
 :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.searcher_factory`
 code should be straightforward to understand and extend. Pick a name for your
-new searcher and set ``searcher_cls`` and ``supported_schedulers`` (the latter
+new searcher and set ``searcher`` and ``supported_schedulers`` (the latter
 can be left to ``None`` if your searcher works with all generic schedulers). The
 constructor of your searcher needs to have the signature
 
