@@ -1,19 +1,21 @@
 import matplotlib.pyplot as plt
 
-from syne_tune.experiments.benchmark_definitions.nas201 import nas201_benchmark
 from syne_tune.stopping_criterions.automatic_termination_criterion import (
     AutomaticTerminationCriterion,
 )
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.legacy_baselines import BORE
+from syne_tune.optimizer.baselines import BORE
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.experiments import load_experiment
+from syne_tune.blackbox_repository import load_blackbox
 
 
 n_workers = 4
-dataset_name = "cifar10"
-benchmark = nas201_benchmark(dataset_name)
+blackbox_name, dataset, metric = "nasbench201", "cifar100", "metric_valid_error"
+elapsed_time_attr = "metric_elapsed_time"
+mode = "min"
+blackbox = load_blackbox(blackbox_name)[dataset]
 max_wallclock_time = 3600 * 6
 num_seeds = 10
 
@@ -25,9 +27,9 @@ for i, criterion in enumerate(criterions):
 
     for seed in range(num_seeds):
         trial_backend = BlackboxRepositoryBackend(
-            elapsed_time_attr=benchmark.elapsed_time_attr,
-            blackbox_name=benchmark.blackbox_name,
-            dataset=dataset_name,
+            elapsed_time_attr=elapsed_time_attr,
+            blackbox_name=blackbox_name,
+            dataset=dataset,
             seed=seed % 3,
         )
 
@@ -40,16 +42,14 @@ for i, criterion in enumerate(criterions):
             stop_criterion = AutomaticTerminationCriterion(
                 blackbox.configuration_space,
                 threshold=0.1,
-                metric=benchmark.metric,
-                mode=benchmark.mode,
+                metric=metric,
+                mode=mode,
                 seed=seed,
             )
 
         scheduler = BORE(
             config_space=blackbox.configuration_space,
-            mode=benchmark.mode,
-            metric=benchmark.metric,
-            search_options={"debug_log": False},
+            metric=metric,
             random_seed=seed,
         )
 
@@ -68,7 +68,7 @@ for i, criterion in enumerate(criterions):
         tuner.run()
 
         exp = load_experiment(tuner.name)
-        traj = list(exp.results[benchmark.metric].cummin())
+        traj = list(exp.results[metric].cummin())
         runtime = list(exp.results["st_tuner_time"])
 
         axis[i].plot(runtime, traj, color=f"C{i}")

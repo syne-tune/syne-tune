@@ -32,7 +32,7 @@ if __name__ == "__main__":
         metric=metric,
         resource_attr=time_attr,
         population_size=population_size,
-        mode=mode,
+        do_minimize=False,
         max_t=200,
         perturbation_interval=1,
     )

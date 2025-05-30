@@ -5,7 +5,7 @@ An example showing to launch a tuning of a python function ``train_height``.
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import PythonBackend
 from syne_tune.config_space import randint
-from syne_tune.optimizer.legacy_baselines import ASHA
+from syne_tune.optimizer.baselines import ASHA
 
 
 def train_height(steps: int, width: float, height: float):
@@ -24,7 +24,7 @@ def train_height(steps: int, width: float, height: float):
     for step in range(steps):
         dummy_score = (0.1 + width * step / 100) ** (-1) + height * 0.1
         # Feed the score back to Syne Tune.
-        reporter(step=step, mean_loss=dummy_score, epoch=step + 1)
+        reporter(step=step, mean_loss=dummy_score)
         time.sleep(0.1)
 
 
@@ -38,10 +38,10 @@ if __name__ == "__main__":
     n_workers = 4
     metric = "mean_loss"
     mode = "min"
-    max_resource_attr = "steps"
+    resource_attr = "step"
 
     config_space = {
-        max_resource_attr: max_steps,
+        "steps": max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -49,9 +49,8 @@ if __name__ == "__main__":
     scheduler = ASHA(
         config_space,
         metric=metric,
-        max_resource_attr=max_resource_attr,
-        resource_attr="epoch",
-        mode=mode,
+        max_t=max_steps,
+        time_attr=resource_attr,
     )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
