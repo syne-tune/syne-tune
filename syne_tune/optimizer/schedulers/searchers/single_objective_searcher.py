@@ -9,25 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SingleObjectiveBaseSearcher(BaseSearcher):
     """
-    Base class of searchers, which are components of schedulers responsible for
-    implementing :meth:`get_config`.
-
-    # TODO: Update docstrings
-    .. note::
-       This is an abstract base class. In order to implement a new searcher, try to
-       start from
-       :class:`~syne_tune.optimizer.scheduler.searcher.StochasticAndFilterDuplicatesSearcher`
-       or :class:`~syne_tune.optimizer.scheduler.searcher.StochasticSearcher`,
-       which implement generally useful properties.
-
-    :param config_space: Configuration space
-    :param points_to_evaluate: List of configurations to be evaluated
-        initially (in that order). Each config in the list can be partially
-        specified, or even be an empty dict. For each hyperparameter not
-        specified, the default value is determined using a midpoint heuristic.
-        If ``None`` (default), this is mapped to ``[dict()]``, a single default config
-        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
-        configurations are specified.
+    Base class of searchers, which optimize a single objective.
     """
 
     def on_trial_result(
