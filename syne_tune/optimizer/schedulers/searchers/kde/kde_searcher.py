@@ -57,7 +57,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
     :param random_fraction: Defines the fraction of configurations that are
         drawn uniformly at random instead of sampling from the model.
         Defaults to 0.33
-     :param random_seed: Seed for initializing random number generators.
+    :param random_seed: Seed for initializing random number generators.
     """
 
     def __init__(

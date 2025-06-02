@@ -10,12 +10,11 @@ def test_ask_tell_scheduler():
         "y": uniform(0, 1),
     }
     metric = "test_metric"
-    mode = "max"
     max_iterations = 10
     target_function = lambda x, y: x**2 + y**2
 
     scheduler = AskTellScheduler(
-        base_scheduler=RandomSearch(config_space, metric=metric, mode=mode)
+        base_scheduler=RandomSearch(config_space, metrics=[metric])
     )
     for iter in range(max_iterations):
         trial_suggestion = scheduler.ask()

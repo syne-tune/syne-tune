@@ -95,7 +95,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
                 searcher_kwargs = {}
 
             self.searcher = LastValueMultiFidelitySearcher(
-                searcher_cls=searcher,
+                searcher=searcher,
                 config_space=config_space,
                 random_seed=random_seed,
                 **searcher_kwargs,

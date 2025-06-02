@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from collections import deque
 from typing import Callable, List, Optional, Tuple, Dict, Any
 
-from syne_tune.config_space import Domain, Integer, Float, FiniteRange
+from syne_tune.config_space import (
+    Domain,
+    Integer,
+    Float,
+    FiniteRange,
+    config_space_to_json_dict,
+)
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
@@ -16,6 +22,7 @@ from syne_tune.optimizer.scheduler import (
 )
 from syne_tune.config_space import cast_config_values, postprocess_config
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
+from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +134,7 @@ class PopulationBasedTraining(TrialScheduler):
         self.resample_probability = resample_probability
         self.custom_explore_fn = custom_explore_fn
         self.max_t = max_t
+        self.do_minimize = do_minimize
         self.metric_op = -1.0 if do_minimize else 1.0  # PBT assumes that we maximize
         self.trial_state = dict()
         self.next_perturbation_sync = self.perturbation_interval
@@ -314,3 +322,22 @@ class PopulationBasedTraining(TrialScheduler):
         logger.debug(f"[explore] perturbed config from {old_hparams} -> {new_hparams}")
 
         return new_config
+
+    def metadata(self) -> Dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        metadata = super().metadata()
+        config_space_json = dump_json_with_numpy(
+            config_space_to_json_dict(self.config_space)
+        )
+        metadata["config_space"] = config_space_json
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
+        return metadata
+
+    def metric_names(self) -> List[str]:
+        return [self.metric]
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"

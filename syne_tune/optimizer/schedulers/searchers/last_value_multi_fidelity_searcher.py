@@ -12,7 +12,7 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 )
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import catchtime
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls_dict
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_dict
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
         max_fit_samples: int = None,
-        searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
+        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
         searcher_kwargs: dict[str, Any] = None,
     ):
         """
@@ -68,11 +68,11 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
             )  # this is handled by the SurrogateSearcher class
             self.searcher_kwargs = searcher_kwargs
 
-        if isinstance(searcher_cls, str):
-            assert searcher_cls in searcher_cls_dict
-            self.searcher_cls = searcher_cls_dict.get(searcher_cls)
+        if isinstance(searcher, str):
+            assert searcher in searcher_dict
+            self.searcher = searcher_dict.get(searcher)
         else:
-            self.searcher_cls = searcher_cls
+            self.searcher = searcher
         self.searcher = None
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
@@ -120,7 +120,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
 
     def fit_model(self):
         configs, metrics = self.make_input_target()
-        self.searcher = self.searcher_cls(
+        self.searcher = self.searcher(
             config_space=self.config_space,
             random_seed=self.random_seed + self.random_state.randint(0, 2**32 - 1),
             points_to_evaluate=None,

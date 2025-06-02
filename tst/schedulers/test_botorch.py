@@ -19,7 +19,7 @@ def test_smoke_botorch():
     """
     This test checks that the BoTorch scheduler can be loaded and used to come up with new trials.
     """
-    from syne_tune.optimizer.baselines import BoTorch
+    from syne_tune.optimizer.legacy_baselines import BoTorch
 
     # Use train_height backend for our tests
     entry_point = (
