@@ -15,7 +15,7 @@ from syne_tune import StoppingCriterion, Tuner
 
 def load_transfer_learning_evaluations(
     blackbox_name: str, test_task: str, metric: str
-) -> Dict[str, TransferLearningTaskEvaluations]:
+) -> dict[str, TransferLearningTaskEvaluations]:
     bb_dict = load_blackbox(blackbox_name)
     metric_index = [
         i
