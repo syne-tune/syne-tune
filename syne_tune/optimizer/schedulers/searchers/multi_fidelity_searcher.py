@@ -7,7 +7,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls_dict
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_dict
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     | Proceedings of the 35th International Conference on Machine Learning
 
     :param config_space: Configuration space
-    :param searcher_cls: Searcher to sample configurations on each rung level.
+    :param searcher: Searcher to sample configurations on each rung level.
     :param points_to_evaluate: List of configurations to be evaluated
         initially (in that order).
     :param random_seed: Seed used to initialize the random number generators.
@@ -31,7 +31,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        searcher_cls: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
+        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
         points_to_evaluate: Optional[List[dict]] = None,
         random_seed: Optional[int] = None,
         searcher_kwargs: dict[str, Any] = None,
@@ -47,14 +47,14 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         else:
             self.searcher_kwargs = searcher_kwargs
 
-        if isinstance(searcher_cls, str):
-            assert searcher_cls in searcher_cls_dict
-            self.searcher_cls = searcher_cls_dict.get(searcher_cls)
+        if isinstance(searcher, str):
+            assert searcher in searcher_dict
+            self.searcher = searcher_dict.get(searcher)
         else:
-            self.searcher_cls = searcher_cls
+            self.searcher = searcher
 
         self.searchers = defaultdict(
-            lambda: self.searcher_cls(
+            lambda: self.searcher(
                 config_space=self.config_space,
                 random_seed=self.random_seed,
                 **self.searcher_kwargs,
