@@ -10,7 +10,6 @@ import sys
 import pandas as pd
 import numpy as np
 
-from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.legacy_baselines import (
     GridSearch,
@@ -209,7 +208,6 @@ list_schedulers_to_test = [
     #     ),
     #     ray_searcher=make_ray_skopt(),
     # ),
-    SimpleScheduler(config_space=config_space, metric=metric1, mode=mode),
     RandomSearch(config_space=config_space, metric=metric1, mode=mode),
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
