@@ -122,6 +122,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         configs, metrics = self.make_input_target()
         self.searcher = self.searcher(
             config_space=self.config_space,
+            # TODO BaseSearcher expects a int for random_seed, so we cannot pass a random state, we could change to pass both 
             random_seed=self.random_seed + self.random_state.randint(0, 2**32 - 1),
             points_to_evaluate=None,
             **self.searcher_kwargs,
