@@ -46,6 +46,22 @@ benchmark_families = [
     "tabrepo-LightGBM",
     "tabrepo-CatBoost",
     # "yahpo"
+    "hpob_4796",
+    "hpob_5527",
+    "hpob_5636",
+    "hpob_5859",
+    "hpob_5860",
+    "hpob_5891",
+    "hpob_5906",
+    "hpob_5965",
+    "hpob_5970",
+    "hpob_5971",
+    "hpob_6766",
+    "hpob_6767",
+    "hpob_6794",
+    "hpob_7607",
+    "hpob_7609",
+    "hpob_5889"
 ]
 benchmark_names = {
     "fcnet": "\\FCNet{}",
@@ -248,7 +264,26 @@ def stack_benchmark_results(
             # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
             benchmark_results = np.stack(benchmark_results)
 
-            if benchmark_family in ["lcbench", "yahpo"]:
+            if benchmark_family in [
+                "lcbench",
+                "yahpo",
+                "hpob_4796",
+                "hpob_5527",
+                "hpob_5636",
+                "hpob_5859",
+                "hpob_5860",
+                "hpob_5891",
+                "hpob_5906",
+                "hpob_5965",
+                "hpob_5970",
+                "hpob_5971",
+                "hpob_6766",
+                "hpob_6767",
+                "hpob_6794",
+                "hpob_7607",
+                "hpob_7609",
+                "hpob_5889"
+            ]:
                 # max instead of minimization, todo pass the mode somehow
                 benchmark_results *= -1
 
