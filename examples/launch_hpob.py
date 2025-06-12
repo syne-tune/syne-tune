@@ -9,21 +9,22 @@ from syne_tune.blackbox_repository import (
 )
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.optimizer.baselines import RandomSearch, CQR
 from syne_tune import StoppingCriterion, Tuner
 
 
 def simulate_benchmark(blackbox, trial_backend, metric):
     max_resource_attr = "epochs"
-    scheduler = RandomSearch(
+    scheduler = CQR(
         config_space=blackbox.configuration_space_with_max_resource_attr(
             max_resource_attr
         ),
-        metrics=[metric],
+        metric=metric,
         random_seed=31415927,
+        do_minimize=False
     )
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=7200)
+    stop_criterion = StoppingCriterion(max_wallclock_time=600)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     metric = "metric_accuracy"
-    blackbox = load_blackbox("hpob_4796")["3549"]
+    blackbox = load_blackbox("hpob_4796", local_files_only=True)["3549"]
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name="hpob_4796",
         dataset="3549",
