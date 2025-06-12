@@ -71,9 +71,9 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
 
         if isinstance(searcher, str):
             assert searcher in searcher_dict
-            self.searcher = searcher_dict.get(searcher)
+            self.searcher_cls = searcher_dict.get(searcher)
         else:
-            self.searcher = searcher
+            self.searcher_cls = searcher
         self.searcher = None
 
     def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
@@ -121,7 +121,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
 
     def fit_model(self):
         configs, metrics = self.make_input_target()
-        self.searcher = self.searcher(
+        self.searcher = self.searcher_cls(
             config_space=self.config_space,
             # TODO BaseSearcher expects a int for random_seed, so we cannot pass a random state, we could change to pass both
             random_seed=self.random_seed + self.random_state.randint(0, sys.maxsize),
