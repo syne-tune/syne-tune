@@ -263,7 +263,7 @@ list_schedulers_to_test = [
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize("scheduler", list_schedulers_to_test)
 def test_schedulers_api(scheduler):
-    trial_ids = range(4)
+    trial_ids = range(6)
 
     # checks suggestions are properly formatted
     trials = []
