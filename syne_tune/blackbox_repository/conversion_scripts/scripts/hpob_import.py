@@ -431,7 +431,6 @@ def convert_dataset(search_space, dataset):
 
         # collect categorical hyperparameters and compute encoding
         for positions in search_space.get("positions_categorical", {}).values():
-            print(config)
             idx = next(
                 (j for j, p in enumerate(positions) if config[p] == 1.0),
                 len(positions) - 1,
