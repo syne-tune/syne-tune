@@ -43,7 +43,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     metric = "metric_accuracy"
-    blackbox = load_blackbox("hpob_4796", local_files_only=True)["3549"]
+    blackbox = load_blackbox("hpob_4796")["3549"]
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name="hpob_4796",
         dataset="3549",
