@@ -645,4 +645,4 @@ if __name__ == "__main__":
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=False)
+        instance.generate(upload_on_hub=True)
