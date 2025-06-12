@@ -53,8 +53,8 @@ SEARCH_SPACE_5527 = {
         "cost": uniform(0.0, 1.0),
         "gamma": uniform(0.0, 1.0),
         "degree": uniform(0.0, 1.0),
-        #"kernel": choice(["_INVALID", "_linear", "_polynomial"]),
-        "kernel": choice([0.0,1.0,2.0])
+        # "kernel": choice(["_INVALID", "_linear", "_polynomial"]),
+        "kernel": choice([0.0, 1.0, 2.0]),
     },
 }
 SEARCH_SPACE_5636 = {
@@ -96,16 +96,22 @@ SEARCH_SPACE_5891 = {
         "cost": uniform(0.0, 1.0),
         "gamma": uniform(0.0, 1.0),
         "degree": uniform(0.0, 1.0),
-        #"kernel": choice(["_INVALID", "_linear", "_polynomial"]),
-        "kernel": choice([0.0,1.0,2.0])
+        # "kernel": choice(["_INVALID", "_linear", "_polynomial"]),
+        "kernel": choice([0.0, 1.0, 2.0]),
     },
 }
 SEARCH_SPACE_5906 = {
     "name": "5906",
     "positions_hps": {
-        "eta": 0, "max_depth": 1, "min_child_weight": 3, "subsample": 5,
-        "colsample_bytree": 6, "colsample_bylevel": 8,
-        "lambda": 10, "alpha": 11, "nrounds": 12,
+        "eta": 0,
+        "max_depth": 1,
+        "min_child_weight": 3,
+        "subsample": 5,
+        "colsample_bytree": 6,
+        "colsample_bylevel": 8,
+        "lambda": 10,
+        "alpha": 11,
+        "nrounds": 12,
     },
     "positions_categorical": {"booster": [14, 15]},
     "config_space": {
@@ -118,25 +124,27 @@ SEARCH_SPACE_5906 = {
         "lambda": uniform(0.0, 1.0),
         "alpha": uniform(0.0, 1.0),
         "nrounds": uniform(0.0, 1.0),
-        #"booster": choice(["_INVALID", "_gblinear"]),
-        "booster": choice([0.0,1.0])
+        # "booster": choice(["_INVALID", "_gblinear"]),
+        "booster": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_5965 = {
     "name": "5965",
-    "positions_hps": {"num.trees": 0, "sample.fraction": 2, "min.node.size": 3, "mtry": 4},
-    "positions_categorical": {
-        "replace": [6, 7],
-        "respect": [8, 9]
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
     },
+    "positions_categorical": {"replace": [6, 7], "respect": [8, 9]},
     "config_space": {
         "num.trees": uniform(0.0, 1.0),
         "mtry": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.0, 1.0),
         "min.node.size": uniform(0.0, 1.0),
-        #"replace": choice(["_FALSE", "_INVALID"]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
         "replace": choice([0.0, 1.0]),
-        #"respect": choice(["_INVALID", "_TRUE"]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
         "respect": choice([0.0, 1.0]),
     },
 }
@@ -152,9 +160,15 @@ SEARCH_SPACE_5970 = {
 SEARCH_SPACE_5971 = {
     "name": "5971",
     "positions_hps": {
-        "eta": 0, "max_depth": 1, "min_child_weight": 3, "subsample": 5,
-        "colsample_bytree": 6, "colsample_bylevel": 8,
-        "lambda": 10, "alpha": 11, "nrounds": 12,
+        "eta": 0,
+        "max_depth": 1,
+        "min_child_weight": 3,
+        "subsample": 5,
+        "colsample_bytree": 6,
+        "colsample_bylevel": 8,
+        "lambda": 10,
+        "alpha": 11,
+        "nrounds": 12,
     },
     "positions_categorical": {"booster": [14, 15]},
     "config_space": {
@@ -167,7 +181,7 @@ SEARCH_SPACE_5971 = {
         "lambda": uniform(0.0, 1.0),
         "alpha": uniform(0.0, 1.0),
         "nrounds": uniform(0.0, 1.0),
-        #"booster": choice(["_INVALID", "_gblinear"]),
+        # "booster": choice(["_INVALID", "_gblinear"]),
         "booster": choice([0.0, 1.0]),
     },
 }
@@ -183,10 +197,16 @@ SEARCH_SPACE_6766 = {
 SEARCH_SPACE_6767 = {
     "name": "6767",
     "positions_hps": {
-        "eta": 0, "subsample": 1, "lambda": 2, "alpha": 3,
-        "nthread": 4, "nrounds": 6, "max_depth": 8,
-        "min_child_weight": 10, "colsample_bytree": 12,
-        "colsample_bylevel": 14
+        "eta": 0,
+        "subsample": 1,
+        "lambda": 2,
+        "alpha": 3,
+        "nthread": 4,
+        "nrounds": 6,
+        "max_depth": 8,
+        "min_child_weight": 10,
+        "colsample_bytree": 12,
+        "colsample_bylevel": 14,
     },
     "positions_categorical": {"booster": [16, 17]},
     "config_space": {
@@ -200,61 +220,67 @@ SEARCH_SPACE_6767 = {
         "min_child_weight": uniform(0.0, 1.0),
         "colsample_bytree": uniform(0.0, 1.0),
         "colsample_bylevel": uniform(0.0, 1.0),
-        #"booster": choice(["_INVALID", "_gblinear"]),
+        # "booster": choice(["_INVALID", "_gblinear"]),
         "booster": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_6794 = {
     "name": "6794",
-    "positions_hps": {"num.trees": 0, "sample.fraction": 2, "min.node.size": 3, "mtry": 4},
-    "positions_categorical": {
-        "replace": [6, 7],
-        "respect": [8, 9]
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
     },
+    "positions_categorical": {"replace": [6, 7], "respect": [8, 9]},
     "config_space": {
         "num.trees": uniform(0.0, 1.0),
         "mtry": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.0, 1.0),
         "min.node.size": uniform(0.0, 1.0),
-        #"replace": choice(["_FALSE", "_INVALID"]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
         "replace": choice([0.0, 1.0]),
-        #"respect": choice(["_INVALID", "_TRUE"]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
         "respect": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_7607 = {
     "name": "7607",
-    "positions_hps": {"num.trees": 0, "min.node.size": 2, "sample.fraction": 3, "mtry": 4},
-    "positions_categorical": {
-        "replace": [5, 6],
-        "respect": [7, 8]
+    "positions_hps": {
+        "num.trees": 0,
+        "min.node.size": 2,
+        "sample.fraction": 3,
+        "mtry": 4,
     },
+    "positions_categorical": {"replace": [5, 6], "respect": [7, 8]},
     "config_space": {
         "num.trees": uniform(0.0, 1.0),
         "mtry": uniform(0.0, 1.0),
         "min.node.size": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.0, 1.0),
-        #"respect": choice(["_INVALID", "_TRUE"]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
         "respect": choice([0.0, 1.0]),
-        #"replace": choice(["_FALSE", "_INVALID"]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
         "replace": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_7609 = {
     "name": "7609",
-    "positions_hps": {"num.trees": 0, "sample.fraction": 2, "min.node.size": 3, "mtry": 4},
-    "positions_categorical": {
-        "respect": [5, 6],
-        "replace": [7, 8]
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
     },
+    "positions_categorical": {"respect": [5, 6], "replace": [7, 8]},
     "config_space": {
         "num.trees": uniform(0.0, 1.0),
         "mtry": uniform(0.0, 1.0),
         "min.node.size": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.0, 1.0),
-        #"respect": choice(["_INVALID", "_TRUE"]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
         "respect": choice([0.0, 1.0]),
-        #"replace": choice(["_FALSE", "_INVALID"]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
         "replace": choice([0.0, 1.0]),
     },
 }
@@ -266,7 +292,7 @@ SEARCH_SPACE_5889 = {
         "num.trees": uniform(0.0, 1.0),
         "mtry": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.1, 1.0),
-        #"replace": choice(["_FALSE", "_INVALID"]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
         "replace": choice([0.0, 1.0]),
     },
 }
@@ -401,17 +427,14 @@ def convert_dataset(search_space, dataset):
 
     for i, config in enumerate(dataset["X"]):
         # collect all continuous hyperparameters
-        final_config = [
-            config[pos]
-            for pos in search_space["positions_hps"].values()
-        ]
+        final_config = [config[pos] for pos in search_space["positions_hps"].values()]
 
         # collect categorical hyperparameters and compute encoding
         for positions in search_space.get("positions_categorical", {}).values():
             print(config)
             idx = next(
                 (j for j, p in enumerate(positions) if config[p] == 1.0),
-                len(positions) - 1
+                len(positions) - 1,
             )
             final_config.append(float(idx))
 
@@ -444,7 +467,6 @@ def convert_dataset(search_space, dataset):
         objectives_names=objective_names,
         fidelity_space=fidelity_space,
     )
-
 
 
 def load_data():
