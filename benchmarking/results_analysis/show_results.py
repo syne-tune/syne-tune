@@ -61,7 +61,7 @@ benchmark_families = [
     "hpob_6794",
     "hpob_7607",
     "hpob_7609",
-    "hpob_5889"
+    "hpob_5889",
 ]
 benchmark_names = {
     "fcnet": "\\FCNet{}",
@@ -282,7 +282,7 @@ def stack_benchmark_results(
                 "hpob_6794",
                 "hpob_7607",
                 "hpob_7609",
-                "hpob_5889"
+                "hpob_5889",
             ]:
                 # max instead of minimization, todo pass the mode somehow
                 benchmark_results *= -1
