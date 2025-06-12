@@ -62,6 +62,9 @@ def load_blackbox(
         * "icml-deepar": 2420 single-fidelity configurations of DeepAR forecasting algorithm evaluated on 10 datasets.
           A quantile-based approach for hyperparameter transfer learning.
           Salinas, D., Shen, H., and Perrone, V. 2021.
+        * "pd1": 23 multi-fidelity benchmarks for hyperparameters optimization of neural networks for image classification
+          Pre-trained Gaussian processes for Bayesian optimization.
+          Wang, Z. and Dahl G. and Swersky K. and Lee C. and Mariet Z. and Nado Z. and Gilmer J. and Snoek J. and Ghahramani Z. 2021.
         * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
           A quantile-based approach for hyperparameter transfer learning.
           Salinas, D., Shen, H., and Perrone, V. 2021.
