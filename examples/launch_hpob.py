@@ -21,7 +21,7 @@ def simulate_benchmark(blackbox, trial_backend, metric):
         ),
         metric=metric,
         random_seed=31415927,
-        do_minimize=False
+        do_minimize=False,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=600)
