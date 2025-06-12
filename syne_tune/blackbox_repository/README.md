@@ -30,6 +30,17 @@ print(blackbox(config, fidelity={'hp_epoch': 10}))
 If the dataset is not found locally, it is downloaded from the [Syne Tune HuggingFace repo](https://huggingface.co/synetune).
 
 
+Some blackbox, for example PD1, do not include evaluation for all configurations in the search space. 
+To use these benchmarks, we can build a surrogate model on the provided observations such that we can predict the target metrics for each configuration in the search space:
+```python
+from syne_tune.blackbox_repository import load_blackbox
+from syne_tune.blackbox_repository.blackbox_surrogate import add_surrogate
+blackbox = load_blackbox("pd1")["imagenet_resnet_batch_size_512"]
+surrogate_blackbox = add_surrogate(blackbox)
+config = {k: v.sample() for k, v in surrogate_blackbox.configuration_space.items()}
+print(surrogate_blackbox(config, fidelity={'global_step': 10}))
+```
+
 ## Simulating an HPO run
 
 We can simulate an HPO run using the `BlackboxRepositoryBackend`, which internally uses a queuing system to simulate
