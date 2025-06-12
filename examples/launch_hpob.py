@@ -9,7 +9,7 @@ from syne_tune.blackbox_repository import (
 )
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.baselines import RandomSearch, CQR
+from syne_tune.optimizer.baselines import CQR
 from syne_tune import StoppingCriterion, Tuner
 
 
