@@ -24,7 +24,7 @@ Syne Tune is a library for large-scale hyperparameter optimization (HPO) with th
 To install Syne Tune from pip:
 
 ```bash
-pip install 'syne-tune[basic]'
+pip install 'syne-tune[extra]'
 ```
 
 or to install the latest version from source: 
@@ -32,7 +32,7 @@ or to install the latest version from source:
 ```bash
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
-pip install -e '.[basic]'
+pip install -e '.[extra]'
 ```
 
 See our [change log](CHANGELOG.md) to see what changed in the latest version. 
