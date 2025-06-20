@@ -36,7 +36,7 @@ To use these benchmarks, we can build a surrogate model based on the provided ob
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.blackbox_surrogate import add_surrogate
 blackbox = load_blackbox("pd1")["imagenet_resnet_batch_size_512"]
-surrogate_blackbox = add_surrogate(blackbox)
+surrogate_blackbox = add_surrogate(blackbox, predict_curves=False)
 config = {k: v.sample() for k, v in surrogate_blackbox.configuration_space.items()}
 print(surrogate_blackbox(config, fidelity={'global_step': 10}))
 ```
