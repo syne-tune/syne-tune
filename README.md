@@ -91,7 +91,7 @@ if __name__ == '__main__':
 ### Step 2: Define a launching script
 
 Once the training script is prepared, we first define the search space and then start the tuning process.
-In this example, we launch [ASHA] for a total of 30 seconds using four workers.
+In this example, we launch [ASHA](https://arxiv.org/abs/1810.05934) for a total of 30 seconds using four workers.
 Each worker spawns a separate Python process to evaluate a hyperparameter configuration, meaning that four configurations are trained in parallel.
 
 ```python
