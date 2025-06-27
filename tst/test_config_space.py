@@ -20,6 +20,7 @@ from syne_tune.config_space import (
     OrdinalNearestNeighbor,
 )
 
+
 def test_serialization():
     config_space = [
         randint(1, 2),
