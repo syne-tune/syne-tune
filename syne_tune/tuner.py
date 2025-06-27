@@ -20,9 +20,6 @@ from syne_tune.constants import (
     TUNER_DEFAULT_SLEEP_TIME,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
-from syne_tune.optimizer.schedulers.remove_checkpoints import (
-    RemoveCheckpointsSchedulerMixin,
-)
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
@@ -195,20 +192,6 @@ class Tuner:
                     "This means no tuning results will be written."
                 )
         self.callbacks: List[TunerCallback] = callbacks
-
-    def _initialize_early_checkpoint_removal(self):
-        """
-        If the scheduler supports early checkpoint removal, the specific callback
-        for this is created here and appended to ``self.callbacks``.
-        """
-        if self.trial_backend.delete_checkpoints:
-            callback = (
-                self.scheduler.callback_for_checkpoint_removal(self.stop_criterion)
-                if isinstance(self.scheduler, RemoveCheckpointsSchedulerMixin)
-                else None
-            )
-            if callback is not None:
-                self.callbacks.append(callback)
 
     def run(self):
         """Launches the tuning."""
