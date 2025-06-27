@@ -7,7 +7,7 @@ from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.legacy_baselines import ASHA
+from syne_tune.optimizer.baselines import ASHA
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import random_string
 
@@ -15,7 +15,6 @@ from syne_tune.util import random_string
 def launch_first_tuning(experiment_name: str):
     max_epochs = 100
     metric = "mean_loss"
-    mode = "min"
     config_space = {
         "steps": max_epochs,
         "width": randint(0, 10),
@@ -32,10 +31,8 @@ def launch_first_tuning(experiment_name: str):
     scheduler = ASHA(
         config_space=config_space,
         metric=metric,
-        mode=mode,
         max_t=max_epochs,
-        search_options={"allow_duplicates": True},
-        resource_attr="epoch",
+        time_attr="epoch",
     )
 
     trial_backend = LocalBackend(entry_point=str(entry_point))
