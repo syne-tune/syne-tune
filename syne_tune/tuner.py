@@ -178,7 +178,6 @@ class Tuner:
         self.tuning_status = None
         self.tuner_saver = None
         self.status_printer = None
-        self._initialize_early_checkpoint_removal()
 
     def _init_callbacks(self, callbacks: Optional[List[TunerCallback]]):
         if callbacks is None:
