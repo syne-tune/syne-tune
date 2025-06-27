@@ -58,11 +58,15 @@ scheduler_fun = partial(
 @pytest.mark.parametrize(
     "scheduler",
     [
-        scheduler_fun(do_minimize=False, multiobjective_priority=FixedObjectivePriority()),
+        scheduler_fun(
+            do_minimize=False, multiobjective_priority=FixedObjectivePriority()
+        ),
         scheduler_fun(
             do_minimize=False, multiobjective_priority=LinearScalarizationPriority()
         ),
-        scheduler_fun(do_minimize=False, multiobjective_priority=NonDominatedPriority()),
+        scheduler_fun(
+            do_minimize=False, multiobjective_priority=NonDominatedPriority()
+        ),
     ],
 )
 def test_moasha_mode_max(scheduler):
@@ -87,7 +91,9 @@ def test_moasha_mode_max(scheduler):
 @pytest.mark.parametrize(
     "scheduler",
     [
-        scheduler_fun(do_minimize=True,multiobjective_priority=FixedObjectivePriority()),
+        scheduler_fun(
+            do_minimize=True, multiobjective_priority=FixedObjectivePriority()
+        ),
         scheduler_fun(
             do_minimize=True, multiobjective_priority=LinearScalarizationPriority()
         ),
