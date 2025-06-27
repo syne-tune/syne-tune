@@ -9,7 +9,7 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
 from syne_tune.blackbox_repository import load_blackbox, add_surrogate
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
-from syne_tune.optimizer.schedulers.searchers import LegacyRandomSearcher
+from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 
 
 @dataclass
@@ -153,7 +153,7 @@ def test_elapsed_time_consistency(name, benchmark):
         seeds = list(range(blackbox.num_seeds))
     else:
         seeds = [None]
-    random_searcher = LegacyRandomSearcher(
+    random_searcher = RandomSearcher(
         config_space=blackbox.configuration_space,
         metric=benchmark.metric,
         random_seed=random_seed,

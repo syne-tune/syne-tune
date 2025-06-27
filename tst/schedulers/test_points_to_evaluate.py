@@ -1,7 +1,7 @@
 import pytest
 
 from syne_tune.config_space import randint
-from syne_tune.optimizer.schedulers.multiobjective import (
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (

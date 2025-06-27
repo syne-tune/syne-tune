@@ -9,7 +9,7 @@ import pytest
 from syne_tune.backend.trial_status import Trial
 
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.multiobjective import (
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (

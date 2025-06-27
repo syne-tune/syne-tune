@@ -13,7 +13,7 @@ from syne_tune.blackbox_repository import (
 )
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.legacy_baselines import RandomSearch
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import StoppingCriterion, Tuner
 
 
@@ -23,8 +23,7 @@ def simulate_benchmark(blackbox, trial_backend, metric):
         config_space=blackbox.configuration_space_with_max_resource_attr(
             max_resource_attr
         ),
-        max_resource_attr=max_resource_attr,
-        metric=metric,
+        metrics=[metric],
         random_seed=31415927,
     )
 
