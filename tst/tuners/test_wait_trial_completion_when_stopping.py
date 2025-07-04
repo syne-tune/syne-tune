@@ -37,7 +37,7 @@ def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_
     sleep_time_bench = 0.02
     sleep_time_tuner = 0.01
     max_wallclock_time = 0.1
-    mode = "min"
+    do_minimize = True
     metric = "mean_loss"
     num_workers = 1
 
@@ -48,7 +48,7 @@ def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_
         "height": randint(-100, 100),
     }
     entry_point = script_height_example_path()
-    scheduler = RandomSearch(config_space, metric=metric, mode=mode)
+    scheduler = RandomSearch(config_space, metrics=[metric], do_minimize=True)
     trial_backend = temporary_local_backend(entry_point=entry_point)
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
     tuner = Tuner(
