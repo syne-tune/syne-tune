@@ -7,15 +7,14 @@ from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.legacy_baselines import ASHA
-from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
+from syne_tune.optimizer.baselines import ASHA
 from syne_tune.util import random_string
 
 
 def launch_first_tuning(experiment_name: str):
     max_epochs = 100
     metric = "mean_loss"
-    mode = "min"
+    do_minimize = True
     config_space = {
         "steps": max_epochs,
         "width": randint(0, 10),
@@ -32,10 +31,9 @@ def launch_first_tuning(experiment_name: str):
     scheduler = ASHA(
         config_space=config_space,
         metric=metric,
-        mode=mode,
+        do_minimize=do_minimize,
         max_t=max_epochs,
-        search_options={"allow_duplicates": True},
-        resource_attr="epoch",
+        time_attr="epoch",
     )
 
     trial_backend = LocalBackend(entry_point=str(entry_point))
@@ -76,23 +74,5 @@ if __name__ == "__main__":
         max_num_trials_started=20
     )
 
-    # Define a new config space for instance favoring a new part of the space based on data analysis
-    new_config_space = {
-        "steps": 100,
-        "width": randint(10, 20),
-        "height": randint(1, 10),
-    }
-
-    # Update scheduler with random searcher to use new configuration space,
-    # For now we modify internals, adding a method `update_config_space` to RandomSearcher would be a cleaner option.
-    tuning_experiment.tuner.scheduler.config_space = new_config_space
-    tuning_experiment.tuner.scheduler.searcher._hp_ranges = make_hyperparameter_ranges(
-        new_config_space
-    )
-    tuning_experiment.tuner.scheduler.searcher.configure_scheduler(
-        tuning_experiment.tuner.scheduler
-    )
-
-    # Resume the tuning with the modified search space and stopping criterion
-    # The scheduler will now explore the updated search space
+    # Resume the tuning
     tuning_experiment.tuner.run()

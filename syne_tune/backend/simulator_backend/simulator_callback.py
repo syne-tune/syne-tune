@@ -6,7 +6,6 @@ from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBacke
 from syne_tune import Tuner
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune import StoppingCriterion
-from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -99,15 +98,6 @@ class SimulatorCallback(StoreResultsCallback):
         ), "Initialize Tuner with sleep_time = 0 if you use the SimulatorBackend"
         self._time_keeper = backend.time_keeper
         scheduler = tuner.scheduler
-        if isinstance(scheduler, LegacyFIFOScheduler):
-            # Assign backend.time_keeper. It is important to do this here,
-            # just at the start of an experiment, and not already at
-            # construction of backend and scheduler. Otherwise, the way in
-            # which backend and scheduler are serialized and deserialized for
-            # remote tuning, leads to issues (in particular, the backend and its
-            # time_keeper are recreated, so the scheduler refers to the wrong
-            # time_keeper object then).
-            scheduler.set_time_keeper(self._time_keeper)
         self._time_keeper.start_of_time()
         self._tuner_sleep_time = backend.tuner_sleep_time
         # Modify ``tuner.stop_criterion`` in case it depends on wallclock time

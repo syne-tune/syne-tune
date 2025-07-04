@@ -21,16 +21,11 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.legacy_baselines import RandomSearch
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.callbacks.tensorboard_callback import TensorboardCallback
 from syne_tune.results_callback import StoreResultsCallback
-from examples.training_scripts.height_example.train_height import (
-    METRIC_ATTR,
-    METRIC_MODE,
-    MAX_RESOURCE_ATTR,
-)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
@@ -40,7 +35,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        MAX_RESOURCE_ATTR: max_steps,
+        "epoch": max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -55,7 +50,7 @@ if __name__ == "__main__":
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space, mode=METRIC_MODE, metric=METRIC_ATTR, random_seed=random_seed
+        config_space, do_minimize=True, metrics=["mean_loss"], random_seed=random_seed
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
@@ -68,7 +63,7 @@ if __name__ == "__main__":
         # Adding the TensorboardCallback overwrites the default callback which consists of the StoreResultsCallback.
         # To write results on this disk as well, we put this in here as well.
         callbacks=[
-            TensorboardCallback(target_metric=METRIC_ATTR, mode=METRIC_MODE),
+            TensorboardCallback(target_metric="mean_loss", mode="min"),
             StoreResultsCallback(),
         ],
         tuner_name="tensorboardx-demo",
