@@ -21,7 +21,6 @@ from syne_tune.config_space import (
 )
 
 
-
 def test_serialization():
     config_space = [
         randint(1, 2),
