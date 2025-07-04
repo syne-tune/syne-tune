@@ -3,7 +3,7 @@ import pytest
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend.trial_status import Status
 from syne_tune.config_space import randint
-from syne_tune.optimizer.legacy_baselines import RandomSearch
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
 
