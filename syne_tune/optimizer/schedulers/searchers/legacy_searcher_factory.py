@@ -1,9 +1,5 @@
 import logging
 
-from syne_tune.optimizer.schedulers.searchers import (
-    LegacyRandomSearcher,
-    GridSearcher,
-)
 from syne_tune.optimizer.schedulers.searchers.legacy_searcher import LegacyBaseSearcher
 
 __all__ = ["legacy_searcher_factory"]
