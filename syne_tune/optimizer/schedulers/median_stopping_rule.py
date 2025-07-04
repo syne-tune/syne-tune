@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 import numpy as np
 
@@ -136,7 +136,7 @@ class MedianStoppingRule(TrialScheduler):
 
         return metadata_scheduler | metadata
 
-    def metric_names(self) -> list[str]:
+    def metric_names(self) -> List[str]:
         return self.metric
 
     def metric_mode(self) -> str:
