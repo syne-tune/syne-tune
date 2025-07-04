@@ -35,7 +35,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        "epoch" : max_steps,
+        "epoch": max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space, do_minimize=True, metrics=['mean_loss'], random_seed=random_seed
+        config_space, do_minimize=True, metrics=["mean_loss"], random_seed=random_seed
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         # Adding the TensorboardCallback overwrites the default callback which consists of the StoreResultsCallback.
         # To write results on this disk as well, we put this in here as well.
         callbacks=[
-            TensorboardCallback(target_metric='mean_loss', mode="min"),
+            TensorboardCallback(target_metric="mean_loss", mode="min"),
             StoreResultsCallback(),
         ],
         tuner_name="tensorboardx-demo",
