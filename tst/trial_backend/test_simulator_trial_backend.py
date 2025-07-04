@@ -18,7 +18,9 @@ from syne_tune.results_callback import StoreResultsCallback
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID
-from syne_tune.optimizer.schedulers.single_fidelity_scheduler import SingleFidelityScheduler
+from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
+    SingleFidelityScheduler,
+)
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
