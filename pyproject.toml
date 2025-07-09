@@ -102,6 +102,19 @@ smac = [
     "swig",
     "smac>=2.0",
 ]
+extra = [
+    "syne-tune[gpsearchers]",
+    "syne-tune[kde]",
+    "syne-tune[dev]",
+    "syne-tune[moo]",
+    "syne-tune[visual]",
+    "syne-tune[sklearn]",
+    "syne-tune[blackbox-repository]",
+    "syne-tune[yahpo]",
+    "syne-tune[raytune]",
+    "syne-tune[botorch]",
+    "syne-tune[bore]",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/awslabs/syne-tune"
