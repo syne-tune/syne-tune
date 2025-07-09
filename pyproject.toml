@@ -107,5 +107,9 @@ smac = [
 "Homepage" = "https://github.com/awslabs/syne-tune"
 "Bug Tracker" = "https://github.com/awslabs/syne-tune/issues"
 
+[tool.setuptools.packages.find]
+include = ["syne_tune", "syne_tune.*"]
+exclude = []
+
 [tool.setuptools.dynamic]
 version = {attr = "syne_tune.read_version"}
