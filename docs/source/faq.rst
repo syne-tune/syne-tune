@@ -69,7 +69,7 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 There are also union tags you can use:
 
 * ``basic``: Union of dependencies of a reasonable size (``gpsearchers``,
-  ``kde``, ``aws``, ``moo``, ``sklearn``). Even if size does not matter for
+  ``kde``,  ``moo``, ``sklearn``). Even if size does not matter for
   your local installation, you should consider ``basic`` for
   `remote launching of experiments <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__.
 * ``extra``: Union of all dependencies listed above.
