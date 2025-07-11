@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "syne-tune"
 dynamic = ["version"]
-description = "Distributed Hyperparameter Optimization"
+description = "A Hyperparameter Optimization Library"
 readme = "README.md"
-authors = [{name = "AWS"}]
+authors = [{name = "Syne Tune Developers"}]
 license = {text = "Apache-2.0"}
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -52,13 +52,6 @@ dev = [
     "sphinxcontrib-bibtex",
     "sphinxcontrib.jquery",
     "wheel",
-]
-aws = [
-    "boto3",
-    "sagemaker>=2.112.0",
-    "PyYaml",
-    "ujson",
-    "s3fs",
 ]
 moo = [
     "pymoo==0.6.0",
