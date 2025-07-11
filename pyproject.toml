@@ -79,11 +79,6 @@ yahpo = [
     "pandas",
     "yahpo-gym",
 ]
-raytune = [
-    "ray[tune]>=2.0.0",
-    "scikit-learn",
-    "scikit-optimize",
-]
 botorch = [
     "botorch>=0.7.2",
 ]
@@ -104,7 +99,6 @@ extra = [
     "syne-tune[sklearn]",
     "syne-tune[blackbox-repository]",
     "syne-tune[yahpo]",
-    "syne-tune[raytune]",
     "syne-tune[botorch]",
     "syne-tune[bore]",
 ]
