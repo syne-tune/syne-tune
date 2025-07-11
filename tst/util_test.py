@@ -74,14 +74,10 @@ def wait_until_all_trials_completed(backend):
 def run_experiment_with_height(
     make_scheduler: callable,
     simulated: bool,
-    mode: Optional[str] = None,
     config_space: Optional[dict] = None,
     **kwargs,
 ):
     random_seed = 382378624
-    if mode is None:
-        mode = METRIC_MODE
-
     if simulated:
         max_steps = 9
         num_workers = 4
@@ -127,10 +123,9 @@ def run_experiment_with_height(
     myscheduler = make_scheduler(
         config_space,
         metric=metric,
-        mode=mode,
+        do_minimize=True,
         random_seed=random_seed,
-        resource_attr=RESOURCE_ATTR,
-        max_resource_attr=MAX_RESOURCE_ATTR,
+        time_attr=RESOURCE_ATTR,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
