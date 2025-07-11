@@ -23,7 +23,6 @@ from examples.training_scripts.height_example.train_height import (
     height_config_space,
     RESOURCE_ATTR,
     METRIC_ATTR,
-    METRIC_MODE,
     MAX_RESOURCE_ATTR,
 )
 from examples.training_scripts.height_example.blackbox_height import (

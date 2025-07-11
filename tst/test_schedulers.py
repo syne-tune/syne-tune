@@ -1,10 +1,5 @@
 import pytest
-import itertools
 
-from syne_tune.config_space import choice
-from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
-    SingleFidelityScheduler,
-)
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
