@@ -1,3 +1,0 @@
-syne-tune[gpsearchers,kde,blackbox-repository,aws]
-tqdm
-botorch

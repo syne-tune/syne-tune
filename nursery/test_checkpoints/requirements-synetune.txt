@@ -1,3 +1,0 @@
-syne-tune[gpsearchers,aws]
-tqdm
-sortedcontainers  # Remove in version > 0.4.1
