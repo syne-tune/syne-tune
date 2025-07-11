@@ -72,37 +72,19 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | Method                                                                                 | Reference                                                                       | Searcher      | Asynchronous? | Multi-fidelity? | Transfer? |
 +========================================================================================+=================================================================================+===============+===============+=================+===========+
-| `Grid Search <tutorials/basics/basics_randomsearch.html>`__                            |                                                                                 | deterministic | yes           | no              | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | `Random Search <tutorials/basics/basics_randomsearch.html>`__                          | `Bergstra, et al. (2011) <https://www.jmlr.org/papers/v13/bergstra12a.html>`__  | random        | yes           | no              | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `Bayesian Optimization <tutorials/basics/basics_bayesopt.html>`__                      | `Snoek, et al. (2012) <https://arxiv.org/abs/1206.2944>`__                      | model-based   | yes           | no              | no        |
+|  :class:`~syne_tune.optimizer.baselines.BoTorch`                                       | `Snoek, et al. (2012) <https://arxiv.org/abs/1206.2944>`__                      | model-based   | yes           | no              | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.BORE`                                           | `Tiao, et al. (2021) <https://proceedings.mlr.press/v139/tiao21a.html>`__       | model-based   | yes           | no              | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.MedianStoppingRule`                            | `Golovin, et al. (2017) <https://dl.acm.org/doi/10.1145/3097983.3098043>`__     | any           | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `SyncHyperband <tutorials/multifidelity/mf_syncsh.html>`__                             | `Li, et al. (2018) <https://jmlr.org/papers/v18/16-558.html>`__                 | random        | no            | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `SyncBOHB <tutorials/multifidelity/mf_sync_model.html#synchronous-bohb>`__             | `Falkner, et al. (2018) <https://arxiv.org/abs/1807.01774>`__                   | model-based   | no            | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `SyncMOBSTER <tutorials/multifidelity/mf_sync_model.html#synchronous-mobster>`__       | `Klein, et al. (2020) <https://openreview.net/forum?id=a2rFihIU7i>`__           | model-based   | no            | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | `ASHA <tutorials/multifidelity/mf_sync_model.html>`__                                  | `Li, et al. (2019) <https://arxiv.org/abs/1810.05934>`__                        | random        | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | `BOHB <tutorials/multifidelity/mf_asha.html>`__                                        | `Falkner, et al. (2018) <https://arxiv.org/abs/1807.01774>`__                   | model-based   | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__         | `Klein, et al. (2020) <https://openreview.net/forum?id=a2rFihIU7i>`__           | model-based   | yes           | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `DEHB <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`__ | `Awad, et al. (2021) <https://arxiv.org/abs/2105.09821>`__                      | evolutionary  | no            | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__                 | `Li, et al. (2022) <https://arxiv.org/abs/2201.06834>`__                        | model-based   | yes           | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `DyHPO <tutorials/multifidelity/mf_async_model.html#dyhpo>`__ :sup:`*`                 | `Wistuba, et al. (2022) <https://arxiv.org/abs/2202.09774>`__                   | model-based   | yes           | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.ASHABORE`                                       | `Tiao, et al. (2021) <https://proceedings.mlr.press/v139/tiao21a.html>`__       | model-based   | yes           | yes             | no        |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `PASHA <tutorials/pasha/pasha.html>`__                                                 | `Bohdal, et al. (2022) <https://arxiv.org/abs/2207.06940>`__                    | random        | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.REA`                                            | `Real, et al. (2019) <https://arxiv.org/abs/1802.01548>`__                      | evolutionary  | yes           | no              | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
@@ -114,20 +96,11 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | ASHA-CTS (:class:`~syne_tune.optimizer.baselines.ASHACTS`)                             | `Salinas, et al. (2021) <https://proceedings.mlr.press/v119/salinas20a.html>`__ | random        | yes           | yes             | yes       |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| RUSH (:class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`)        | `Zappella, et al. (2021) <https://arxiv.org/abs/2103.16111>`__                  | random        | yes           | yes             | yes       |
-+----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`                 | `Perrone, et al. (2019) <https://arxiv.org/abs/1909.12552>`__                   | any           | yes           | yes             | yes       |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 
-:sup:`*`: We implement the model-based scheduling logic of DyHPO, but use the
-same Gaussian process surrogate models as MOBSTER and HyperTune. The original
-source code for the paper is
-`here <https://github.com/releaunifreiburg/DyHPO/tree/main>`__.
-
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
-Syne Tune also supports `BoTorch <https://github.com/pytorch/botorch>`__ searchers,
-see :class:`~syne_tune.optimizer.baselines.BoTorch`.
 
 Supported Multi-objective Optimization Methods
 ----------------------------------------------
@@ -135,21 +108,8 @@ Supported Multi-objective Optimization Methods
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 | Method                                                                  | Reference                                                                   | Searcher    | Asynchronous? | Multi-fidelity? | Transfer? |
 +=========================================================================+=============================================================================+=============+===============+=================+===========+
-| :class:`~syne_tune.optimizer.baselines.ConstrainedBayesianOptimization` | `Gardner, et al. (2014) <http://proceedings.mlr.press/v32/gardner14.pdf>`__ | model-based | yes           | no              | no        |
-+-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA`          | `Schmucker, et al. (2021) <https://arxiv.org/abs/2106.12639>`__             | random      | yes           | yes             | no        |
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
-| :class:`~syne_tune.optimizer.baselines.NSGA2`                           | `Deb, et al. (2002) <https://ieeexplore.ieee.org/document/996017>`__        | evolutionary| no            | no              | no        |
-+-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
-| :class:`~syne_tune.optimizer.baselines.MORandomScalarizationBayesOpt`   | `Peria, et al. (2018) <https://proceedings.mlr.press/v115/paria20a.html>`__ | model-based | yes           | no              | no        |
-+-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
-| :class:`~syne_tune.optimizer.baselines.MOLinearScalarizationBayesOpt`   |                                                                             | model-based | yes           | no              | no        |
-+-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
-
-HPO methods listed can be used in a multi-objective setting by scalarization
-(:class:`~syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority.LinearScalarizationPriority`)
-or non-dominated sorting
-(:class:`~syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority.NonDominatedPriority`).
 
 Security
 ========
