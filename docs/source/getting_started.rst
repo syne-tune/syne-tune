@@ -11,17 +11,11 @@ For development, you need to install Syne Tune from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/awslabs/syne-tune.git
+   git clone https://github.com/syne-tune/syne-tune.git
    cd syne-tune
-   python3 -m venv st_venv
-   . st_venv/bin/activate
    pip install --upgrade pip
    pip install -e '.[basic,dev]'
 
-This installs Syne Tune in a virtual environment ``st_venv``. Remember to activate
-this environment before working with Syne Tune. We also recommend building the
-virtual environment from scratch now and then, in particular when you pull a new
-release, as dependencies may have changed.
 
 See our `change log <https://github.com/awslabs/syne-tune/blob/main/CHANGELOG.md>`__ to
 check what has changed in the latest version.
@@ -31,13 +25,6 @@ collects a reasonable number of dependencies. If you want to install all
 dependencies, replace ``basic`` with ``extra``. You can further refine this
 selection by using
 `partial dependencies <faq.html#what-are-the-different-installations-options-supported>`__.
-
-What Is Hyperparameter Optimization?
-====================================
-
-Here is an
-`introduction to hyperparameter optimization <https://d2l.ai/chapter_hyperparameter-optimization/index.html>`__
-in the context of deep learning, which uses Syne Tune for some examples.
 
 First Example
 =============
