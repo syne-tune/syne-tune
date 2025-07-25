@@ -35,14 +35,12 @@ calling :code:`report(epoch=epoch, loss=loss)`, as shown in this example:
 
 .. literalinclude:: ../../examples/training_scripts/height_example/train_height_simple.py
    :caption: train_height_simple.py
-   :start-after: # permissions and limitations under the License.
 
 Once you have annotated your training script in this way, you can launch a
 tuning experiment as follows:
 
 .. literalinclude:: ../../examples/launch_height_simple.py
    :caption: launch_height_simple.py
-   :start-after: # permissions and limitations under the License.
 
 
 This example runs `ASHA <tutorials/multifidelity/mf_asha.html>`__ with
