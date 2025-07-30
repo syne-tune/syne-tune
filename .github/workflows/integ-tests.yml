@@ -1,6 +1,6 @@
 name: Integ Tests
 
-# All tests in this file: 
+# All tests in this file:
 # 1. Run against every PR
 # 2. Do not require AWS credentials (We only run the tests that require credentials on code that has been approved and merged to main)
 
@@ -11,7 +11,7 @@ on:
   pull_request:
     branches:
       - main
-    
+
 jobs:
   launch_tensorboard_example:
     uses: ./.github/workflows/run-syne-tune.yml
@@ -19,7 +19,7 @@ jobs:
       extras-require: extra
       additional-command: pip install tensorboardX
       script-path: examples/launch_tensorboard_example.py
-  
+
   launch_plot_results:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
