@@ -22,6 +22,7 @@ jobs:
   launch_plot_results:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       additional-command: pip install matplotlib
       script-path: examples/launch_plot_results.py
 
@@ -33,23 +34,25 @@ jobs:
   launch_height_python_backend:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/launch_height_python_backend.py
 
   launch_checkpoint_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
+      extras-require: extra
       additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_checkpoint_example.py
 
   launch_transfer_learning_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
-      additional-command: pip install xgboost scikit-learn
+      extras-require: extra
+      additional-command: pip install xgboost scikit-learn huggingface-hub
       script-path: examples/launch_transfer_learning_example.py
 
   launch_height_simple:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/launch_height_simple.py
