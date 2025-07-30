@@ -21,7 +21,7 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.legacy_baselines import RandomSearch
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.callbacks.tensorboard_callback import TensorboardCallback
@@ -55,7 +55,10 @@ if __name__ == "__main__":
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space, mode=METRIC_MODE, metric=METRIC_ATTR, random_seed=random_seed
+        config_space,
+        do_minimize=METRIC_MODE == "min",
+        metrics=[METRIC_ATTR],
+        random_seed=random_seed,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
