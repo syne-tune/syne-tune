@@ -3,7 +3,7 @@ Example for running CQR on NASBench201.
 """
 import logging
 
-from syne_tune.blackbox_repository import BlackboxRepositoryBackend, load_blackbox
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.legacy_baselines import ASHACQR
 from syne_tune import Tuner, StoppingCriterion
@@ -16,7 +16,6 @@ if __name__ == "__main__":
     n_workers = 4
     dataset_name = "cifar100"
     max_resource_attr = "hp_epoch"
-    # blackbox = load_blackbox("nasbench201")[dataset_name]
     # simulator backend specialized to tabulated blackboxes
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name="nasbench201",
