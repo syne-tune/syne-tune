@@ -84,7 +84,7 @@ class Tuner:
         provided ``tuner_name`` that ensures uniqueness, otherwise the name is
         left unchanged and is expected to be unique. Defaults to ``True``.
     :param save_tuner: If ``True``, the :class:`Tuner` object is serialized at
-        the end of tuning, including its dependencies (e.g., scheduler). This
+        every ``results_update_interval`` seconds, including its dependencies (e.g., scheduler). This
         allows all details of the experiment to be recovered. Defaults to
         ``True``.
     :param start_jobs_without_delay: Defaults to ``True``. If this is ``True``, the tuner
