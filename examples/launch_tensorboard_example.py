@@ -35,7 +35,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        "epoch": max_steps,
+        "steps": max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
