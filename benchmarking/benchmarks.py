@@ -14,7 +14,7 @@ class BenchmarkDefinition:
     mode: str
     blackbox_name: str
     dataset_name: str
-    max_num_evaluations: int | None= None
+    max_num_evaluations: int | None = None
     surrogate: str | None = None
     surrogate_kwargs: dict | None = None
     datasets: list[str] | None = None

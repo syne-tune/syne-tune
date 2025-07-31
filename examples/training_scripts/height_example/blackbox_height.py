@@ -1,4 +1,4 @@
-from typing import  Any
+from typing import Any
 import numpy as np
 
 from syne_tune.blackbox_repository.blackbox import Blackbox, ObjectiveFunctionResult

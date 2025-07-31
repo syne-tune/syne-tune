@@ -68,10 +68,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config_space: dict[str, Any],
         metric: str,
         do_minimize: bool | None = True,
-        searcher:
-            str | IndependentMultiFidelitySearcher | LastValueMultiFidelitySearcher
-            | None
-        = "random_search",
+        searcher: str
+        | IndependentMultiFidelitySearcher
+        | LastValueMultiFidelitySearcher
+        | None = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,

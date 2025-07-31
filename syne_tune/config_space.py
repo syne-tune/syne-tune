@@ -64,7 +64,7 @@ class Domain:
 
     def sample(
         self,
-        spec: list[dict] | dict | None= None,
+        spec: list[dict] | dict | None = None,
         size: int = 1,
         random_state: np.random.RandomState | None = None,
     ) -> Any | list[Any]:

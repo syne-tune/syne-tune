@@ -264,8 +264,9 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
         return self._rung_levels
 
 
-PerResourcePosteriorState = IndependentGPPerResourcePosteriorState | GaussProcPosteriorStateAndRungLevels
-
+PerResourcePosteriorState = (
+    IndependentGPPerResourcePosteriorState | GaussProcPosteriorStateAndRungLevels
+)
 
 
 def _posterior_state_for_rung_level(

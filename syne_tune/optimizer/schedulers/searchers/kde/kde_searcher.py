@@ -290,9 +290,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
 
         return suggestion
 
-    def _check_data_shape_and_good_size(
-        self, data_shape: list[int, int]
-    ) -> int | None:
+    def _check_data_shape_and_good_size(self, data_shape: list[int, int]) -> int | None:
         """
         Determine size of data for "good" model (the rest of the data is for the
         "bad" model). Both sizes must be larger than the number of features,

@@ -680,9 +680,7 @@ class Tuner:
         """
         return StoreResultsCallback()
 
-    def best_config(
-        self, metric: str | int | None = 0
-    ) -> tuple[int, dict[str, Any]]:
+    def best_config(self, metric: str | int | None = 0) -> tuple[int, dict[str, Any]]:
         """
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
             default to 0 - first metric defined in the Scheduler

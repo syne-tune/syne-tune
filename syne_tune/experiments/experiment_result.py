@@ -284,7 +284,7 @@ def _impute_filter(filt: PathOrExperimentFilter | None) -> PathOrExperimentFilte
 
 
 def get_metadata(
-    path_filter: PathFilter  | None = None, root: Path = experiment_path()
+    path_filter: PathFilter | None = None, root: Path = experiment_path()
 ) -> dict[str, dict]:
     """Load meta-data for a number of experiments
 
@@ -318,7 +318,7 @@ def get_metadata(
 
 
 def list_experiments(
-    path_filter: PathFilter  | None = None,
+    path_filter: PathFilter | None = None,
     experiment_filter: ExperimentFilter | None = None,
     root: Path = experiment_path(),
     load_tuner: bool = False,
@@ -359,7 +359,7 @@ def list_experiments(
 
 def load_experiments_df(
     path_filter: PathFilter | None = None,
-    experiment_filter: ExperimentFilter  | None = None,
+    experiment_filter: ExperimentFilter | None = None,
     root: Path = experiment_path(),
     load_tuner: bool = False,
 ) -> pd.DataFrame:

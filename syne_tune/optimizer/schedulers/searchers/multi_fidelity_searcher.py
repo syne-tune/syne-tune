@@ -31,7 +31,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
     def __init__(
         self,
         config_space: dict[str, Any],
-        searcher: str | SingleObjectiveBaseSearcher  | None = "kde",
+        searcher: str | SingleObjectiveBaseSearcher | None = "kde",
         points_to_evaluate: list[dict] | None = None,
         random_seed: int | None = None,
         searcher_kwargs: dict[str, Any] = None,

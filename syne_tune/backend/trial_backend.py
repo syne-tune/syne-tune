@@ -312,9 +312,7 @@ class TrialBackend:
                 self.delete_checkpoint(trial_id=trial_id)
                 self._cleanup_after_trial(trial_id)
 
-    def set_path(
-        self, results_root: str | None = None, tuner_name: str | None = None
-    ):
+    def set_path(self, results_root: str | None = None, tuner_name: str | None = None):
         """
         :param results_root: The local folder that should contain the results of
             the tuning experiment. Used by :class:`~syne_tune.Tuner` to indicate

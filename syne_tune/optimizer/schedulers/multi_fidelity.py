@@ -1,5 +1,3 @@
-
-
 class MultiFidelitySchedulerMixin:
     """
     Declares properties which are required for multi-fidelity schedulers.

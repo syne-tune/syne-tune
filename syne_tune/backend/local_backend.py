@@ -358,9 +358,7 @@ class LocalBackend(TrialBackend):
         with open(self.trial_path(trial_id=trial_id) / "std.err", "r") as f:
             return f.readlines()
 
-    def set_path(
-        self, results_root: str | None = None, tuner_name: str | None = None
-    ):
+    def set_path(self, results_root: str | None = None, tuner_name: str | None = None):
         self.local_path = Path(results_root)
 
     def entrypoint_path(self) -> Path:

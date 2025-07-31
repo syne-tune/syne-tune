@@ -39,8 +39,9 @@ def _assert_same_keys(dict1, dict2):
 # that work both in the standard case of a single output model and in the
 # multi-output case
 
-SkipOptimizationOutputPredicate = SkipOptimizationPredicate | dict[str, SkipOptimizationPredicate]
-
+SkipOptimizationOutputPredicate = (
+    SkipOptimizationPredicate | dict[str, SkipOptimizationPredicate]
+)
 
 
 class StateForModelConverter:
@@ -273,9 +274,7 @@ class ModelStateTransformer:
             )
             del metric_vals[key]
 
-    def label_trial(
-        self, data: TrialEvaluations, config: Configuration | None = None
-    ):
+    def label_trial(self, data: TrialEvaluations, config: Configuration | None = None):
         """
         Adds observed data for a trial. If it has observations in the state
         already, ``data.metrics`` are appended. Otherwise, a new entry is

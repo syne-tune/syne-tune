@@ -45,8 +45,13 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 logger = logging.getLogger(__name__)
 
 
-GPModel = GaussianProcessRegression | GPRegressionMCMC | IndependentGPPerResourceModel | HyperTuneIndependentGPModel | HyperTuneJointGPModel
-
+GPModel = (
+    GaussianProcessRegression
+    | GPRegressionMCMC
+    | IndependentGPPerResourceModel
+    | HyperTuneIndependentGPModel
+    | HyperTuneJointGPModel
+)
 
 
 class GaussProcPredictor(BasePredictor):

@@ -68,9 +68,7 @@ class SimulatorState:
 
     """
 
-    def __init__(
-        self, event_heap: EventHeapType | None = None, events_added: int = 0
-    ):
+    def __init__(self, event_heap: EventHeapType | None = None, events_added: int = 0):
         if event_heap is None:
             event_heap = []
         self.event_heap = event_heap

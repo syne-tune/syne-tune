@@ -1,5 +1,5 @@
 from typing import Any
-from collections.abc import Iterable,Iterator, Callable
+from collections.abc import Iterable, Iterator, Callable
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (

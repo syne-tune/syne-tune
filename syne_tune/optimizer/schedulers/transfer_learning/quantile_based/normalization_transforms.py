@@ -13,9 +13,7 @@ class GaussianTransform:
      If none use lowest rank of duplicated values.
     """
 
-    def __init__(
-        self, y: np.array, random_state: np.random.RandomState | None = None
-    ):
+    def __init__(self, y: np.array, random_state: np.random.RandomState | None = None):
         assert y.ndim == 2
         self.dim = y.shape[1]
         self.sorted = y.copy()

@@ -86,9 +86,7 @@ class PythonBackend(LocalBackend):
     def tune_function_path(self) -> Path:
         return self.local_path / "tune_function"
 
-    def set_path(
-        self, results_root: str | None = None, tuner_name: str | None = None
-    ):
+    def set_path(self, results_root: str | None = None, tuner_name: str | None = None):
         super(PythonBackend, self).set_path(
             results_root=results_root, tuner_name=tuner_name
         )

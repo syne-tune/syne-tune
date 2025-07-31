@@ -167,9 +167,7 @@ def is_integer(lst: list) -> bool:
     return all(x == int(x) for x in lst)
 
 
-def dump_json_with_numpy(
-    x: dict, filename: str | Path | None = None
-) -> str | None:
+def dump_json_with_numpy(x: dict, filename: str | Path | None = None) -> str | None:
     """
     Serializes dictionary ``x`` in JSON, taking into account NumPy specific
     value types such as ``n.p.int64``.

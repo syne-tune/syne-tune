@@ -146,9 +146,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return status, results
 
 
-def make_surrogate(
-    surrogate: str | None = None, surrogate_kwargs: dict | None = None
-):
+def make_surrogate(surrogate: str | None = None, surrogate_kwargs: dict | None = None):
     """Creates surrogate model (scikit-learn estimater)
 
     :param surrogate: A model that is fitted to predict objectives given any
