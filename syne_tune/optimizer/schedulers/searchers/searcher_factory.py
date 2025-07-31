@@ -24,10 +24,26 @@ searcher_dict = {
 }
 
 
+def searcher_cls(searcher_name: str):
+    match searcher_name:
+        case "random_search":
+            cls = RandomSearcher
+        case "bore":
+            cls = Bore
+        case "kde":
+            cls = KernelDensityEstimator
+        case "regularized_evolution":
+            cls = RegularizedEvolution
+        case "cqr":
+            cls = ConformalQuantileRegression
+        case "botorch":
+            cls = BoTorchSearcher
+        case _:
+            raise ValueError(f"Unknown searcher: {searcher_name}")
+    return cls
+
+
 def searcher_factory(
     searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
-    assert (
-        searcher_name in searcher_dict
-    ), f"Searcher name must be one of {list(searcher_dict.keys())}, got {searcher_name}"
-    return searcher_dict[searcher_name](config_space=config_space, **searcher_kwargs)
+    return searcher_cls(searcher_name)(config_space=config_space, **searcher_kwargs)
