@@ -1,16 +1,12 @@
 import logging
 
-from syne_tune.optimizer.schedulers.legacy_fifo import LegacyFIFOScheduler
-from syne_tune.optimizer.schedulers.legacy_hyperband import LegacyHyperbandScheduler
-from syne_tune.optimizer.schedulers.legacy_median_stopping_rule import (
-    LegacyMedianStoppingRule,
+from syne_tune.optimizer.schedulers.median_stopping_rule import (
+    MedianStoppingRule,
 )
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 
 __all__ = [
-    "LegacyFIFOScheduler",
-    "LegacyHyperbandScheduler",
-    "LegacyMedianStoppingRule",
+    "MedianStoppingRule",
     "PopulationBasedTraining",
 ]
 
