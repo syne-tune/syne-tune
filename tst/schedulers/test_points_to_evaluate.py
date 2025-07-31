@@ -1,6 +1,7 @@
 import pytest
 
 from syne_tune.config_space import randint
+from syne_tune.optimizer.baselines import ASHA, ASHACQR
 from syne_tune.optimizer.schedulers.multiobjective import (
     MultiObjectiveRegularizedEvolution,
 )
@@ -24,7 +25,6 @@ points_to_evaluate = [
     {"a": 100, "b": 200, "c": 27},
     {"a": 1000, "b": 2000, "c": 27},
 ]
-
 list_schedulers_to_test = [
     SingleObjectiveScheduler(
         config_space,
@@ -85,6 +85,20 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    ASHA(
+        config_space,
+        metric="mean_loss",
+        time_attr="epoch",
+        max_t=10,
+        points_to_evaluate=points_to_evaluate,
+    ),
+    ASHACQR(
+        config_space,
+        metric="mean_loss",
+        time_attr="epoch",
+        max_t=10,
+        points_to_evaluate=points_to_evaluate,
+    ),
 ]
 
 
@@ -94,7 +108,7 @@ def test_points_to_evaluate(scheduler):
 
     # Check that the first points match those defined in points_to_evaluate
     for i in range(len(points_to_evaluate)):
-        config = scheduler.suggest()
-        config == points_to_evaluate[i], (
+        trial_suggestion = scheduler.suggest()
+        assert trial_suggestion.config == points_to_evaluate[i], (
             "Initial point %s does not match listed points_to_evaluate." % i
         )
