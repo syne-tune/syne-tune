@@ -76,5 +76,4 @@ jobs:
         run: ${{ inputs.additional-command }}
       - name: Run Syne Tune Script
         run: |
-          module_path=$(echo "${{ inputs.script-path }}" | sed 's/\//./g' | sed 's/\.py$//')                                                                                                                        │
-          python -m "$module_path"
+          python ${{ inputs.script-path }}
