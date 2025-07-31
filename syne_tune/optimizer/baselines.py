@@ -2,17 +2,8 @@ from typing import Dict, Optional, Any, List
 import logging
 
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
-    BoTorchSearcher,
-)
-from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
-    ConformalQuantileRegression,
-)
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
-from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.kde import (
-    KernelDensityEstimator,
-)
+
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
@@ -83,6 +74,8 @@ class BORE(SingleObjectiveScheduler):
         random_seed: Optional[int] = None,
         points_to_evaluate: Optional[List[dict]] = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.bore import Bore
+
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -146,6 +139,10 @@ class TPE(SingleObjectiveScheduler):
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
     ):
+        from syne_tune.optimizer.schedulers.searchers.kde import (
+            KernelDensityEstimator,
+        )
+
         super(TPE, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -227,6 +224,10 @@ class BOTorch(SingleObjectiveScheduler):
         random_seed: Optional[int] = None,
         points_to_evaluate: Optional[List[dict]] = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+            BoTorchSearcher,
+        )
+
         super(BOTorch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -448,6 +449,10 @@ class CQR(SingleObjectiveScheduler):
         random_seed: Optional[int] = None,
         points_to_evaluate: Optional[List[dict]] = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+            ConformalQuantileRegression,
+        )
+
         super(CQR, self).__init__(
             config_space=config_space,
             metric=metric,
