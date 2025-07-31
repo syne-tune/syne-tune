@@ -5,10 +5,11 @@ from syne_tune.optimizer.schedulers.searchers.multi_fidelity_searcher import (
     IndependentMultiFidelitySearcher,
 )
 from syne_tune.config_space import choice
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searchers
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 
 
-@pytest.mark.parametrize("searcher", ["random_search", "cqr", "bore", "rea"])
+@pytest.mark.parametrize("searcher", searchers)
 def test_independent_multi_fidelity_searcher(searcher):
     random_seed = 31415927
     resource_levels = [3] * 20 + [1] * 25 + [9] * 9
