@@ -1,2 +1,0 @@
-scipy<1.15.3  # 1.16 is not compatible with the current statsmodels version
-autograd>=1.3
