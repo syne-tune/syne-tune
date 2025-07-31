@@ -22,36 +22,34 @@ def searcher_cls(searcher_name: str):
     :param searcher_name:
     :return: the class associated to the searcher string
     """
-    match searcher_name:
-        case "random_search":
-            cls = RandomSearcher
-        case "bore":
-            from syne_tune.optimizer.schedulers.searchers.bore import Bore
+    if searcher_name == "random_search":
+        return RandomSearcher
+    elif searcher_name == "bore":
+        from syne_tune.optimizer.schedulers.searchers.bore import Bore
 
-            cls = Bore
-        case "kde":
-            from syne_tune.optimizer.schedulers.searchers.kde import (
-                KernelDensityEstimator,
-            )
+        return Bore
+    elif searcher_name == "kde":
+        from syne_tune.optimizer.schedulers.searchers.kde import (
+            KernelDensityEstimator,
+        )
 
-            cls = KernelDensityEstimator
-        case "regularized_evolution":
-            cls = RegularizedEvolution
-        case "cqr":
-            from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
-                ConformalQuantileRegression,
-            )
+        return KernelDensityEstimator
+    elif searcher_name == "regularized_evolution":
+        return RegularizedEvolution
+    elif searcher_name == "cqr":
+        from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+            ConformalQuantileRegression,
+        )
 
-            cls = ConformalQuantileRegression
-        case "botorch":
-            from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
-                BoTorchSearcher,
-            )
+        return ConformalQuantileRegression
+    elif searcher_name == "botorch":
+        from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+            BoTorchSearcher,
+        )
 
-            cls = BoTorchSearcher
-        case _:
-            raise ValueError(f"Unknown searcher: {searcher_name}")
-    return cls
+        return BoTorchSearcher
+    else:
+        raise ValueError(f"Unknown searcher: {searcher_name}")
 
 
 def searcher_factory(
