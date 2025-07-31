@@ -12,7 +12,7 @@ from syne_tune.blackbox_repository import (
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.legacy_baselines import ASHA
+from syne_tune.optimizer.baselines import ASHA
 from syne_tune import StoppingCriterion, Tuner
 
 
