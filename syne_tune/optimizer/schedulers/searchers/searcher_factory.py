@@ -1,42 +1,42 @@
 from typing import Dict, Any
-
-from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
-    BoTorchSearcher,
-)
-from syne_tune.optimizer.schedulers.searchers.kde import KernelDensityEstimator
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
-    ConformalQuantileRegression,
-)
 
-searcher_dict = {
-    "random_search": RandomSearcher,
-    "bore": Bore,
-    "kde": KernelDensityEstimator,
-    "regularized_evolution": RegularizedEvolution,
-    "cqr": ConformalQuantileRegression,
-    "botorch": BoTorchSearcher,
-}
+
+# TODO support listing available searchers
 
 
 def searcher_cls(searcher_name: str):
+
     match searcher_name:
         case "random_search":
             cls = RandomSearcher
         case "bore":
+            from syne_tune.optimizer.schedulers.searchers.bore import Bore
+
             cls = Bore
         case "kde":
+            from syne_tune.optimizer.schedulers.searchers.kde import (
+                KernelDensityEstimator,
+            )
+
             cls = KernelDensityEstimator
         case "regularized_evolution":
             cls = RegularizedEvolution
         case "cqr":
+            from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+                ConformalQuantileRegression,
+            )
+
             cls = ConformalQuantileRegression
         case "botorch":
+            from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+                BoTorchSearcher,
+            )
+
             cls = BoTorchSearcher
         case _:
             raise ValueError(f"Unknown searcher: {searcher_name}")
