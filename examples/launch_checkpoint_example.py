@@ -7,7 +7,7 @@ After the tuning is done, this example loads the best checkpoint and evaluate th
 import logging
 from pathlib import Path
 
-from examples.training_scripts.xgboost.xgboost_checkpoint import evaluate_accuracy
+from training_scripts.xgboost.xgboost_checkpoint import evaluate_accuracy
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import CQR
