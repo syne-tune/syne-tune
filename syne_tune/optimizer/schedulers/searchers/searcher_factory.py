@@ -6,11 +6,22 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
 )
 
 
-# TODO support listing available searchers
+# TODO better way to support listing available searchers and tie strings
+searchers = [
+    "random_search",
+    "bore",
+    "kde",
+    "regularized_evolution",
+    "cqr",
+    "botorch",
+]
 
 
 def searcher_cls(searcher_name: str):
-
+    """
+    :param searcher_name:
+    :return: the class associated to the searcher string
+    """
     match searcher_name:
         case "random_search":
             cls = RandomSearcher

@@ -37,6 +37,9 @@ class LocalBackend(TrialBackend):
     :class:`~syne_tune.backend.trial_backend.TrialBackend`:
 
     :param entry_point: Path to Python main file to be tuned
+    :param binary: Binary to use when evaluating configurations, defaults to the current python environment but can
+    be overrided with `"java"` to tune a Java program or `"torchrun --standalone --nproc_per_node=4"` to tune a
+    distributed setup in pytorch.
     :param rotate_gpus: In case several GPUs are present, each trial is
         scheduled on a different GPU. A new trial is preferentially
         scheduled on a free GPU, and otherwise the GPU with least prior
