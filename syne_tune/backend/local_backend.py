@@ -53,6 +53,7 @@ class LocalBackend(TrialBackend):
     def __init__(
         self,
         entry_point: str,
+        binary: Optional[None] = None,
         delete_checkpoints: bool = False,
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
@@ -67,6 +68,7 @@ class LocalBackend(TrialBackend):
             entry_point
         ).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
+        self.binary = sys.executable if binary is None else binary
         self.local_path = None
         self.trial_subprocess = dict()
 
@@ -206,7 +208,7 @@ class LocalBackend(TrialBackend):
                 )
 
                 dump_json_with_numpy(config, config_json_fname)
-                cmd = f"{sys.executable} {self.entry_point} {config_str}"
+                cmd = f"{self.binary} {self.entry_point} {config_str}"
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
                 logger.info(f"running subprocess with command: {cmd}")
