@@ -34,7 +34,7 @@ class SingleFidelityScheduler(TrialScheduler):
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
         with ``search_options`` and extra information. Supported values:
         :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_FIFO`.
-        Defaults to "random" (i.e., random search)
+        Defaults to "random_search" (i.e., random search)
     :param random_seed: Seed for initializing random number generators.
     :param searcher_kwargs: Additional arguments for the searcher.
     """
