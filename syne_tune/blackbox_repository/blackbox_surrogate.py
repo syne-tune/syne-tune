@@ -107,7 +107,7 @@ class BlackboxSurrogate(Blackbox):
         configuration_space: dict[str, Any],
         objectives_names: list[str],
         fidelity_space: dict | None = None,
-        fidelity_values: np.array | None = None,
+        fidelity_values: np.ndarray | None = None,
         surrogate=None,
         predict_curves: bool = False,
         num_seeds: int = 1,
@@ -173,7 +173,7 @@ class BlackboxSurrogate(Blackbox):
             ), f"y.shape[1] = {y.shape[1]} != {num_objectives}"
 
     @property
-    def fidelity_values(self) -> np.array | None:
+    def fidelity_values(self) -> np.ndarray | None:
         return self._fidelity_values
 
     @property

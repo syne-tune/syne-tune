@@ -31,7 +31,7 @@ class MOPriority:
 
 class LinearScalarizationPriority(MOPriority):
     def __init__(
-        self, metrics: list[str] | None = None, weights: np.array | None = None
+        self, metrics: list[str] | None = None, weights: np.ndarray | None = None
     ):
         """
         A simple multiobjective scalarization strategy that do a weighed sum to assign a priority to the objectives.

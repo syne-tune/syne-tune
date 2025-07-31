@@ -709,10 +709,10 @@ class OrdinalNearestNeighbor(Ordinal):
 
     def sample(
         self,
-        spec: Optional[Union[list[dict], dict]] = None,
+        spec: list[dict] | dict | None = None,
         size: int = 1,
-        random_state: Optional[np.random.RandomState] = None,
-    ) -> Union[Any, list[Any]]:
+        random_state: np.random.RandomState | None = None,
+    ) -> Any | list[Any]:
         if random_state is None:
             random_state = np.random
         items = random_state.uniform(self._lower_int, self._upper_int, size=size)
@@ -768,7 +768,7 @@ class FiniteRange(Domain):
     def values(self):
         return self._values
 
-    def _map_from_int(self, x: int) -> Union[float, int]:
+    def _map_from_int(self, x: int) -> float | int:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
@@ -813,10 +813,10 @@ class FiniteRange(Domain):
 
     def sample(
         self,
-        spec: Optional[Union[list[dict], dict]] = None,
+        spec: list[dict] | dict | None = None,
         size: int = 1,
-        random_state: Optional[np.random.RandomState] = None,
-    ) -> Union[Any, list[Any]]:
+        random_state: np.random.RandomState | None = None,
+    ) -> Any | list[Any]:
         int_sample = self._uniform_int.sample(spec, size, random_state)
         if size > 1:
             return [self._values[x] for x in int_sample]
@@ -1186,8 +1186,8 @@ def from_dict(d: dict[str, Any]) -> Domain:
 
 
 def config_space_to_json_dict(
-    config_space: dict[str, Union[Domain, int, float, str]]
-) -> dict[str, Union[int, float, str]]:
+    config_space: dict[str, Domain | int | float | str]
+) -> dict[str, int | float | str]:
     """Converts ``config_space`` into a dictionary that can be saved as a json file.
 
     :param config_space: Configuration space
@@ -1199,8 +1199,8 @@ def config_space_to_json_dict(
 
 
 def config_space_from_json_dict(
-    config_space_dict: dict[str, Union[int, float, str]]
-) -> dict[str, Union[Domain, int, float, str]]:
+    config_space_dict: dict[str, int | float | str]
+) -> dict[str, Domain | int | float | str]:
     """Converts the given dictionary into a Syne Tune search space.
 
     Reverse of :func:`config_space_to_json_dict`.
@@ -1256,7 +1256,7 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
 
 
 class Quantized(Sampler):
-    def __init__(self, sampler: Sampler, q: Union[float, int]):
+    def __init__(self, sampler: Sampler, q: float | int):
         self.sampler = sampler
         self.q = q
 

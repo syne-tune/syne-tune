@@ -141,7 +141,7 @@ class Blackbox:
         pass
 
     @property
-    def fidelity_values(self) -> np.array | None:
+    def fidelity_values(self) -> np.ndarray | None:
         """
         :return: Fidelity values; or None if the blackbox has none
         """

@@ -41,7 +41,7 @@ class BlackboxTabular(Blackbox):
         configuration_space: dict[str, Any],
         fidelity_space: dict[str, Any],
         objectives_evaluations: np.array,
-        fidelity_values: np.array | None = None,
+        fidelity_values: np.ndarray | None = None,
         objectives_names: list[str] | None = None,
     ):
         super(BlackboxTabular, self).__init__(
