@@ -26,6 +26,7 @@ def make_asha_scheduler(searcher):
 
 asha_variants = ["cqr", "random_search", "kde", "bore"]
 
+
 @pytest.mark.skip()
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize("searcher", asha_variants)
@@ -52,6 +53,7 @@ def make_single_objective_scheduler(searcher):
 
 
 asha_variants = ["cqr", "random_search", "kde", "regularized_evolution", "bore"]
+
 
 @pytest.mark.skip()
 @pytest.mark.timeout(10)
