@@ -1,4 +1,3 @@
-from typing import Optional, Tuple
 import tempfile
 import time
 
@@ -33,7 +32,7 @@ from examples.training_scripts.height_example.blackbox_height import (
 class TestPredictor(SKLearnPredictor):
     def predict(
         self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones(nexamples), np.ones(nexamples)
 
@@ -73,7 +72,7 @@ def wait_until_all_trials_completed(backend):
 def run_experiment_with_height(
     make_scheduler: callable,
     simulated: bool,
-    config_space: Optional[dict] = None,
+    config_space: dict | None = None,
     **kwargs,
 ):
     random_seed = 382378624

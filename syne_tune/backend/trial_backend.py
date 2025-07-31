@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Any
 import logging
 
 from syne_tune.backend.trial_status import TrialResult, Trial, Status
@@ -11,10 +11,10 @@ from syne_tune.constants import ST_WORKER_TIMESTAMP
 logger = logging.getLogger(__name__)
 
 
-TrialAndStatusInformation = Dict[int, Tuple[Trial, str]]
+TrialAndStatusInformation = dict[int, tuple[Trial, str]]
 
 
-TrialIdAndResultList = List[Tuple[int, dict]]
+TrialIdAndResultList = list[tuple[int, dict]]
 
 
 BUSY_STATUS = {Status.in_progress, Status.stopping}
@@ -57,7 +57,7 @@ class TrialBackend:
         self._last_metric_seen_index = defaultdict(lambda: 0)
 
     def start_trial(
-        self, config: Dict[str, Any], checkpoint_trial_id: Optional[int] = None
+        self, config: dict[str, Any], checkpoint_trial_id: int | None = None
     ) -> TrialResult:
         """Start new trial with new trial ID
 
@@ -104,7 +104,7 @@ class TrialBackend:
         raise NotImplementedError
 
     def resume_trial(
-        self, trial_id: int, new_config: Optional[dict] = None
+        self, trial_id: int, new_config: dict | None = None
     ) -> TrialResult:
         """Resume paused trial
 
@@ -137,7 +137,7 @@ class TrialBackend:
         """
         raise NotImplementedError
 
-    def pause_trial(self, trial_id: int, result: Optional[dict] = None):
+    def pause_trial(self, trial_id: int, result: dict | None = None):
         """Pauses a running trial
 
         Checks that the operation is valid and calls backend internal
@@ -153,7 +153,7 @@ class TrialBackend:
         self._pause_trial(trial_id=trial_id, result=result)
         self._cleanup_after_trial(trial_id)
 
-    def _pause_trial(self, trial_id: int, result: Optional[dict]):
+    def _pause_trial(self, trial_id: int, result: dict | None):
         """Implements :meth:`pause_trial`.
 
         :param trial_id: ID of trial to pause
@@ -162,7 +162,7 @@ class TrialBackend:
         """
         raise NotImplementedError
 
-    def stop_trial(self, trial_id: int, result: Optional[dict] = None):
+    def stop_trial(self, trial_id: int, result: dict | None = None):
         """Stops (and terminates) a running trial
 
         Checks that the operation is valid and calls backend internal
@@ -191,7 +191,7 @@ class TrialBackend:
         """
         pass
 
-    def _stop_trial(self, trial_id: int, result: Optional[dict]):
+    def _stop_trial(self, trial_id: int, result: dict | None):
         """Backend specific operation that stops the trial.
 
         :param trial_id: ID of trial to stop
@@ -203,7 +203,7 @@ class TrialBackend:
     def new_trial_id(self) -> int:
         return len(self.trial_ids)
 
-    def _schedule(self, trial_id: int, config: Dict[str, Any]):
+    def _schedule(self, trial_id: int, config: dict[str, Any]):
         """Schedules job for trial evaluation.
 
         Called by :meth:`start_trial`, :meth:`resume_trial`.
@@ -213,7 +213,7 @@ class TrialBackend:
         """
         raise NotImplementedError
 
-    def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+    def _all_trial_results(self, trial_ids: list[int]) -> list[TrialResult]:
         """Returns results for selected trials
 
         :param trial_ids: IDs of trials for which results are to be queried
@@ -223,7 +223,7 @@ class TrialBackend:
         raise NotImplementedError
 
     def fetch_status_results(
-        self, trial_ids: List[int]
+        self, trial_ids: list[int]
     ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         """
         :param trial_ids: Trials whose information should be fetched.
@@ -267,7 +267,7 @@ class TrialBackend:
         results = sorted(results, key=lambda result: result[1][ST_WORKER_TIMESTAMP])
         return trial_status_dict, results
 
-    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def busy_trial_ids(self) -> list[tuple[int, str]]:
         """Returns list of ids for currently busy trials
 
         A trial is busy if its status is
@@ -281,7 +281,7 @@ class TrialBackend:
         """
         raise NotImplementedError
 
-    def stdout(self, trial_id: int) -> List[str]:
+    def stdout(self, trial_id: int) -> list[str]:
         """Fetch ``stdout`` log for trial
 
         :param trial_id: ID of trial
@@ -289,7 +289,7 @@ class TrialBackend:
         """
         raise NotImplementedError
 
-    def stderr(self, trial_id: int) -> List[str]:
+    def stderr(self, trial_id: int) -> list[str]:
         """Fetch ``stderr`` log for trial
 
         :param trial_id: ID of trial
@@ -313,7 +313,7 @@ class TrialBackend:
                 self._cleanup_after_trial(trial_id)
 
     def set_path(
-        self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
+        self, results_root: str | None = None, tuner_name: str | None = None
     ):
         """
         :param results_root: The local folder that should contain the results of

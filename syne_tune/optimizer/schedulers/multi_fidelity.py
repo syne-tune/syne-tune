@@ -1,4 +1,3 @@
-from typing import List
 
 
 class MultiFidelitySchedulerMixin:
@@ -21,7 +20,7 @@ class MultiFidelitySchedulerMixin:
         raise NotImplementedError
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         """
         :return: Rung levels (positive int; increasing), may or may not
             include ``max_resource_level``

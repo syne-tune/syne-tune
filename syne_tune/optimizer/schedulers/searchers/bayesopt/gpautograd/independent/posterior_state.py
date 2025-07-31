@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Optional, Callable, Union
+from collections.abc import Callable
 import numpy as np
 import autograd.numpy as anp
 from numpy.random import RandomState
@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 )
 
 
-NoiseVariance = Union[np.ndarray, Dict[int, np.ndarray]]
+NoiseVariance = np.ndarray | dict[int, np.ndarray]
 
 
 class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
@@ -39,10 +39,10 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         features: np.ndarray,
         targets: np.ndarray,
         kernel: KernelFunction,
-        mean: Dict[int, MeanFunction],
-        covariance_scale: Dict[int, np.ndarray],
+        mean: dict[int, MeanFunction],
+        covariance_scale: dict[int, np.ndarray],
         noise_variance: NoiseVariance,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
         debug_log: bool = False,
     ):
         """
@@ -92,10 +92,10 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         features: np.ndarray,
         targets: np.ndarray,
         kernel: KernelFunction,
-        mean: Dict[int, MeanFunction],
-        covariance_scale: Dict[int, np.ndarray],
-        noise_variance: Dict[int, np.ndarray],
-        resource_attr_range: Tuple[int, int],
+        mean: dict[int, MeanFunction],
+        covariance_scale: dict[int, np.ndarray],
+        noise_variance: dict[int, np.ndarray],
+        resource_attr_range: tuple[int, int],
         debug_log: bool = False,
     ):
         features, resources = decode_extended_features(features, resource_attr_range)
@@ -135,7 +135,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
 
     # Different to ``sample_marginals``, ``sample_joint``, this method supports
     # ``autograd`` differentiation
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         test_features, resources = decode_extended_features(
             test_features, self._resource_attr_range
         )
@@ -205,7 +205,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         """
         Different to ``predict``, entries in ``test_features``
@@ -230,7 +230,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         """
         Different to ``predict``, entries in ``test_features``
@@ -254,7 +254,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:

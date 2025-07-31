@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional, Union
 import numpy as np
 import logging
 
@@ -46,13 +45,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 logger = logging.getLogger(__name__)
 
 
-GPModel = Union[
-    GaussianProcessRegression,
-    GPRegressionMCMC,
-    IndependentGPPerResourceModel,
-    HyperTuneIndependentGPModel,
-    HyperTuneJointGPModel,
-]
+GPModel = GaussianProcessRegression | GPRegressionMCMC | IndependentGPPerResourceModel | HyperTuneIndependentGPModel | HyperTuneJointGPModel
+
 
 
 class GaussProcPredictor(BasePredictor):
@@ -85,12 +79,12 @@ class GaussProcPredictor(BasePredictor):
         self,
         state: TuningJobState,
         gpmodel: GPModel,
-        fantasy_samples: List[FantasizedPendingEvaluation],
+        fantasy_samples: list[FantasizedPendingEvaluation],
         active_metric: str = None,
         normalize_mean: float = 0.0,
         normalize_std: float = 1.0,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
-        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
+        filter_observed_data: ConfigurationFilter | None = None,
+        hp_ranges_for_prediction: HyperparameterRanges | None = None,
     ):
         super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
@@ -105,7 +99,7 @@ class GaussProcPredictor(BasePredictor):
         else:
             return super().hp_ranges_for_prediction()
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         predictions_list = []
         for post_mean, post_variance in self._gpmodel.predict(inputs):
             assert post_mean.shape[0] == inputs.shape[0], (
@@ -123,8 +117,8 @@ class GaussProcPredictor(BasePredictor):
         return predictions_list
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         poster_states = self.posterior_states
         assert (
             poster_states is not None
@@ -148,7 +142,7 @@ class GaussProcPredictor(BasePredictor):
         return isinstance(self._gpmodel, GPRegressionMCMC)
 
     @property
-    def posterior_states(self) -> Optional[List[PosteriorState]]:
+    def posterior_states(self) -> list[PosteriorState] | None:
         return self._gpmodel.states
 
     def _current_best_filter_candidates(self, candidates):
@@ -187,10 +181,10 @@ class GaussProcEstimator(Estimator):
         gpmodel: GPModel,
         active_metric: str,
         normalize_targets: bool = True,
-        debug_log: Optional[DebugLogPrinter] = None,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
+        debug_log: DebugLogPrinter | None = None,
+        filter_observed_data: ConfigurationFilter | None = None,
         no_fantasizing: bool = False,
-        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
+        hp_ranges_for_prediction: HyperparameterRanges | None = None,
     ):
         self._gpmodel = gpmodel
         self.active_metric = active_metric
@@ -203,7 +197,7 @@ class GaussProcEstimator(Estimator):
         self._std = None
 
     @property
-    def debug_log(self) -> Optional[DebugLogPrinter]:
+    def debug_log(self) -> DebugLogPrinter | None:
         return self._debug_log
 
     @property
@@ -398,10 +392,10 @@ class GaussProcEmpiricalBayesEstimator(GaussProcEstimator):
         num_fantasy_samples: int,
         active_metric: str = INTERNAL_METRIC_NAME,
         normalize_targets: bool = True,
-        debug_log: Optional[DebugLogPrinter] = None,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
+        debug_log: DebugLogPrinter | None = None,
+        filter_observed_data: ConfigurationFilter | None = None,
         no_fantasizing: bool = False,
-        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
+        hp_ranges_for_prediction: HyperparameterRanges | None = None,
     ):
         assert num_fantasy_samples > 0
         super().__init__(

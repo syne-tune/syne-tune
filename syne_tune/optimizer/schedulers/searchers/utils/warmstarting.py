@@ -1,5 +1,3 @@
-from typing import Optional
-
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
@@ -79,7 +77,7 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
 
 def create_filter_observed_data_for_warmstarting(
     **kwargs,
-) -> Optional[ConfigurationFilter]:
+) -> ConfigurationFilter | None:
     """
     See :class:`GPFIFOSearcher` for details on transfer_learning_task_attr',
     'transfer_learning_active_task' as optional fields in ``kwargs``.

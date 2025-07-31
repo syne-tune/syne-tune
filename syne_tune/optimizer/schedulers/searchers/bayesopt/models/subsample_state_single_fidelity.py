@@ -1,4 +1,3 @@
-from typing import Optional, List, Tuple
 import copy
 from numpy.random import RandomState
 from operator import itemgetter
@@ -15,11 +14,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 )
 
 
-ObservedData = List[Tuple[int, float]]
+ObservedData = list[tuple[int, float]]
 
 
 def _extract_observations(
-    trials_evaluations: List[TrialEvaluations],
+    trials_evaluations: list[TrialEvaluations],
 ) -> ObservedData:
     """
     Maps ``trials_evaluations`` to list of tuples :math:`(i, y_i)`, where
@@ -34,7 +33,7 @@ def _extract_observations(
     ]
 
 
-def _create_trials_evaluations(data: ObservedData) -> List[TrialEvaluations]:
+def _create_trials_evaluations(data: ObservedData) -> list[TrialEvaluations]:
     """Inverse of :func:`_extract_observations`
 
     :param data: List of tuples
@@ -53,7 +52,7 @@ def cap_size_tuning_job_state(
     max_size: int,
     mode: str,
     top_fraction: float,
-    random_state: Optional[RandomState] = None,
+    random_state: RandomState | None = None,
 ) -> TuningJobState:
     """
     Returns state which is identical to ``state``, except that the
@@ -113,7 +112,7 @@ class SubsampleSingleFidelityStateConverter(StateForModelConverter):
         max_size: int,
         mode: str,
         top_fraction: float,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ):
         support_mode = ["min", "max"]
         assert (

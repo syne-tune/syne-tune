@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Any
 import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
@@ -104,16 +104,16 @@ class BlackboxSurrogate(Blackbox):
         self,
         X: pd.DataFrame,
         y: pd.DataFrame,
-        configuration_space: Dict[str, Any],
-        objectives_names: List[str],
-        fidelity_space: Optional[dict] = None,
-        fidelity_values: Optional[np.array] = None,
+        configuration_space: dict[str, Any],
+        objectives_names: list[str],
+        fidelity_space: dict | None = None,
+        fidelity_values: np.array | None = None,
         surrogate=None,
         predict_curves: bool = False,
         num_seeds: int = 1,
-        fit_differences: Optional[List[str]] = None,
-        max_fit_samples: Optional[int] = None,
-        name: Optional[str] = None,
+        fit_differences: list[str] | None = None,
+        max_fit_samples: int | None = None,
+        name: str | None = None,
     ):
         super(BlackboxSurrogate, self).__init__(
             configuration_space=configuration_space,
@@ -148,8 +148,8 @@ class BlackboxSurrogate(Blackbox):
         X: pd.DataFrame,
         y: pd.DataFrame,
         predict_curves: bool,
-        fidelity_values: Optional[np.ndarray],
-        num_seeds: Optional[int],
+        fidelity_values: np.ndarray | None,
+        num_seeds: int | None,
         num_objectives: int,
     ):
         assert X.ndim == 2 and y.ndim == 2
@@ -173,7 +173,7 @@ class BlackboxSurrogate(Blackbox):
             ), f"y.shape[1] = {y.shape[1]} != {num_objectives}"
 
     @property
-    def fidelity_values(self) -> Optional[np.array]:
+    def fidelity_values(self) -> np.array | None:
         return self._fidelity_values
 
     @property
@@ -352,9 +352,9 @@ class BlackboxSurrogate(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Optional[dict] = None,
-        seed: Optional[int] = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         if seed is None:
             seed = np.random.randint(0, self.num_seeds)
@@ -419,17 +419,17 @@ class BlackboxSurrogate(Blackbox):
 
     def hyperparameter_objectives_values(
         self, predict_curves: bool = False
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         raise NotImplementedError("This is a surrogate already!")
 
 
 def add_surrogate(
     blackbox: Blackbox,
     surrogate=None,
-    configuration_space: Optional[dict] = None,
-    predict_curves: Optional[bool] = None,
+    configuration_space: dict | None = None,
+    predict_curves: bool | None = None,
     separate_seeds: bool = False,
-    fit_differences: Optional[List[str]] = None,
+    fit_differences: list[str] | None = None,
 ):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful

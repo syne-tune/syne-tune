@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Union, Any
+from typing import Any
 import pandas as pd
 import numpy as np
 
@@ -38,11 +38,11 @@ class BlackboxTabular(Blackbox):
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
-        configuration_space: Dict[str, Any],
-        fidelity_space: Dict[str, Any],
+        configuration_space: dict[str, Any],
+        fidelity_space: dict[str, Any],
         objectives_evaluations: np.array,
-        fidelity_values: Optional[np.array] = None,
-        objectives_names: Optional[List[str]] = None,
+        fidelity_values: np.array | None = None,
+        objectives_names: list[str] | None = None,
     ):
         super(BlackboxTabular, self).__init__(
             configuration_space=configuration_space,
@@ -104,9 +104,9 @@ class BlackboxTabular(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Union[dict, int],
-        fidelity: Optional[dict] = None,
-        seed: Optional[int] = None,
+        configuration: dict | int,
+        fidelity: dict | None = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         if seed is not None:
             assert 0 <= seed < self.num_seeds
@@ -143,7 +143,7 @@ class BlackboxTabular(Blackbox):
     def fidelity_values(self) -> np.array:
         return self._fidelity_values
 
-    def _impute_objectives_values(self) -> Tuple[pd.DataFrame, np.array]:
+    def _impute_objectives_values(self) -> tuple[pd.DataFrame, np.array]:
         """Replaces nan values in objectives with first previous non-nan value.
 
         Time objective should be cumulative, otherwise each step will consume additional time.
@@ -184,7 +184,7 @@ class BlackboxTabular(Blackbox):
     # to understand if this was not done
     def hyperparameter_objectives_values(
         self, predict_curves: bool = False
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         If ``predict_curves`` is False, the shape of ``X`` is
         ``(num_evals * num_seeds * num_fidelities, num_hps + 1)``, the shape of ``y``
@@ -241,7 +241,7 @@ class BlackboxTabular(Blackbox):
         return X, y
 
     def rename_objectives(
-        self, objective_name_mapping: Dict[str, str]
+        self, objective_name_mapping: dict[str, str]
     ) -> "BlackboxTabular":
         """
         :param objective_name_mapping: dictionary from old objective name to
@@ -269,7 +269,7 @@ class BlackboxTabular(Blackbox):
             objectives_names=list(objective_name_mapping.values()),
         )
 
-    def all_configurations(self) -> List[Dict[str, Any]]:
+    def all_configurations(self) -> list[dict[str, Any]]:
         """
         This method is useful in order to set ``restrict_configurations`` in
         :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
@@ -304,7 +304,7 @@ class BlackboxTabular(Blackbox):
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[dict] = None
+    bb_dict: dict[str, BlackboxTabular], path: str, metadata: dict | None = None
 ):
     # check all blackboxes share the same search space and have evaluated the same hyperparameters
     # pick an arbitrary blackbox
@@ -360,7 +360,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+def deserialize(path: str) -> dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with :func:`serialize`
     above.

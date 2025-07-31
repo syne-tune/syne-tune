@@ -1,5 +1,3 @@
-from typing import List, Dict, Tuple
-
 import numpy as np
 import scipy.linalg as spl
 import autograd.numpy as anp
@@ -33,13 +31,13 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext impo
 
 def _prepare_data_internal(
     state: TuningJobState,
-    data_lst: List[Tuple[Configuration, List, str]],
+    data_lst: list[tuple[Configuration, list, str]],
     config_space_ext: ExtendedConfiguration,
     active_metric: str,
     do_fantasizing: bool,
     mean: float,
     std: float,
-) -> (List[Configuration], List[np.ndarray], List[str]):
+) -> (list[Configuration], list[np.ndarray], list[str]):
     r_min, r_max = config_space_ext.resource_attr_range
     configs = [x[0] for x in data_lst]
     trial_ids = [x[2] for x in data_lst]
@@ -119,7 +117,7 @@ def _prepare_data_internal(
     return configs, targets, trial_ids
 
 
-def _create_tuple(ev: TrialEvaluations, active_metric: str, config_for_trial: Dict):
+def _create_tuple(ev: TrialEvaluations, active_metric: str, config_for_trial: dict):
     metric_vals = ev.metrics[active_metric]
     assert isinstance(metric_vals, dict)
     observed = list(
@@ -136,7 +134,7 @@ def prepare_data(
     active_metric: str,
     normalize_targets: bool = False,
     do_fantasizing: bool = False,
-) -> Dict:
+) -> dict:
     """
     Prepares data in ``state`` for further processing. The entries
     ``configs``, ``targets`` of the result dict are lists of one entry per trial,
@@ -212,7 +210,7 @@ def prepare_data_with_pending(
     config_space_ext: ExtendedConfiguration,
     active_metric: str,
     normalize_targets: bool = False,
-) -> (Dict, Dict):
+) -> (dict, dict):
     """
     Similar to ``prepare_data`` with ``do_fantasizing=False``, but two dicts are
     returned, the first for trials without pending evaluations, the second
@@ -311,7 +309,7 @@ def prepare_data_with_pending(
     return results
 
 
-def issm_likelihood_precomputations(targets: List[np.ndarray], r_min: int) -> Dict:
+def issm_likelihood_precomputations(targets: list[np.ndarray], r_min: int) -> dict:
     """
     Precomputations required by ``issm_likelihood_computations``.
 
@@ -386,12 +384,12 @@ def _flatvec(a, _np=anp):
 
 
 def issm_likelihood_computations(
-    precomputed: Dict,
-    issm_params: Dict,
+    precomputed: dict,
+    issm_params: dict,
     r_min: int,
     r_max: int,
     skip_c_d: bool = False,
-) -> Dict:
+) -> dict:
     """
     Given ``precomputed`` from ``issm_likelihood_precomputations`` and ISSM
     parameters ``issm_params``, compute quantities required for inference and
@@ -526,8 +524,8 @@ def issm_likelihood_computations(
 
 
 def posterior_computations(
-    features, mean, kernel, issm_likelihood: Dict, noise_variance
-) -> Dict:
+    features, mean, kernel, issm_likelihood: dict, noise_variance
+) -> dict:
     """
     Computes posterior state (required for predictions) and negative log
     marginal likelihood (returned in ``criterion``), The latter is computed only
@@ -593,7 +591,7 @@ def posterior_computations(
     return result
 
 
-def predict_posterior_marginals(poster_state: Dict, mean, kernel, test_features):
+def predict_posterior_marginals(poster_state: dict, mean, kernel, test_features):
     """
     These are posterior marginals on the h variable, whereas the full model is
     for f_r = h + g_r (additive).
@@ -624,7 +622,7 @@ def predict_posterior_marginals(poster_state: Dict, mean, kernel, test_features)
 
 
 def sample_posterior_marginals(
-    poster_state: Dict,
+    poster_state: dict,
     mean,
     kernel,
     test_features,
@@ -648,12 +646,12 @@ def sample_posterior_marginals(
 
 
 def predict_posterior_marginals_extended(
-    poster_state: Dict,
+    poster_state: dict,
     mean,
     kernel,
     test_features,
-    resources: List[int],
-    issm_params: Dict,
+    resources: list[int],
+    issm_params: dict,
     r_min: int,
     r_max: int,
 ):
@@ -724,17 +722,17 @@ def predict_posterior_marginals_extended(
 
 
 def sample_posterior_joint(
-    poster_state: Dict,
+    poster_state: dict,
     mean,
     kernel,
     feature,
     targets: np.ndarray,
-    issm_params: Dict,
+    issm_params: dict,
     r_min: int,
     r_max: int,
     random_state: RandomState,
     num_samples: int = 1,
-) -> Dict:
+) -> dict:
     """
     Given ``poster_state`` for some data plus one additional configuration
     with data (``feature``, ``targets``, ``issm_params``), draw joint samples
@@ -866,12 +864,12 @@ def sample_posterior_joint(
 
 
 def issm_likelihood_slow_computations(
-    targets: List[np.ndarray],
-    issm_params: Dict,
+    targets: list[np.ndarray],
+    issm_params: dict,
     r_min: int,
     r_max: int,
     skip_c_d: bool = False,
-) -> Dict:
+) -> dict:
     """
     Naive implementation of ``issm_likelihood_computations``, which does not
     require precomputations, but is much slower. Here, results are computed
@@ -962,8 +960,8 @@ def issm_likelihood_slow_computations(
 
 
 def _update_posterior_internal(
-    poster_state: Dict, kernel, feature, d_new, s_new, r2_new
-) -> Dict:
+    poster_state: dict, kernel, feature, d_new, s_new, r2_new
+) -> dict:
     assert "r2vec" in poster_state and "r4vec" in poster_state
     features = poster_state["features"]
     r2vec = poster_state["r2vec"]
@@ -1003,8 +1001,8 @@ def _update_posterior_internal(
 
 
 def update_posterior_state(
-    poster_state: Dict, kernel, feature, d_new, s_new, r2_new
-) -> Dict:
+    poster_state: dict, kernel, feature, d_new, s_new, r2_new
+) -> dict:
     """
     Incremental update of posterior state, given data for one additional
     configuration. The new datapoint gives rise to a new row/column of the
@@ -1069,7 +1067,7 @@ def update_posterior_state(
 
 
 def update_posterior_pvec(
-    poster_state: Dict, kernel, feature, d_new, s_new, r2_new
+    poster_state: dict, kernel, feature, d_new, s_new, r2_new
 ) -> np.ndarray:
     """
     Part of ``update_posterior_state``, just returns the new p vector.

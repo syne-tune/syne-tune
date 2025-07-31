@@ -511,7 +511,7 @@ class ParameterDict:
         name : str
             Name of the desired Parameter. It will be prepended with this dictionary's
             prefix.
-        **kwargs : Dict[str, Any]
+        **kwargs : dict[str, Any]
             The rest of key-word arguments for the created :py:class:`Parameter`.
         Returns
         -------

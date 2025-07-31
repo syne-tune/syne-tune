@@ -1,4 +1,4 @@
-from typing import List, Callable, Optional, Dict, Tuple
+from collections.abc import Callable
 import numpy as np
 from sklearn.linear_model import RidgeCV
 from enum import IntEnum
@@ -50,7 +50,7 @@ class LinearCostModel(CostModel):
         return INTERNAL_COST_NAME
 
     def feature_matrices(
-        self, candidates: List[Configuration]
+        self, candidates: list[Configuration]
     ) -> (np.ndarray, np.ndarray):
         """
         Has to be supplied by subclasses
@@ -107,7 +107,7 @@ class LinearCostModel(CostModel):
         self.weights1 = predictor.coef_[dim0:].reshape((-1, 1))
         self.alpha = predictor.alpha_
 
-    def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
+    def sample_joint(self, candidates: list[Configuration]) -> list[CostValue]:
         assert self.weights0 is not None, "Must call 'update' before 'sample_joint'"
         features0, features1 = self.feature_matrices(candidates)
         c0_vals = np.matmul(features0, self.weights0).reshape((-1,))
@@ -124,7 +124,7 @@ class BiasOnlyLinearCostModel(LinearCostModel):
         super().__init__()
 
     def feature_matrices(
-        self, candidates: List[Configuration]
+        self, candidates: list[Configuration]
     ) -> (np.ndarray, np.ndarray):
         one_feats = np.ones((len(candidates), 1))
         return one_feats, one_feats
@@ -170,10 +170,10 @@ class MLPLinearCostModel(LinearCostModel):
         num_hidden_layers: Callable[[dict], int],
         hidden_layer_width: Callable[[dict, int], int],
         batch_size: Callable[[dict], int],
-        bs_exponent: Optional[float] = None,
+        bs_exponent: float | None = None,
         extra_mlp: bool = False,
         c0_mlp_feature: bool = False,
-        expected_hidden_layer_width: Optional[Callable[[int], float]] = None,
+        expected_hidden_layer_width: Callable[[int], float] | None = None,
     ):
         super().__init__()
         self.num_inputs = num_inputs
@@ -190,7 +190,7 @@ class MLPLinearCostModel(LinearCostModel):
         self.expected_hidden_layer_width = expected_hidden_layer_width
 
     def feature_matrices(
-        self, candidates: List[Configuration]
+        self, candidates: list[Configuration]
     ) -> (np.ndarray, np.ndarray):
         features1_1 = []
         features1_2 = []
@@ -251,11 +251,11 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
         self,
         num_inputs: int,
         num_outputs: int,
-        num_units_keys: List[str] = None,
-        bs_exponent: Optional[float] = None,
+        num_units_keys: list[str] = None,
+        bs_exponent: float | None = None,
         extra_mlp: bool = False,
         c0_mlp_feature: bool = False,
-        expected_hidden_layer_width: Optional[Callable[[int], float]] = None,
+        expected_hidden_layer_width: Callable[[int], float] | None = None,
     ):
         if num_units_keys is None:
             num_units_keys = ["n_units_1", "n_units_2"]
@@ -277,7 +277,7 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
         )
 
     @staticmethod
-    def get_expected_hidden_layer_width(config_space: Dict, num_units_keys: List[str]):
+    def get_expected_hidden_layer_width(config_space: dict, num_units_keys: list[str]):
         """
         Constructs expected_hidden_layer_width function from the training
         evaluation function.
@@ -330,8 +330,8 @@ class NASBench201LinearCostModel(LinearCostModel):
 
     def __init__(
         self,
-        config_keys: Tuple[str, ...],
-        map_config_values: Dict[str, int],
+        config_keys: tuple[str, ...],
+        map_config_values: dict[str, int],
         conv_separate_features: bool,
         count_sum: bool,
     ):
@@ -341,11 +341,11 @@ class NASBench201LinearCostModel(LinearCostModel):
         self.conv_separate_features = conv_separate_features
         self.count_sum = count_sum
 
-    def _translate(self, config: Configuration) -> List[int]:
+    def _translate(self, config: Configuration) -> list[int]:
         return [self._map_config_values[config[name]] for name in self._config_keys]
 
     def feature_matrices(
-        self, candidates: List[Configuration]
+        self, candidates: list[Configuration]
     ) -> (np.ndarray, np.ndarray):
         features1_1 = []
         features1_2 = []

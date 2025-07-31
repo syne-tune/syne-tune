@@ -1,4 +1,3 @@
-from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.likelihood import (
@@ -68,9 +67,9 @@ class GaussianProcessLearningCurveModel(GaussianProcessOptimizeModel):
         self,
         kernel: KernelFunction,
         res_model: LCModel,
-        mean: Optional[MeanFunction] = None,
-        initial_noise_variance: Optional[float] = None,
-        optimization_config: Optional[OptimizationConfig] = None,
+        mean: MeanFunction | None = None,
+        initial_noise_variance: float | None = None,
+        optimization_config: OptimizationConfig | None = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):

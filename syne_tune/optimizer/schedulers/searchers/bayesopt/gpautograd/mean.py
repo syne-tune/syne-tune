@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import autograd.numpy as anp
 from autograd.tracer import getval
 
@@ -38,13 +38,13 @@ class MeanFunction(Block):
         """
         raise NotImplementedError
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         :return: Dictionary with hyperparameter values
         """
         raise NotImplementedError
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         """
         :param param_dict: Dictionary with new hyperparameter values
         :return:
@@ -97,10 +97,10 @@ class ScalarMeanFunction(MeanFunction):
     def set_mean_value(self, mean_value):
         self.encoding.set(self.mean_value_internal, mean_value)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {"mean_value": self.get_mean_value()}
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.set_mean_value(param_dict["mean_value"])
 
 
@@ -114,8 +114,8 @@ class ZeroMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass

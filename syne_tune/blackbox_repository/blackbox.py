@@ -1,11 +1,12 @@
 from numbers import Number
 
 import pandas as pd
-from typing import Optional, Callable, List, Tuple, Union, Dict, Any
+from typing import Any
+from collections.abc import Callable
 import numpy as np
 
 
-ObjectiveFunctionResult = Union[Dict[str, float], np.ndarray]
+ObjectiveFunctionResult = dict[str, float] | np.ndarray
 
 
 class Blackbox:
@@ -23,9 +24,9 @@ class Blackbox:
 
     def __init__(
         self,
-        configuration_space: Dict[str, Any],
-        fidelity_space: Optional[dict] = None,
-        objectives_names: Optional[List[str]] = None,
+        configuration_space: dict[str, Any],
+        fidelity_space: dict | None = None,
+        objectives_names: list[str] | None = None,
     ):
         self.configuration_space = configuration_space
         self.fidelity_space = fidelity_space
@@ -33,9 +34,9 @@ class Blackbox:
 
     def objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Union[dict, Number] = None,
-        seed: Optional[int] = None,
+        configuration: dict[str, Any],
+        fidelity: dict | Number = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         """Returns an evaluation of the blackbox.
 
@@ -81,9 +82,9 @@ class Blackbox:
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Optional[dict] = None,
-        seed: Optional[int] = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         """Override this method to provide your benchmark function.
 
@@ -118,7 +119,7 @@ class Blackbox:
 
     def hyperparameter_objectives_values(
         self, predict_curves: bool = False
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         If ``predict_curves`` is False, the shape of ``X`` is
         ``(num_evals * num_seeds * num_fidelities, num_hps + 1)``, the shape of ``y``
@@ -140,7 +141,7 @@ class Blackbox:
         pass
 
     @property
-    def fidelity_values(self) -> Optional[np.array]:
+    def fidelity_values(self) -> np.array | None:
         """
         :return: Fidelity values; or None if the blackbox has none
         """
@@ -157,7 +158,7 @@ class Blackbox:
 
     def configuration_space_with_max_resource_attr(
         self, max_resource_attr: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         It is best practice to have one attribute in the configuration space to
         represent the maximum fidelity value used for evaluation (e.g., the
@@ -179,10 +180,10 @@ class Blackbox:
 
 
 def from_function(
-    configuration_space: Dict[str, Any],
+    configuration_space: dict[str, Any],
     eval_fun: Callable,
-    fidelity_space: Optional[dict] = None,
-    objectives_names: Optional[List[str]] = None,
+    fidelity_space: dict | None = None,
+    objectives_names: list[str] | None = None,
 ) -> Blackbox:
     """
     Helper to create a blackbox from a function, useful for test or to wrap-up
@@ -206,9 +207,9 @@ def from_function(
 
         def objective_function(
             self,
-            configuration: Dict[str, Any],
-            fidelity: Optional[dict] = None,
-            seed: Optional[int] = None,
+            configuration: dict[str, Any],
+            fidelity: dict | None = None,
+            seed: int | None = None,
         ) -> ObjectiveFunctionResult:
             return eval_fun(configuration, fidelity, seed)
 

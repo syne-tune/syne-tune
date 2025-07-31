@@ -1,5 +1,3 @@
-from typing import Optional, List
-
 import numpy as np
 from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import (
     nondominated_sort,
@@ -7,7 +5,7 @@ from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import
 
 
 class MOPriority:
-    def __init__(self, metrics: Optional[List[str]] = None):
+    def __init__(self, metrics: list[str] | None = None):
         """
         :param metrics: name of the objectives, optional if not passed anonymous names are created when seeing the
         first objectives to rank.
@@ -33,7 +31,7 @@ class MOPriority:
 
 class LinearScalarizationPriority(MOPriority):
     def __init__(
-        self, metrics: Optional[List[str]] = None, weights: Optional[np.array] = None
+        self, metrics: list[str] | None = None, weights: np.array | None = None
     ):
         """
         A simple multiobjective scalarization strategy that do a weighed sum to assign a priority to the objectives.
@@ -58,7 +56,7 @@ class LinearScalarizationPriority(MOPriority):
 
 
 class FixedObjectivePriority(MOPriority):
-    def __init__(self, metrics: Optional[List[str]] = None, dim: Optional[int] = None):
+    def __init__(self, metrics: list[str] | None = None, dim: int | None = None):
         """
         Optimizes a fixed objective, the first one by default.
         :param metrics:
@@ -74,9 +72,9 @@ class FixedObjectivePriority(MOPriority):
 class NonDominatedPriority(MOPriority):
     def __init__(
         self,
-        metrics: Optional[List[str]] = None,
-        dim: Optional[int] = 0,
-        max_num_samples: Optional[int] = None,
+        metrics: list[str] | None = None,
+        dim: int | None = 0,
+        max_num_samples: int | None = None,
     ):
         """
         A non-dominated sort strategy that uses an epsilon-net strategy instead of crowding distance proposed in:

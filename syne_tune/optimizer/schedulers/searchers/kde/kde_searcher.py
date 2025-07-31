@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Any
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -62,15 +62,15 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
-        num_min_data_points: Optional[int] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: list[dict] | None = None,
+        num_min_data_points: int | None = None,
         top_n_percent: int = 15,
         min_bandwidth: float = 1e-3,
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ):
         super().__init__(
             config_space=config_space,
@@ -195,7 +195,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         self.X.append(self._to_feature(config=config))
@@ -207,7 +207,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
             for k, v in self.config_space.items()
         }
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> dict[str, Any] | None:
         suggestion = self._next_points_to_evaluate()
         if suggestion is None:
             if self.y:
@@ -291,8 +291,8 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         return suggestion
 
     def _check_data_shape_and_good_size(
-        self, data_shape: Tuple[int, int]
-    ) -> Optional[int]:
+        self, data_shape: list[int, int]
+    ) -> int | None:
         """
         Determine size of data for "good" model (the rest of the data is for the
         "bad" model). Both sizes must be larger than the number of features,
@@ -313,7 +313,7 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
 
     def _train_kde(
         self, train_data: np.ndarray, train_targets: np.ndarray
-    ) -> Optional[Tuple[Any, Any]]:
+    ) -> list[Any, Any] | None:
         train_data = train_data.reshape((train_targets.size, -1))
         n_good = self._check_data_shape_and_good_size(train_data.shape)
         if n_good is None:

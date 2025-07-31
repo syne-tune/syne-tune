@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 
 import numpy as np
 import autograd.numpy as anp
@@ -52,10 +52,10 @@ class ZeroKernel(KernelFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass
 
 
@@ -69,10 +69,10 @@ class ZeroMean(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass
 
 
@@ -125,10 +125,10 @@ class ExponentialDecayBaseKernelFunction(KernelFunction):
     def param_encoding_pairs(self):
         return self.kernel.param_encoding_pairs()
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self.kernel.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.kernel.set_params(param_dict)
 
     def mean_function(self, X):
@@ -137,7 +137,7 @@ class ExponentialDecayBaseKernelFunction(KernelFunction):
         return self.kernel.mean_function(X)
 
 
-def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
+def logdet_cholfact_cov_resource(likelihood: dict) -> float:
     """
     Computes the additional log(det(Lbar)) term. This is
     sum_i log(det(Lbar_i)), where Lbar_i is upper left submatrix of
@@ -156,7 +156,7 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
     return _inner_product(log_diag[:dim], weights)
 
 
-def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dict:
+def resource_kernel_likelihood_precomputations(targets: list[np.ndarray]) -> dict:
     """
     Precomputations required by ``resource_kernel_likelihood_computations``.
 
@@ -200,11 +200,11 @@ def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dic
 # TODO: This code is complex. If it does not run faster than
 # ``resource_kernel_likelihood_slow_computations``, remove it.
 def resource_kernel_likelihood_computations(
-    precomputed: Dict,
+    precomputed: dict,
     res_kernel: ExponentialDecayBaseKernelFunction,
     noise_variance,
     skip_c_d: bool = False,
-) -> Dict:
+) -> dict:
     """
     Given ``precomputed`` from ``resource_kernel_likelihood_precomputations`` and
     resource kernel function ``res_kernel``, compute quantities required for
@@ -312,11 +312,11 @@ def resource_kernel_likelihood_computations(
 # TODO: It is not clear whether this code is slower, and it is certainly
 # simpler.
 def resource_kernel_likelihood_slow_computations(
-    targets: List[np.ndarray],
+    targets: list[np.ndarray],
     res_kernel: ExponentialDecayBaseKernelFunction,
     noise_variance,
     skip_c_d: bool = False,
-) -> Dict:
+) -> dict:
     """
     Naive implementation of ``resource_kernel_likelihood_computations``, which
     does not require precomputations, but is somewhat slower. Here, results are
@@ -372,11 +372,11 @@ def resource_kernel_likelihood_slow_computations(
 
 
 def predict_posterior_marginals_extended(
-    poster_state: Dict,
+    poster_state: dict,
     mean,
     kernel,
     test_features,
-    resources: List[int],
+    resources: list[int],
     res_kernel: ExponentialDecayBaseKernelFunction,
 ):
     """
@@ -413,7 +413,7 @@ def predict_posterior_marginals_extended(
 
 
 def sample_posterior_joint(
-    poster_state: Dict,
+    poster_state: dict,
     mean,
     kernel,
     feature,
@@ -424,7 +424,7 @@ def sample_posterior_joint(
     means_all,
     random_state: RandomState,
     num_samples: int = 1,
-) -> Dict:
+) -> dict:
     """
     Given ``poster_state`` for some data plus one additional configuration
     with data (``feature``, ``targets``), draw joint samples of unobserved

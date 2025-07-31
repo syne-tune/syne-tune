@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, Dict, Any, List
+from typing import Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -65,12 +65,13 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        searcher: Optional[
-            Union[str, IndependentMultiFidelitySearcher, LastValueMultiFidelitySearcher]
-        ] = "random_search",
+        do_minimize: bool | None = True,
+        searcher:
+            str | IndependentMultiFidelitySearcher | LastValueMultiFidelitySearcher
+            | None
+        = "random_search",
         time_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
@@ -121,7 +122,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.metric_multiplier = 1 if self.do_minimize else -1
         self.time_attr = time_attr
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
         config = self.searcher.suggest()
         if config is not None:
             config = cast_config_values(config, self.config_space)
@@ -141,7 +142,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         self.searcher.on_trial_error(trial.trial_id)
         logger.warning(f"trial_id {trial.trial_id}: Evaluation failed!")
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
@@ -161,7 +162,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
             self.num_stopped += 1
         return action
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
 
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
@@ -181,13 +182,13 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     def on_trial_remove(self, trial: Trial):
         del self.trial_info[trial.trial_id]
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:
         return "min" if self.do_minimize else "max"
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """
@@ -201,7 +202,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         metadata["metric_mode"] = self.metric_mode()
         return metadata
 
-    def _check_metrics_are_present(self, result: Dict[str, Any]):
+    def _check_metrics_are_present(self, result: dict[str, Any]):
         for key in [self.metric, self.time_attr]:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
@@ -220,7 +221,7 @@ class Bracket:
         max_t: int,
         reduction_factor: float,
         s: int,
-        priority: Optional[MOPriority] = None,
+        priority: MOPriority | None = None,
     ):
         self.rf = reduction_factor
         MAX_RUNGS = int(np.log(max_t / min_t) / np.log(self.rf) - s + 1)
@@ -229,7 +230,7 @@ class Bracket:
         ]
         self.priority = priority
 
-    def on_result(self, trial_id: int, cur_iter: int, metrics: Optional[dict]) -> str:
+    def on_result(self, trial_id: int, cur_iter: int, metrics: dict | None) -> str:
         action = SchedulerDecision.CONTINUE
         for milestone, recorded in self.rungs:
             if cur_iter < milestone or trial_id in recorded:

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 from autograd.tracer import getval
@@ -203,7 +203,7 @@ class FreezeThawKernelFunction(KernelFunction):
         cfg, res, kappa, mean = self._compute_terms(X, alpha, mean_lam, ret_mean=True)
         return anp.add(mean, anp.multiply(kappa, gamma))
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         Parameter keys are alpha, mean_lam, gamma, delta (only if not fixed
         to delta_fixed_value), as well as those of self.kernel_x (prefix
@@ -216,7 +216,7 @@ class FreezeThawKernelFunction(KernelFunction):
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
@@ -240,8 +240,8 @@ class FreezeThawMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass

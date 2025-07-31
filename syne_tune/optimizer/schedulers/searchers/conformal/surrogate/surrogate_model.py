@@ -2,7 +2,6 @@ import logging
 
 import pandas as pd
 import numpy as np
-from typing import Dict, Optional, Tuple, List, Union
 
 from syne_tune.config_space import Domain
 
@@ -10,10 +9,10 @@ from syne_tune.config_space import Domain
 class SurrogateModel:
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         mode: str,
-        max_fit_samples: Optional[int] = None,
-        random_state: Optional[np.random.RandomState] = None,
+        max_fit_samples: int | None = None,
+        random_state: np.random.RandomState | None = None,
     ):
         self.random_state = random_state if random_state else np.random
         self.config_space = config_space
@@ -39,7 +38,7 @@ class SurrogateModel:
         self,
         df_features: pd.DataFrame,
         y: np.array,
-        ncandidates: Union[int, pd.DataFrame] = 2000,
+        ncandidates: int | pd.DataFrame = 2000,
     ):
         self._fit(df_features=df_features, y=y)
 
@@ -71,7 +70,7 @@ class SurrogateModel:
         z_pred = self._sampler()
         return z_pred
 
-    def predict(self, df_features: pd.DataFrame) -> Tuple[np.array, np.array]:
+    def predict(self, df_features: pd.DataFrame) -> tuple[np.array, np.array]:
         """
         :param df_features: input features to make predictions with shape (n, d)
         :return: predictions in the shape of (n,)
@@ -115,13 +114,13 @@ class SurrogateModel:
         self.df_candidates = self._configs_to_df(self.config_candidates)
         self._sampler = self._get_sampler(self.df_candidates)
 
-    def _sample_random(self) -> Dict:
+    def _sample_random(self) -> dict:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.config_space.items()
         }
 
-    def _configs_to_df(self, configs: List[Dict]) -> pd.DataFrame:
+    def _configs_to_df(self, configs: list[dict]) -> pd.DataFrame:
         return pd.DataFrame(configs)
 
     def _config_already_seen(self, config) -> bool:

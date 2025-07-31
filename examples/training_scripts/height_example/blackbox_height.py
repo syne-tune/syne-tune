@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import  Any
 import numpy as np
 
 from syne_tune.blackbox_repository.blackbox import Blackbox, ObjectiveFunctionResult
@@ -31,9 +31,9 @@ class HeightExampleBlackbox(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Optional[dict] = None,
-        seed: Optional[int] = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         assert seed is None or seed == 0, "Blackbox has one seed only"
         width, height = configuration["width"], configuration["height"]
@@ -59,5 +59,5 @@ class HeightExampleBlackbox(Blackbox):
             )
 
     @property
-    def fidelity_values(self) -> Optional[np.array]:
+    def fidelity_values(self) -> np.array | None:
         return np.arange(1, self._max_steps + 1)

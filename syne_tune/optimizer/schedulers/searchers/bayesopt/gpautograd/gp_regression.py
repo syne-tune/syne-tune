@@ -1,4 +1,3 @@
-from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -48,10 +47,10 @@ class GaussianProcessRegression(GaussianProcessOptimizeModel):
     def __init__(
         self,
         kernel: KernelFunction,
-        mean: Optional[MeanFunction] = None,
-        target_transform: Optional[ScalarTargetTransform] = None,
-        initial_noise_variance: Optional[float] = None,
-        optimization_config: Optional[OptimizationConfig] = None,
+        mean: MeanFunction | None = None,
+        target_transform: ScalarTargetTransform | None = None,
+        initial_noise_variance: float | None = None,
+        optimization_config: OptimizationConfig | None = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):

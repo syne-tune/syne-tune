@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
 from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
@@ -25,7 +25,7 @@ searcher_dict = {
 
 
 def searcher_factory(
-    searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
+    searcher_name: str, config_space: dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
     assert (
         searcher_name in searcher_dict

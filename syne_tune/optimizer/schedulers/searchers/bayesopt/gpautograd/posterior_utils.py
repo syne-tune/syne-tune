@@ -1,4 +1,3 @@
-from typing import Tuple, Union
 import autograd.numpy as anp
 import autograd.scipy.linalg as aspl
 import numpy as np
@@ -24,9 +23,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
 )
 
 
-KernelFunctionWithCovarianceScale = Union[
-    KernelFunction, Tuple[KernelFunction, np.ndarray]
-]
+KernelFunctionWithCovarianceScale = KernelFunction | tuple[KernelFunction, np.ndarray]
 
 
 def _extract_kernel_and_scale(kernel: KernelFunctionWithCovarianceScale):

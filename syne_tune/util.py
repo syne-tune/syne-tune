@@ -8,8 +8,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Optional, Dict, Any, Iterable
-from typing import Tuple, Union, List
+from typing import Any
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class RegularCallback:
 
 
 def experiment_path(
-    tuner_name: Optional[str] = None, local_path: Optional[str] = None
+    tuner_name: str | None = None, local_path: str | None = None
 ) -> Path:
     """
     Return the path of an experiment which is used both by :class:`~syne_tune.Tuner`
@@ -69,7 +69,7 @@ def experiment_path(
     return result_path
 
 
-def name_from_base(base: Optional[str], max_length: int = 63) -> str:
+def name_from_base(base: str | None, max_length: int = 63) -> str:
     """Append a timestamp to the provided string.
 
     This function assures that the total length of the resulting string is
@@ -143,7 +143,7 @@ def catchtime(name: str) -> float:
         print(f"Time for {name}: {perf_counter() - start:.4f} secs")
 
 
-def is_increasing(lst: List[Union[float, int]]) -> bool:
+def is_increasing(lst: list[float | int]) -> bool:
     """
     :param lst: List of float or int entries
     :return: Is ``lst`` strictly increasing?
@@ -151,7 +151,7 @@ def is_increasing(lst: List[Union[float, int]]) -> bool:
     return all(x < y for x, y in zip(lst, lst[1:]))
 
 
-def is_positive_integer(lst: List[int]) -> bool:
+def is_positive_integer(lst: list[int]) -> bool:
     """
     :param lst: List of int entries
     :return: Are all entries of ``lst`` of type ``int`` and positive?
@@ -168,8 +168,8 @@ def is_integer(lst: list) -> bool:
 
 
 def dump_json_with_numpy(
-    x: dict, filename: Optional[Union[str, Path]] = None
-) -> Optional[str]:
+    x: dict, filename: str | Path | None = None
+) -> str | None:
     """
     Serializes dictionary ``x`` in JSON, taking into account NumPy specific
     value types such as ``n.p.int64``.
@@ -192,7 +192,7 @@ def dump_json_with_numpy(
         return None
 
 
-def dict_get(params: Dict[str, Any], key: str, default: Any) -> Any:
+def dict_get(params: dict[str, Any], key: str, default: Any) -> Any:
     """
     Returns ``params[key]`` if this exists and is not None, and ``default`` otherwise.
     Note that this is not the same as ``params.get(key, default)``. Namely, if ``params[key]``
@@ -208,10 +208,10 @@ def dict_get(params: Dict[str, Any], key: str, default: Any) -> Any:
 
 
 def recursive_merge(
-    a: Dict[str, Any],
-    b: Dict[str, Any],
-    stop_keys: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    a: dict[str, Any],
+    b: dict[str, Any],
+    stop_keys: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Merge dictionaries ``a`` and ``b``, where ``b`` takes precedence. We
     typically use this to modify a dictionary ``a``, so ``b`` is smaller
@@ -252,7 +252,7 @@ def recursive_merge(
         return a
 
 
-def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
+def find_first_of_type(a: Iterable[Any], typ) -> Any | None:
     try:
         return next(x for x in a if isinstance(x, typ))
     except StopIteration:
@@ -260,8 +260,8 @@ def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
 
 
 def metric_name_mode(
-    metric_names: List[str], metric_mode: Union[str, List[str]], metric: Union[str, int]
-) -> Tuple[str, str]:
+    metric_names: list[str], metric_mode: str | list[str], metric: str | int
+) -> tuple[str, str]:
     """
     Retrieve the metric mode given a metric queried by either index or name.
     :param metric_names: metrics names defined in a scheduler

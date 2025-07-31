@@ -2,7 +2,8 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple, Any, Union
+from typing import Any
+from collections.abc import Callable
 
 import dill as dill
 
@@ -128,15 +129,15 @@ class Tuner:
         results_update_interval: float = 10.0,
         print_update_interval: float = 30.0,
         max_failures: int = 1,
-        tuner_name: Optional[str] = None,
+        tuner_name: str | None = None,
         asynchronous_scheduling: bool = True,
         wait_trial_completion_when_stopping: bool = False,
-        callbacks: Optional[List[TunerCallback]] = None,
-        metadata: Optional[dict] = None,
+        callbacks: list[TunerCallback] | None = None,
+        metadata: dict | None = None,
         suffix_tuner_name: bool = True,
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
-        trial_backend_path: Optional[str] = None,
+        trial_backend_path: str | None = None,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -183,7 +184,7 @@ class Tuner:
         self.status_printer = None
         self._initialize_early_checkpoint_removal()
 
-    def _init_callbacks(self, callbacks: Optional[List[TunerCallback]]):
+    def _init_callbacks(self, callbacks: list[TunerCallback] | None):
         if callbacks is None:
             callbacks = [self._default_callback()]
         else:
@@ -194,7 +195,7 @@ class Tuner:
                     "None of the callbacks provided are of type StoreResultsCallback. "
                     "This means no tuning results will be written."
                 )
-        self.callbacks: List[TunerCallback] = callbacks
+        self.callbacks: list[TunerCallback] = callbacks
 
     def _initialize_early_checkpoint_removal(self):
         """
@@ -366,7 +367,7 @@ class Tuner:
             callback.on_tuning_sleep(self.sleep_time)
 
     @staticmethod
-    def _set_metadata(metadata: Dict[str, Any], name: str, value):
+    def _set_metadata(metadata: dict[str, Any], name: str, value):
         if name in metadata:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
@@ -375,7 +376,7 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def _enrich_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
         """
         :param metadata: Original metadata
         :return: ``metadata`` enriched by default entries
@@ -398,7 +399,7 @@ class Tuner:
         )
 
     def _process_new_results(
-        self, running_trials_ids: Set[int]
+        self, running_trials_ids: set[int]
     ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         """Communicates new results from the backend to the scheduler
 
@@ -442,7 +443,7 @@ class Tuner:
 
         return done_trials_statuses, new_results
 
-    def _schedule_new_tasks(self, running_trials_ids: Set[int]):
+    def _schedule_new_tasks(self, running_trials_ids: set[int]):
         """Schedules new tasks if resources are available or sleep.
 
         Note: If ``start_jobs_without_delay`` is False, we ask the backend for
@@ -488,7 +489,7 @@ class Tuner:
                     new_results=[],
                 )
 
-    def _schedule_new_task(self) -> Optional[TrialResult]:
+    def _schedule_new_task(self) -> TrialResult | None:
         """Schedules a new task according to scheduler suggestion.
 
         :return: Information for the trial suggested, ``None`` if the scheduler does
@@ -531,7 +532,7 @@ class Tuner:
                 callback.on_resume_trial(trial)
             return trial
 
-    def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
+    def _handle_failure(self, done_trials_statuses: dict[int, tuple[Trial, str]]):
         logger.error(f"Stopped as {self.max_failures} failures were reached")
         for trial_id, (_, status) in done_trials_statuses.items():
             if status == Status.failed:
@@ -542,7 +543,7 @@ class Tuner:
                 logger.error(stderr)
                 raise ValueError(f"Trial - {trial_id} failed")
 
-    def save(self, folder: Optional[str] = None):
+    def save(self, folder: str | None = None):
         if folder is None:
             tuner_serialized_path = self.tuner_path / ST_TUNER_DILL_FILENAME
         else:
@@ -553,7 +554,7 @@ class Tuner:
             self.trial_backend.on_tuner_save()  # callback
 
     @staticmethod
-    def load(tuner_path: Optional[str]):
+    def load(tuner_path: str | None):
         with open(Path(tuner_path) / ST_TUNER_DILL_FILENAME, "rb") as f:
             tuner = dill.load(f)
             tuner.tuner_path = Path(experiment_path(tuner_name=tuner.name))
@@ -680,8 +681,8 @@ class Tuner:
         return StoreResultsCallback()
 
     def best_config(
-        self, metric: Optional[Union[str, int]] = 0
-    ) -> Tuple[int, Dict[str, Any]]:
+        self, metric: str | int | None = 0
+    ) -> tuple[int, dict[str, Any]]:
         """
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
             default to 0 - first metric defined in the Scheduler

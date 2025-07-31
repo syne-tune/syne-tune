@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 from collections import deque
 
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
@@ -33,10 +33,10 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
     def __init__(
         self,
         config_space,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: list[dict] | None = None,
         population_size: int = 100,
         sample_size: int = 10,
-        multiobjective_priority: Optional[MOPriority] = None,
+        multiobjective_priority: MOPriority | None = None,
         random_seed: int = None,
     ):
 
@@ -59,7 +59,7 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
         else:
             self._multiobjective_priority = multiobjective_priority
 
-    def suggest(self, **kwargs) -> Optional[dict]:
+    def suggest(self, **kwargs) -> dict | None:
         initial_config = self._next_points_to_evaluate()
         if initial_config is not None:
             return initial_config
@@ -83,8 +83,8 @@ class MultiObjectiveRegularizedEvolution(BaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
-        metrics: List[float],
+        config: dict[str, Any],
+        metrics: list[float],
     ):
 
         # Add element to the population
