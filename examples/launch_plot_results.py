@@ -6,11 +6,7 @@ from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-from examples.training_scripts.height_example.train_height import (
-    METRIC_ATTR,
-    METRIC_MODE,
-    MAX_RESOURCE_ATTR,
-)
+
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -20,7 +16,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        MAX_RESOURCE_ATTR: max_steps,
+        "steps": max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -36,8 +32,8 @@ if __name__ == "__main__":
     # Random search without stopping
     scheduler = RandomSearch(
         config_space,
-        do_minimize=METRIC_MODE == "min",
-        metrics=[METRIC_ATTR],
+        do_minimize=True,
+        metrics=["mean_loss"],
         random_seed=random_seed,
     )
 
