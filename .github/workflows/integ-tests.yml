@@ -45,13 +45,6 @@ jobs:
       additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_checkpoint_example.py
 
-  launch_transfer_learning_example:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      extras-require: extra
-      additional-command: pip install xgboost scikit-learn huggingface-hub
-      script-path: examples/launch_transfer_learning_example.py
-
   launch_height_simple:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
