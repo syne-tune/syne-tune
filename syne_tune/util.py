@@ -129,6 +129,7 @@ def script_height_example_path() -> Path:
         / "height_example"
         / "train_height.py"
     )
+    print(path)
     assert path.exists()
     return path
 
