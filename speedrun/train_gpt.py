@@ -818,19 +818,24 @@ def distributed_data_generator(filename_pattern: str, seq_len: int, grad_accum_s
 # -----------------------------------------------------------------------------
 # int main
 
+
+import argparse
+from dataclasses import dataclass, fields
+
+
 @dataclass
 class Hyperparameters:
     # data
-    train_files: str = "data/fineweb10B/fineweb_train_*.bin" # input .bin to train on
-    val_files: str = "data/fineweb10B/fineweb_val_*.bin" # input .bin to eval validation loss on
-    val_tokens: int = 10485760 # how many tokens of validation data? it's important to keep this fixed for consistent comparisons
-    train_seq_len: int = 48*1024 # FlexAttention sequence length
-    val_seq_len: int = 4*64*1024 # FlexAttention sequence length for validation
+    train_files: str = "data/fineweb10B/fineweb_train_*.bin"  # input .bin to train on
+    val_files: str = "data/fineweb10B/fineweb_val_*.bin"  # input .bin to eval validation loss on
+    val_tokens: int = 10485760  # how many tokens of validation data? it's important to keep this fixed for consistent comparisons
+    train_seq_len: int = 48 * 1024  # FlexAttention sequence length
+    val_seq_len: int = 4 * 64 * 1024  # FlexAttention sequence length for validation
     # optimization
-    num_iterations: int = 1750 # number of iterations to run
-    cooldown_frac: float = 0.45 # fraction of training spent cooling down the learning rate
+    num_iterations: int = 1750  # number of iterations to run
+    cooldown_frac: float = 0.45  # fraction of training spent cooling down the learning rate
     # evaluation and logging
-    val_loss_every: int = 125 # every how many steps to evaluate val loss? 0 for only at the end
+    val_loss_every: int = 125  # every how many steps to evaluate val loss? 0 for only at the end
     save_checkpoint: bool = False
     adam_lr: float = 0.008
     adam_beta1: float = 0.8
@@ -841,8 +846,46 @@ class Hyperparameters:
     min_window_size: int = 128
 
 
-args = Hyperparameters()
+def parse_args():
+    parser = argparse.ArgumentParser(description='Training hyperparameters')
 
+    # Get default values from dataclass
+    defaults = Hyperparameters()
+
+    # Add arguments for each field in the dataclass
+    for field in fields(Hyperparameters):
+        field_name = field.name
+        default_value = getattr(defaults, field_name)
+        field_type = field.type
+
+        # Handle boolean fields specially
+        if field_type == bool:
+            parser.add_argument(
+                f'--{field_name.replace("_", "-")}',
+                action='store_true' if not default_value else 'store_false',
+                default=default_value,
+                help=f'Default: {default_value}'
+            )
+        else:
+            parser.add_argument(
+                f'--{field_name.replace("_", "-")}',
+                type=field_type,
+                default=default_value,
+                help=f'Default: {default_value}'
+            )
+
+    args = parser.parse_args()
+
+    # Convert argparse Namespace to dict and create Hyperparameters instance
+    args_dict = vars(args)
+    # Convert hyphenated names back to underscores
+    args_dict = {k.replace("-", "_"): v for k, v in args_dict.items()}
+
+    return Hyperparameters(**args_dict)
+
+
+# Usage
+args = parse_args()
 
 data_path = os.environ.get("DATA_PATH", ".")
 args.train_files = os.path.join(data_path, args.train_files)
