@@ -54,7 +54,7 @@ class ExperimentResult:
 
     def plot_hypervolume(
         self,
-        metrics_to_plot: list[int] | list[str] = None,
+        metrics_to_plot: list[int] | list[str] | None = None,
         reference_point: np.ndarray = None,
         figure_path: str = None,
         **plt_kwargs,
