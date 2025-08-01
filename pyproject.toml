@@ -52,6 +52,7 @@ dev = [
     "wheel",
 ]
 extra = [
+    "syne-tune[dev]",
     # blackbox repository
     "numpy>=1.16.0, <1.27.0",
     "pandas",
