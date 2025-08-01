@@ -1074,6 +1074,7 @@ class Hyperparameters:
     muon_momentum: float = 0.95
     max_window_size: int = 1728
     min_window_size: int = 128
+    st_checkpoint_dir: str = ""
 
 
 def parse_args():

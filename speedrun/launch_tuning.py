@@ -6,6 +6,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.optimizer.baselines import ASHACQR
+from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuner_callback import TunerCallback
 
 cooldown_frac: float = 0.4  # fraction of training for learning rate cooldown
@@ -102,6 +103,6 @@ tuner = Tuner(
     scheduler=scheduler,
     stop_criterion=StoppingCriterion(max_wallclock_time=3600 * 12),
     n_workers=1,  # how many trials are evaluated in parallel
-    callbacks=[ResetMemoryCallback()],
+    callbacks=[ResetMemoryCallback(), StoreResultsCallback()],
 )
 tuner.run()
