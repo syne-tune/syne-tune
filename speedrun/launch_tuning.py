@@ -59,6 +59,7 @@ entry_point = str(Path(__file__).parent / "train_gpt.py")
 
 
 def clean_memory():
+    return
     print("Clean memory")
     try:
         result = subprocess.run(
@@ -67,9 +68,7 @@ def clean_memory():
             capture_output=True,
             text=True,
         )
-
-        print("Return code:", result.returncode)
-        print("Output:", result.stdout)
+        # print("Output:", result.stdout)
         if result.stderr:
             print("Error:", result.stderr)
 
