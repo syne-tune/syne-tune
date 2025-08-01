@@ -19,6 +19,7 @@ def test_smoke_botorch():
         height_config_space,
         METRIC_ATTR,
     )
+
     # Use train_height backend for our tests
     entry_point = (
         Path(__file__).parent.parent.parent
