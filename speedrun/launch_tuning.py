@@ -15,6 +15,10 @@ adam_beta2: float = 0.95
 muon_lr: float = 0.05
 muon_momentum: float = 0.95
 
+# num_iterations = 1750
+# faster for debugging
+num_iterations = 125 * 5
+
 config_space = {
     "cooldown_frac": uniform(cooldown_frac - 0.3, cooldown_frac + 0.3),
     "adam_lr": loguniform(adam_lr / 10, adam_lr * 10),
@@ -22,6 +26,7 @@ config_space = {
     "adam_beta2": uniform(0.7, 0.99),
     "muon_lr": loguniform(muon_lr / 10, muon_lr * 10),
     "muon_momentum": uniform(0.7, 0.999),
+    "num_iterations": num_iterations,
 }
 
 # adam_head_lr: float = 0.22  # learning rate for the language model head
@@ -33,7 +38,7 @@ scheduler = ASHACQR(
     metric="val_loss",
     time_attr="iteration",
     # 1770 / 125
-    max_t=15,
+    max_t=num_iterations // 125,
     points_to_evaluate=[
         {
             "cooldown_frac": cooldown_frac,
