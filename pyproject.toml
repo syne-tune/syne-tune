@@ -51,7 +51,8 @@ dev = [
     "sphinxcontrib.jquery",
     "wheel",
 ]
-"blackbox-repository" = [
+extra = [
+    # blackbox repository
     "numpy>=1.16.0, <1.27.0",
     "pandas",
     "scikit-learn",
@@ -59,27 +60,17 @@ dev = [
     "fastparquet",
     "h5py",
     "huggingface_hub",
-]
-yahpo = [
+    # yahpo
     "onnxruntime>=1.10.0",
     "pyyaml",
     "configspace<=0.6.1",
     "pandas",
     "yahpo-gym",
-]
-botorch = [
+    # botorch
     "botorch>=0.7.2",
-]
-smac = [
+    # smac
     "swig",
     "smac>=2.0",
-]
-extra = [
-    "syne-tune[dev]",
-    "syne-tune[blackbox-repository]",
-    "syne-tune[yahpo]",
-    "syne-tune[botorch]",
-    "syne-tune[smac]",
 ]
 
 [project.urls]
