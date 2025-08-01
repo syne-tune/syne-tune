@@ -1091,14 +1091,14 @@ def parse_args():
         # Handle boolean fields specially
         if field_type == bool:
             parser.add_argument(
-                f'--{field_name.replace("_", "-")}',
+                f"--{field_name}",
                 action="store_true" if not default_value else "store_false",
                 default=default_value,
                 help=f"Default: {default_value}",
             )
         else:
             parser.add_argument(
-                f'--{field_name.replace("_", "-")}',
+                f"--{field_name}",
                 type=field_type,
                 default=default_value,
                 help=f"Default: {default_value}",
@@ -1108,8 +1108,7 @@ def parse_args():
 
     # Convert argparse Namespace to dict and create Hyperparameters instance
     args_dict = vars(args)
-    # Convert hyphenated names back to underscores
-    args_dict = {k.replace("-", "_"): v for k, v in args_dict.items()}
+    args_dict = {k: v for k, v in args_dict.items()}
 
     return Hyperparameters(**args_dict)
 
