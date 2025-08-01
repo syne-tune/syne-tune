@@ -5,6 +5,7 @@ from pathlib import Path
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint, uniform, loguniform
+from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHACQR
 from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuner_callback import TunerCallback
@@ -76,32 +77,39 @@ def clean_memory():
         print(f"Error executing command: {e}")
 
 
-class ResetMemoryCallback(TunerCallback):
-    def on_tuning_start(self, _):
-        clean_memory()
+# class ResetMemoryCallback(TunerCallback):
+#     def on_tuning_start(self, _):
+#         clean_memory()
+#
+#     def on_tuning_end(self):
+#         clean_memory()
+#
+#     def on_trial_complete(self, trial, result):
+#         clean_memory()
+#
+#     def on_trial_error(self, trial):
+#         clean_memory()
+#
+#     def on_trial_stopped(self, trial):
+#         clean_memory()
 
-    def on_tuning_end(self):
-        clean_memory()
+try:
+    tuning_experiment = load_experiment(
+        "train-gpt-2025-08-01-13-21-59-525", load_tuner=True
+    )
+    tuner = tuning_experiment.tuner
+except Exception as e:
+    # does not exists, initialize it
+    tuner = Tuner(
+        trial_backend=LocalBackend(
+            entry_point=entry_point,
+            binary="torchrun --standalone --nproc_per_node=4",
+            rotate_gpus=False,
+        ),
+        scheduler=scheduler,
+        stop_criterion=StoppingCriterion(max_num_trials_started=200),
+        n_workers=1,  # how many trials are evaluated in parallel
+        # callbacks=[ResetMemoryCallback(), StoreResultsCallback()],
+    )
 
-    def on_trial_complete(self, trial, result):
-        clean_memory()
-
-    def on_trial_error(self, trial):
-        clean_memory()
-
-    def on_trial_stopped(self, trial):
-        clean_memory()
-
-
-tuner = Tuner(
-    trial_backend=LocalBackend(
-        entry_point=entry_point,
-        binary="torchrun --standalone --nproc_per_node=4",
-        rotate_gpus=False,
-    ),
-    scheduler=scheduler,
-    stop_criterion=StoppingCriterion(max_wallclock_time=3600 * 12),
-    n_workers=1,  # how many trials are evaluated in parallel
-    callbacks=[ResetMemoryCallback(), StoreResultsCallback()],
-)
 tuner.run()
