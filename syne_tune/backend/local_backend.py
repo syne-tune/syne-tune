@@ -56,7 +56,7 @@ class LocalBackend(TrialBackend):
     def __init__(
         self,
         entry_point: str,
-        binary: Optional[str] = None,
+        binary: str | None = None,
         delete_checkpoints: bool = False,
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
