@@ -16,9 +16,9 @@ adam_beta2: float = 0.95
 muon_lr: float = 0.05
 muon_momentum: float = 0.95
 
-# num_iterations = 1750
+num_iterations = 1750
 # faster for debugging
-num_iterations = 125 * 5
+# num_iterations = 125 * 5
 
 config_space = {
     "cooldown_frac": uniform(cooldown_frac - 0.3, cooldown_frac + 0.3),
