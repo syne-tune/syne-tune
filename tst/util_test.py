@@ -1,8 +1,6 @@
 import tempfile
 import time
 
-import numpy as np
-
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import Status
 from syne_tune.util import script_height_example_path
