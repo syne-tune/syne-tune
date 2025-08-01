@@ -24,16 +24,14 @@ dependencies = [
     "pandas",
     "typing_extensions",
     "sortedcontainers",
+    "statsmodels",
+    "scikit-learn",
+    "xgboost",
+    "tqdm",
 ]
 
 [project.optional-dependencies]
-gpsearchers = [
-    "scipy<1.15.3",
-    "autograd>=1.3",
-]
-kde = [
-    "statsmodels",
-]
+
 dev = [
     "pytest",
     "pytest-cov~=4.1.0",
@@ -52,16 +50,6 @@ dev = [
     "sphinxcontrib-bibtex",
     "sphinxcontrib.jquery",
     "wheel",
-]
-moo = [
-    "pymoo==0.6.0",
-    "scipy>=1.3.3",
-]
-visual = [
-    "matplotlib",
-]
-sklearn = [
-    "scikit-learn<1.6",
 ]
 "blackbox-repository" = [
     "numpy>=1.16.0, <1.27.0",
@@ -82,30 +70,21 @@ yahpo = [
 botorch = [
     "botorch>=0.7.2",
 ]
-bore = [
-    "xgboost",
-    "scikit-learn",
-]
 smac = [
     "swig",
     "smac>=2.0",
 ]
 extra = [
-    "syne-tune[gpsearchers]",
-    "syne-tune[kde]",
     "syne-tune[dev]",
-    "syne-tune[moo]",
-    "syne-tune[visual]",
-    "syne-tune[sklearn]",
     "syne-tune[blackbox-repository]",
     "syne-tune[yahpo]",
     "syne-tune[botorch]",
-    "syne-tune[bore]",
+    "syne-tune[smac]",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/awslabs/syne-tune"
-"Bug Tracker" = "https://github.com/awslabs/syne-tune/issues"
+"Homepage" = "https://github.com/syne-tune/syne-tune"
+"Bug Tracker" = "https://github.com/syne-tune/syne-tune/issues"
 
 [tool.setuptools.packages.find]
 include = ["syne_tune", "syne_tune.*"]
