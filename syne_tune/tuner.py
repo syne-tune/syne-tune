@@ -605,7 +605,10 @@ class Tuner:
                         # update after the change which may be expensive
                         status = Status.stopped
                         self.trial_backend.stop_trial(trial_id=trial_id, result=result)
+
                     self.scheduler.on_trial_remove(trial=trial)
+                    for callback in self.callbacks:
+                        callback.on_trial_stopped(trial)
                     done_trials[trial_id] = (trial, status)
                     self.trials_scheduler_stopped.add(trial_id)
 
@@ -613,6 +616,8 @@ class Tuner:
                     status = Status.paused
                     self.trial_backend.pause_trial(trial_id=trial_id, result=result)
                     self.scheduler.on_trial_remove(trial=trial)
+                    for callback in self.callbacks:
+                        callback.on_trial_stopped(trial)
                     done_trials[trial_id] = (trial, status)
 
         for trial_id, (trial, status) in trial_status_dict.items():
@@ -649,7 +654,7 @@ class Tuner:
                 last_result = self.last_seen_result_per_trial[trial_id]
                 if trial_id not in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
-                if status == Status.completed:
+                    # if status == Status.completed:
                     for callback in self.callbacks:
                         callback.on_trial_complete(trial, last_result)
                 done_trials[trial_id] = (trial, status)
@@ -657,6 +662,9 @@ class Tuner:
             if status == Status.failed:
                 logger.info(f"Trial trial_id {trial_id} failed.")
                 self.scheduler.on_trial_error(trial)
+                for callback in self.callbacks:
+                    callback.on_trial_error(trial)
+
                 done_trials[trial_id] = (trial, status)
 
             # For the case when the trial is stopped independently of the scheduler, we choose to use
@@ -669,6 +677,9 @@ class Tuner:
                     f"Trial trial_id {trial_id} was stopped independently of the scheduler."
                 )
                 self.scheduler.on_trial_error(trial)
+                for callback in self.callbacks:
+                    callback.on_trial_error(trial)
+
                 done_trials[trial_id] = (trial, status)
 
         return done_trials

@@ -121,13 +121,11 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
 
     def fit_model(self):
         configs, metrics = self.make_input_target()
-        # TODO BaseSearcher expects a int for random_seed, so we cannot pass a random state, we could change to pass both
-        random_seed = (
-            self.random_seed + self.random_state.randint(0, sys.maxsize)
-        ) % sys.maxsize
         self.searcher = self.searcher_cls(
             config_space=self.config_space,
-            random_seed=random_seed,
+            # TODO BaseSearcher expects a int for random_seed, so we cannot pass a random state, we could change to pass both
+            random_seed=(self.random_seed + self.random_state.randint(0, sys.maxsize))
+            % sys.maxsize,
             points_to_evaluate=None,
             **self.searcher_kwargs,
         )

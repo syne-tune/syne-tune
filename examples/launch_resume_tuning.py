@@ -57,17 +57,19 @@ if __name__ == "__main__":
     experiment_name = f"resume-tuning-example-{random_string(5)}"
 
     # Launch a tuning, tuning results and checkpoints are written to disk
+    print("Launch first tuning")
     launch_first_tuning(experiment_name)
 
+    print("First tuning done")
     # Later loads an experiment from disk given the experiment name,
     # in particular sets `load_tuner` to True to deserialize the Tuner
     tuning_experiment = load_experiment(experiment_name, load_tuner=True)
 
-    # Copy the tuner as it will be modified when retuning
-    shutil.copy(
-        tuning_experiment.path / "tuner.dill",
-        tuning_experiment.path / "tuner-backup.dill",
-    )
+    # Optional: copy the tuner as it will be modified when retuning
+    # shutil.copy(
+    #     tuning_experiment.path / "tuner.dill",
+    #     tuning_experiment.path / "tuner-backup.dill",
+    # )
 
     # Update stop criterion to run the tuning a couple more trials than before
     tuning_experiment.tuner.stop_criterion = StoppingCriterion(
@@ -75,4 +77,11 @@ if __name__ == "__main__":
     )
 
     # Resume the tuning
+    print(f"Loaded first tuning from disk with following:\n{tuning_experiment}")
+    print("Resume tuning")
     tuning_experiment.tuner.run()
+
+    # reload with new info from disk
+    tuning_experiment = load_experiment(experiment_name, load_tuner=True)
+
+    print(f"Second tuning finished:\n{tuning_experiment}")

@@ -67,6 +67,18 @@ class TunerCallback:
         """
         pass
 
+    def on_trial_error(self, trial: Trial):
+        """Called when a trial fails
+        :param trial: Trial that just completed.
+        """
+        pass
+
+    def on_trial_stopped(self, trial: Trial):
+        """Called when a trial stops
+        :param trial: Trial that just completed.
+        """
+        pass
+
     def on_trial_result(
         self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
