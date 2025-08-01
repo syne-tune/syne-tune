@@ -1,8 +1,3 @@
-from examples.training_scripts.height_example.train_height import (
-    height_config_space,
-    METRIC_ATTR,
-)
-
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from pathlib import Path
@@ -19,8 +14,11 @@ def test_smoke_botorch():
     """
     This test checks that the BoTorch scheduler can be loaded and used to come up with new trials.
     """
-    from syne_tune.optimizer.legacy_baselines import BoTorch
-
+    from syne_tune.optimizer.baselines import BOTorch
+    from examples.training_scripts.height_example.train_height import (
+        height_config_space,
+        METRIC_ATTR,
+    )
     # Use train_height backend for our tests
     entry_point = (
         Path(__file__).parent.parent.parent
@@ -34,7 +32,7 @@ def test_smoke_botorch():
     # Set up tuner and run for a few evaluations
     tuner = Tuner(
         trial_backend=LocalBackend(entry_point=str(entry_point)),
-        scheduler=BoTorch(
+        scheduler=BOTorch(
             metric=METRIC_ATTR,
             config_space=height_config_space(max_steps=5),
             random_seed=15,
