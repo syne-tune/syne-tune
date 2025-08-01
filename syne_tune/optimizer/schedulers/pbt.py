@@ -5,7 +5,8 @@ import numpy as np
 
 from dataclasses import dataclass
 from collections import deque
-from typing import Callable, List, Optional, Tuple, Dict, Any
+from typing import Any
+from collections.abc import Callable
 
 from syne_tune.config_space import (
     Domain,
@@ -98,12 +99,12 @@ class PopulationBasedTraining(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         resource_attr: str,
         max_t: int = 100,
-        custom_explore_fn: Optional[Callable[[dict], dict]] = None,
-        do_minimize: Optional[bool] = True,
+        custom_explore_fn: Callable[[dict], dict] | None = None,
+        do_minimize: bool | None = True,
         random_seed: int = None,
         population_size: int = 4,
         perturbation_interval: int = 60,
@@ -169,7 +170,7 @@ class PopulationBasedTraining(TrialScheduler):
         else:
             return trial_id
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         for name, value in [
             ("resource_attr", self.resource_attr),
             ("metric", self.metric),
@@ -218,7 +219,7 @@ class PopulationBasedTraining(TrialScheduler):
             return SchedulerDecision.STOP
 
     def _save_trial_state(
-        self, state: PBTTrialState, time: int, result: Dict[str, Any]
+        self, state: PBTTrialState, time: int, result: dict[str, Any]
     ) -> float:
         """Saves necessary trial information when result is received.
 
@@ -236,7 +237,7 @@ class PopulationBasedTraining(TrialScheduler):
         state.last_result = result
         return score
 
-    def _quantiles(self) -> Tuple[List[Trial], List[Trial]]:
+    def _quantiles(self) -> tuple[list[Trial], list[Trial]]:
         """Returns trials in the lower and upper ``quantile`` of the population.
 
         If there is not enough data to compute this, returns empty lists.
@@ -260,7 +261,7 @@ class PopulationBasedTraining(TrialScheduler):
                 num_trials_in_quantile = int(math.floor(len(trials) / 2))
             return trials[:num_trials_in_quantile], trials[-num_trials_in_quantile:]
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
         if len(self.trial_decisions_stack) == 0:
             # If our stack is empty, we simply start a new random configuration.
             config = self.searcher.suggest()
@@ -275,7 +276,7 @@ class PopulationBasedTraining(TrialScheduler):
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
 
-    def _explore(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _explore(self, config: dict[str, Any]) -> dict[str, Any]:
         """Return a config perturbed as specified.
 
         :param config: Original hyperparameter configuration from the cloned trial
@@ -323,7 +324,7 @@ class PopulationBasedTraining(TrialScheduler):
 
         return new_config
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """
@@ -336,7 +337,7 @@ class PopulationBasedTraining(TrialScheduler):
         metadata["metric_mode"] = self.metric_mode()
         return metadata
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
 
     def metric_mode(self) -> str:

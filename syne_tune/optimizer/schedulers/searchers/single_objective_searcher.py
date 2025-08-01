@@ -1,6 +1,6 @@
 import logging
 
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
@@ -15,7 +15,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
     def on_trial_result(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         """Inform searcher about result
@@ -37,7 +37,7 @@ class SingleObjectiveBaseSearcher(BaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         """Inform searcher about result

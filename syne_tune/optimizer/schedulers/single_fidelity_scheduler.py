@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Union, List
+from typing import Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -41,10 +41,10 @@ class SingleFidelityScheduler(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metrics: List[str],
-        do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, BaseSearcher]] = "random_search",
+        config_space: dict[str, Any],
+        metrics: list[str],
+        do_minimize: bool | None = True,
+        searcher: str | BaseSearcher | None = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
     ):
@@ -63,7 +63,7 @@ class SingleFidelityScheduler(TrialScheduler):
         else:
             self.searcher = searcher
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
 
         config = self.searcher.suggest()
         if config is not None:
@@ -77,7 +77,7 @@ class SingleFidelityScheduler(TrialScheduler):
         self.searcher.on_trial_error(trial.trial_id)
         logger.warning(f"trial_id {trial.trial_id}: Evaluation failed!")
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
@@ -96,7 +96,7 @@ class SingleFidelityScheduler(TrialScheduler):
         self.searcher.on_trial_result(trial.trial_id, config, metric)
         return SchedulerDecision.CONTINUE
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         """Notification for the completion of trial.
 
         Note that :meth:`on_trial_result` is called with the same result before.
@@ -112,7 +112,7 @@ class SingleFidelityScheduler(TrialScheduler):
         ]
         self.searcher.on_trial_complete(trial.trial_id, config, metric)
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """
@@ -125,7 +125,7 @@ class SingleFidelityScheduler(TrialScheduler):
         metadata["metric_mode"] = self.metric_mode()
         return metadata
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self.metrics
 
     def metric_mode(self) -> str:

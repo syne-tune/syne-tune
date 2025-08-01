@@ -1,4 +1,3 @@
-from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc import (
@@ -41,9 +40,9 @@ class GaussProcMCMCEstimator(GaussProcEstimator):
         gpmodel: GPRegressionMCMC,
         active_metric: str = INTERNAL_METRIC_NAME,
         normalize_targets: bool = True,
-        debug_log: Optional[DebugLogPrinter] = None,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
-        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
+        debug_log: DebugLogPrinter | None = None,
+        filter_observed_data: ConfigurationFilter | None = None,
+        hp_ranges_for_prediction: HyperparameterRanges | None = None,
     ):
         super().__init__(
             gpmodel=gpmodel,

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 repository_path = Path("~/.blackbox-repository/").expanduser()
 repo_id = "synetune/blackbox-repository"
@@ -25,7 +24,7 @@ def blackbox_local_path(name: str) -> Path:
     return Path(repository_path) / subdir / subname
 
 
-def upload_blackbox(name: str, custom_repo_id: Optional[str] = None):
+def upload_blackbox(name: str, custom_repo_id: str | None = None):
     """
     Uploads a blackbox locally present in repository_path to HuggingFace hub
     :param name: folder must be available in repository_path/name

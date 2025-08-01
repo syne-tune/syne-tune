@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -60,11 +60,11 @@ class MOASHA(TrialScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metrics: List[str],
-        do_minimize: Optional[bool] = True,
+        config_space: dict[str, Any],
+        metrics: list[str],
+        do_minimize: bool | None = True,
         time_attr: str = "training_iteration",
-        multiobjective_priority: Optional[MOPriority] = None,
+        multiobjective_priority: MOPriority | None = None,
         max_t: int = 100,
         grace_period: int = 1,
         reduction_factor: float = 3,
@@ -101,13 +101,13 @@ class MOASHA(TrialScheduler):
         self.metric_multiplier = 1 if self.do_minimize else -1
         self.time_attr = time_attr
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return self.metrics
 
     def metric_mode(self) -> str:
         return "min" if self.do_minimize else "max"
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
         config = {
             k: v.sample() if hasattr(v, "sample") else v
             for k, v in self.config_space.items()
@@ -121,7 +121,7 @@ class MOASHA(TrialScheduler):
         idx = np.random.choice(len(self.brackets), p=normalized)
         self.trial_info[trial.trial_id] = self.brackets[idx]
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         self.check_metrics_are_present(result)
         if result[self.time_attr] >= self.max_t:
             action = SchedulerDecision.STOP
@@ -137,18 +137,18 @@ class MOASHA(TrialScheduler):
             self.num_stopped += 1
         return action
 
-    def metric_dict(self, reported_results: Dict[str, Any]) -> Dict[str, Any]:
+    def metric_dict(self, reported_results: dict[str, Any]) -> dict[str, Any]:
         return {
             metric: reported_results[metric] * self.metric_multiplier
             for metric in self.metrics
         }
 
-    def check_metrics_are_present(self, result: Dict[str, Any]):
+    def check_metrics_are_present(self, result: dict[str, Any]):
         for key in [self.time_attr] + self.metrics:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         self.check_metrics_are_present(result)
         bracket = self.trial_info[trial.trial_id]
         bracket.on_result(
@@ -161,7 +161,7 @@ class MOASHA(TrialScheduler):
     def on_trial_remove(self, trial: Trial):
         del self.trial_info[trial.trial_id]
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

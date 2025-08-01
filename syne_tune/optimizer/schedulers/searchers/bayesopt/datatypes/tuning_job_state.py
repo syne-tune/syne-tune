@@ -1,5 +1,3 @@
-from typing import List, Dict, Optional
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     TrialEvaluations,
     PendingEvaluation,
@@ -35,10 +33,10 @@ class TuningJobState:
     def __init__(
         self,
         hp_ranges: HyperparameterRanges,
-        config_for_trial: Dict[str, Configuration],
-        trials_evaluations: List[TrialEvaluations],
-        failed_trials: List[str] = None,
-        pending_evaluations: List[PendingEvaluation] = None,
+        config_for_trial: dict[str, Configuration],
+        trials_evaluations: list[TrialEvaluations],
+        failed_trials: list[str] = None,
+        pending_evaluations: list[PendingEvaluation] = None,
     ):
         if failed_trials is None:
             failed_trials = []
@@ -54,7 +52,7 @@ class TuningJobState:
         self.pending_evaluations = pending_evaluations
 
     @staticmethod
-    def _check_all_string(trial_ids: List[str], name: str):
+    def _check_all_string(trial_ids: list[str], name: str):
         assert all(
             isinstance(x, str) for x in trial_ids
         ), f"trial_ids in {name} contain non-string values:\n{trial_ids}"
@@ -94,7 +92,7 @@ class TuningJobState:
         except StopIteration:
             return -1
 
-    def _find_pending(self, trial_id: str, resource: Optional[int] = None) -> int:
+    def _find_pending(self, trial_id: str, resource: int | None = None) -> int:
         try:
             return next(
                 i
@@ -105,7 +103,7 @@ class TuningJobState:
             return -1
 
     def _register_config_for_trial(
-        self, trial_id: str, config: Optional[Configuration] = None
+        self, trial_id: str, config: Configuration | None = None
     ):
         if config is None:
             assert trial_id in self.config_for_trial, (
@@ -116,7 +114,7 @@ class TuningJobState:
             self.config_for_trial[trial_id] = config.copy()
 
     def metrics_for_trial(
-        self, trial_id: str, config: Optional[Configuration] = None
+        self, trial_id: str, config: Configuration | None = None
     ) -> MetricValues:
         """
         Helper for inserting new entry into ``trials_evaluations``. If ``trial_id``
@@ -142,7 +140,7 @@ class TuningJobState:
         return metrics
 
     def num_observed_cases(
-        self, metric_name: str = INTERNAL_METRIC_NAME, resource: Optional[int] = None
+        self, metric_name: str = INTERNAL_METRIC_NAME, resource: int | None = None
     ) -> int:
         """
         Counts the number of observations for metric ``metric_name``.
@@ -158,7 +156,7 @@ class TuningJobState:
 
     def observed_data_for_metric(
         self, metric_name: str = INTERNAL_METRIC_NAME, resource_attr_name: str = None
-    ) -> (List[Configuration], List[float]):
+    ) -> (list[Configuration], list[float]):
         """
         Extracts datapoints from ``trials_evaluations`` for particular
         metric ``metric_name``, in the form of a list of configs and a list of
@@ -198,14 +196,14 @@ class TuningJobState:
                     metric_values.append(metric_entry)
         return configs, metric_values
 
-    def is_pending(self, trial_id: str, resource: Optional[int] = None) -> bool:
+    def is_pending(self, trial_id: str, resource: int | None = None) -> bool:
         return self._find_pending(trial_id, resource) != -1
 
     def is_labeled(
         self,
         trial_id: str,
         metric_name: str = INTERNAL_METRIC_NAME,
-        resource: Optional[int] = None,
+        resource: int | None = None,
     ) -> bool:
         """
         Checks whether ``trial_id`` has observed data under ``metric_name``. If
@@ -226,8 +224,8 @@ class TuningJobState:
     def append_pending(
         self,
         trial_id: str,
-        config: Optional[Configuration] = None,
-        resource: Optional[int] = None,
+        config: Configuration | None = None,
+        resource: int | None = None,
     ):
         """
         Appends new pending evaluation. If the trial has not been registered
@@ -240,7 +238,7 @@ class TuningJobState:
             PendingEvaluation(trial_id=trial_id, resource=resource)
         )
 
-    def remove_pending(self, trial_id: str, resource: Optional[int] = None) -> bool:
+    def remove_pending(self, trial_id: str, resource: int | None = None) -> bool:
         pos = self._find_pending(trial_id, resource)
         if pos != -1:
             self.pending_evaluations.pop(pos)
@@ -250,7 +248,7 @@ class TuningJobState:
 
     def pending_configurations(
         self, resource_attr_name: str = None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         """
         Returns list of configurations corresponding to pending evaluations.
         If the latter have resource values, the configs are extended.
@@ -271,8 +269,8 @@ class TuningJobState:
         return configs
 
     def _map_configs_for_matching(
-        self, config_for_trial: Dict[str, Configuration]
-    ) -> Dict[str, str]:
+        self, config_for_trial: dict[str, Configuration]
+    ) -> dict[str, str]:
         return {
             trial_id: self.hp_ranges.config_to_match_string(config)
             for trial_id, config in config_for_trial.items()
@@ -295,8 +293,8 @@ class TuningJobState:
         ) == self._map_configs_for_matching(other.config_for_trial)
 
     def all_configurations(
-        self, filter_observed_data: Optional[ConfigurationFilter] = None
-    ) -> List[Configuration]:
+        self, filter_observed_data: ConfigurationFilter | None = None
+    ) -> list[Configuration]:
         """
         Returns list of configurations for all trials represented here, whether
         observed, pending, or failed. If ``filter_observed_data`` is given, the

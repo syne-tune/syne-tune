@@ -1,4 +1,3 @@
-from typing import Optional
 import logging
 
 from syne_tune.results_callback import StoreResultsCallback, ExtraResultsComposer
@@ -40,7 +39,7 @@ class SimulatorCallback(StoreResultsCallback):
         extra columns to the results dataframe
     """
 
-    def __init__(self, extra_results_composer: Optional[ExtraResultsComposer] = None):
+    def __init__(self, extra_results_composer: ExtraResultsComposer | None = None):
         # Note: ``results_update_interval`` is w.r.t. real time, not
         # simulated time. Storing results intermediately is not important for
         # the simulator backend, so the default is larger

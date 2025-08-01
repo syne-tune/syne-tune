@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any, Optional
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
     GaussianProcessMarginalLikelihood,
@@ -39,10 +39,10 @@ class HyperTuneIndependentGPMarginalLikelihood(
     def __init__(
         self,
         kernel: KernelFunction,
-        mean: Dict[int, MeanFunction],
-        resource_attr_range: Tuple[int, int],
-        ensemble_distribution: Dict[int, float],
-        target_transform: Optional[ScalarTargetTransform] = None,
+        mean: dict[int, MeanFunction],
+        resource_attr_range: tuple[int, int],
+        ensemble_distribution: dict[int, float],
+        target_transform: ScalarTargetTransform | None = None,
         separate_noise_variances: bool = False,
         initial_noise_variance=None,
         initial_covariance_scale=None,
@@ -64,14 +64,14 @@ class HyperTuneIndependentGPMarginalLikelihood(
         self.set_ensemble_distribution(ensemble_distribution)
 
     @property
-    def ensemble_distribution(self) -> Dict[int, float]:
+    def ensemble_distribution(self) -> dict[int, float]:
         return self._ensemble_distribution
 
-    def set_ensemble_distribution(self, distribution: Dict[int, float]):
+    def set_ensemble_distribution(self, distribution: dict[int, float]):
         assert_ensemble_distribution(distribution, set(self.mean.keys()))
         self._ensemble_distribution = distribution.copy()
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = self.target_transform(data["targets"])
         return HyperTuneIndependentGPPosteriorState(
@@ -99,9 +99,9 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
         self,
         kernel: KernelFunction,
         mean: MeanFunction,
-        resource_attr_range: Tuple[int, int],
-        ensemble_distribution: Dict[int, float],
-        target_transform: Optional[ScalarTargetTransform] = None,
+        resource_attr_range: tuple[int, int],
+        ensemble_distribution: dict[int, float],
+        target_transform: ScalarTargetTransform | None = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs,
@@ -119,13 +119,13 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
         self.set_ensemble_distribution(ensemble_distribution)
 
     @property
-    def ensemble_distribution(self) -> Dict[int, float]:
+    def ensemble_distribution(self) -> dict[int, float]:
         return self._ensemble_distribution
 
-    def set_ensemble_distribution(self, distribution: Dict[int, float]):
+    def set_ensemble_distribution(self, distribution: dict[int, float]):
         self._ensemble_distribution = distribution.copy()
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = self.target_transform(data["targets"])
         return HyperTuneJointGPPosteriorState(

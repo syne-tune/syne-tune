@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Any
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 
@@ -60,7 +60,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         alpha_init: float = 1.0,
         mean_lam_init: float = 0.5,
         gamma_init: float = 0.5,
-        delta_fixed_value: Optional[float] = None,
+        delta_fixed_value: float | None = None,
         delta_init: float = 0.5,
         max_metric_value: float = 1.0,
         **kwargs
@@ -263,7 +263,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
 
         return anp.add(mean, anp.multiply(kappa, kr_pref))
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """
         Parameter keys are "alpha", "mean_lam", "gamma", "delta" (only if not
         fixed to ``delta_fixed_value``), as well as those of ``self.kernel_x`` (prefix
@@ -280,7 +280,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
 
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
@@ -306,8 +306,8 @@ class ExponentialDecayResourcesMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass

@@ -1,10 +1,10 @@
-from typing import Dict, Any
+from typing import Any
+
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-
+from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 
 # TODO better way to support listing available searchers and tie strings
 searchers = [
@@ -53,6 +53,6 @@ def searcher_cls(searcher_name: str):
 
 
 def searcher_factory(
-    searcher_name: str, config_space: Dict[str, Any], **searcher_kwargs
+    searcher_name: str, config_space: dict[str, Any], **searcher_kwargs
 ) -> BaseSearcher:
     return searcher_cls(searcher_name)(config_space=config_space, **searcher_kwargs)

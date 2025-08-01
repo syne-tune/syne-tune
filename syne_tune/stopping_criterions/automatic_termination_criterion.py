@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import torch
-from typing import List, Dict, Any
+from typing import Any
 
 from torch import Tensor
 from botorch.models import SingleTaskGP
@@ -52,7 +52,7 @@ class AutomaticTerminationCriterion(object):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         threshold: float,
         mode: str = "min",
@@ -82,7 +82,7 @@ class AutomaticTerminationCriterion(object):
         else:
             self.multiplier = -1
 
-    def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
+    def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)

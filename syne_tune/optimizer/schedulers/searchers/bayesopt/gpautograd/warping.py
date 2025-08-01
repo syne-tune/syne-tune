@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Any
 import autograd.numpy as anp
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -58,7 +58,7 @@ class Warping(MeanFunction):
     def __init__(
         self,
         dimension: int,
-        coordinate_range: Optional[Tuple[int, int]] = None,
+        coordinate_range: tuple[int, int] | None = None,
         encoding_type: str = DEFAULT_ENCODING,
         **kwargs,
     ):
@@ -143,7 +143,7 @@ class Warping(MeanFunction):
         else:
             return f"power_{kind}_{index}"
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         size = self.upper - self.lower
         just_one = size == 1
         param_dict = dict()
@@ -157,7 +157,7 @@ class Warping(MeanFunction):
             )
         return param_dict
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         size = self.upper - self.lower
         just_one = size == 1
         for kind in ("a", "b"):
@@ -171,7 +171,7 @@ class Warping(MeanFunction):
             self.encoding.set(warping_int, warping)
 
 
-def warpings_for_hyperparameters(hp_ranges: HyperparameterRanges) -> List[Warping]:
+def warpings_for_hyperparameters(hp_ranges: HyperparameterRanges) -> list[Warping]:
     """
     It is custom to warp hyperparameters which are not categorical. This
     function creates warpings based on your configuration space.
@@ -245,7 +245,7 @@ class WarpedKernel(KernelFunction):
         checked.
     """
 
-    def __init__(self, kernel: KernelFunction, warpings: List[Warping], **kwargs):
+    def __init__(self, kernel: KernelFunction, warpings: list[Warping], **kwargs):
         super().__init__(kernel.dimension, **kwargs)
         num_warpings = len(warpings)
         assert num_warpings > 0
@@ -291,14 +291,14 @@ class WarpedKernel(KernelFunction):
             x for warping in self.warpings for x in warping.param_encoding_pairs()
         ]
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         result = dict()
         blocks = [self.kernel] + self.warpings
         for pref, block in zip(self._prefixes, blocks):
             result.update({(pref + k): v for k, v in block.get_params().items()})
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         blocks = [self.kernel] + self.warpings
         for pref, block in zip(self._prefixes, blocks):
             len_pref = len(pref)

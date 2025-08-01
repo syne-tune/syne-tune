@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
     KernelFunction,
 )
@@ -55,8 +55,8 @@ class RangeKernelFunction(KernelFunction):
         """
         return self.kernel.param_encoding_pairs()
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self.kernel.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.kernel.set_params(param_dict)

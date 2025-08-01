@@ -1,5 +1,4 @@
 import logging
-from typing import List, Union, Dict, Optional
 
 from huggingface_hub import snapshot_download
 
@@ -29,7 +28,7 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
 logger = logging.getLogger(__name__)
 
 
-def blackbox_list() -> List[str]:
+def blackbox_list() -> list[str]:
     """
     :return: list of blackboxes available
     """
@@ -38,12 +37,12 @@ def blackbox_list() -> List[str]:
 
 def load_blackbox(
     name: str,
-    custom_repo_id: Optional[str] = None,
-    yahpo_kwargs: Optional[dict] = None,
+    custom_repo_id: str | None = None,
+    yahpo_kwargs: dict | None = None,
     local_files_only: bool = False,
     force_download: bool = False,
     **snapshot_download_kwargs,
-) -> Union[Dict[str, Blackbox], Blackbox]:
+) -> dict[str, Blackbox] | Blackbox:
     """
     :param name: name of a blackbox present in the repository, see
         :func:`blackbox_list` to get list of available blackboxes. Syne Tune

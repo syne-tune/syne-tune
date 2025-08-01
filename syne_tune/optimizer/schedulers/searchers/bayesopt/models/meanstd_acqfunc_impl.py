@@ -1,4 +1,3 @@
-from typing import Dict, Optional, Set, List, Tuple
 import logging
 import itertools
 
@@ -90,7 +89,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> np.ndarray:
         assert current_best is not None
         means, stds = self._extract_mean_and_std(output_to_predictions)
@@ -102,7 +101,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> HeadWithGradient:
         assert current_best is not None
         mean, std = self._extract_mean_and_std(output_to_predictions)
@@ -168,7 +167,7 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> np.ndarray:
         means, stds = self._extract_mean_and_std(output_to_predictions)
         return np.mean(means - stds * self.kappa, axis=1)
@@ -176,7 +175,7 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> HeadWithGradient:
         mean, std = self._extract_mean_and_std(output_to_predictions)
         nf_mean = mean.size
@@ -224,7 +223,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     def __init__(
         self,
         predictor: OutputPredictor,
-        active_metric: Optional[str] = None,
+        active_metric: str | None = None,
         exponent_cost: float = 1.0,
         jitter: float = 0.01,
     ):
@@ -241,7 +240,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     def _head_needs_current_best(self) -> bool:
         return True
 
-    def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
+    def _output_to_keys_predict(self) -> dict[str, set[str]]:
         """
         The cost model may be deterministic, as the acquisition function
         only needs the mean.
@@ -254,7 +253,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> np.ndarray:
         """
         Returns minus the cost-aware expected improvement.
@@ -271,7 +270,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> HeadWithGradient:
         """
         Returns minus cost-aware expected improvement and, for each output
@@ -321,7 +320,7 @@ class ConstraintCurrentBestProvider(CurrentBestProvider):
     Here, ``current_best`` depends on two predictors, for active and constraint metric.
     """
 
-    def __init__(self, current_best_list: List[np.ndarray], num_samples_active: int):
+    def __init__(self, current_best_list: list[np.ndarray], num_samples_active: int):
         list_size = len(current_best_list)
         assert list_size > 0 and list_size % num_samples_active == 0
         self._active_and_constraint_current_best = [
@@ -329,7 +328,7 @@ class ConstraintCurrentBestProvider(CurrentBestProvider):
         ]
         self._num_samples_active = num_samples_active
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> np.ndarray | None:
         flat_pos = positions[1] * self._num_samples_active + positions[0]
         return self._active_and_constraint_current_best[flat_pos]
 
@@ -372,7 +371,7 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     def __init__(
         self,
         predictor: OutputPredictor,
-        active_metric: Optional[str] = None,
+        active_metric: str | None = None,
         jitter: float = 0.01,
     ):
         super().__init__(predictor, active_metric)
@@ -391,7 +390,7 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> np.ndarray:
         """
         Returns minus the legacy_constrained expected improvement (- CEI).
@@ -418,7 +417,7 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> HeadWithGradient:
         """
         Returns minus cost-aware expected improvement (- CEI) and, for each output predictor, the gradients

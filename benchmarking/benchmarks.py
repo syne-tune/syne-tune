@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional, List, Dict
 
 from syne_tune.blackbox_repository.conversion_scripts.scripts.tabrepo_import import (
     TABREPO_DATASETS,
@@ -15,10 +14,10 @@ class BenchmarkDefinition:
     mode: str
     blackbox_name: str
     dataset_name: str
-    max_num_evaluations: Optional[int] = None
-    surrogate: Optional[str] = None
-    surrogate_kwargs: Optional[Dict] = None
-    datasets: Optional[List[str]] = None
+    max_num_evaluations: int | None = None
+    surrogate: str | None = None
+    surrogate_kwargs: dict | None = None
+    datasets: list[str] | None = None
 
 
 n_full_evals = 200

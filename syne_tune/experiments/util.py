@@ -1,11 +1,10 @@
 import logging
-from typing import Dict, Tuple, List
 
 import pandas as pd
 
 from syne_tune.constants import ST_TUNER_TIME
 
-DataFrameGroups = Dict[Tuple[int, str], List[Tuple[str, pd.DataFrame]]]
+DataFrameGroups = dict[tuple[int, str], list[tuple[str, pd.DataFrame]]]
 
 logger = logging.getLogger(__name__)
 

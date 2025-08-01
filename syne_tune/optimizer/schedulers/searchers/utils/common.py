@@ -1,9 +1,9 @@
-from typing import Union, Dict, Callable
+from collections.abc import Callable
 
 
-Hyperparameter = Union[str, int, float]
+Hyperparameter = str | int | float
 
-Configuration = Dict[str, Hyperparameter]
+Configuration = dict[str, Hyperparameter]
 
 # Type of ``filter_observed_data``, which is (optionally) used to filter the
 # observed data in ``TuningJobState.trials_evaluations`` when determining

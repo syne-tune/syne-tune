@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from collections.abc import Callable
 
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.tuning_status import TuningStatus
@@ -20,7 +20,7 @@ class RemoveCheckpointsSchedulerMixin:
 
     def callback_for_checkpoint_removal(
         self, stop_criterion: Callable[[TuningStatus], bool]
-    ) -> Optional[TunerCallback]:
+    ) -> TunerCallback | None:
         """
         :param stop_criterion: Stopping criterion, as passed to
             :class:`~syne_tune.Tuner`

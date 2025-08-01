@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Dict, Tuple, Optional, Set, List
 from dataclasses import dataclass
 import itertools
 
@@ -20,9 +19,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 # :class:`Predictor`.
 # Note: List sizes of different entries can be different. MCMC averaging
 # is done over the Cartesian product of these lists.
-PredictionsPerOutput = Dict[str, List[Dict[str, np.ndarray]]]
+PredictionsPerOutput = dict[str, list[dict[str, np.ndarray]]]
 
-SamplePredictionsPerOutput = Dict[str, Dict[str, np.ndarray]]
+SamplePredictionsPerOutput = dict[str, dict[str, np.ndarray]]
 
 
 @dataclass
@@ -45,12 +44,12 @@ class CurrentBestProvider:
     ``(0, 0, ..., 0)``).
     """
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> np.ndarray | None:
         raise NotImplementedError
 
 
 class NoneCurrentBestProvider(CurrentBestProvider):
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> np.ndarray | None:
         return None
 
 
@@ -60,13 +59,13 @@ class ActiveMetricCurrentBestProvider(CurrentBestProvider):
     active metric only.
     """
 
-    def __init__(self, active_metric_current_best: List[np.ndarray]):
+    def __init__(self, active_metric_current_best: list[np.ndarray]):
         self._active_metric_current_best = [
             v.reshape((1, -1)) for v in active_metric_current_best
         ]
         self._constant_list = len(active_metric_current_best) == 1
 
-    def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
+    def __call__(self, positions: tuple[int, ...]) -> np.ndarray | None:
         pos = positions[0] if not self._constant_list else 0
         return self._active_metric_current_best[pos]
 
@@ -89,12 +88,12 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     Note that acquisition functions will always be *minimized*!
     """
 
-    def __init__(self, predictor: OutputPredictor, active_metric: Optional[str] = None):
+    def __init__(self, predictor: OutputPredictor, active_metric: str | None = None):
         super().__init__(predictor, active_metric)
         if isinstance(predictor, Predictor):
             # Ignore active_metric
             predictor = dictionarize_objective(predictor)
-        assert isinstance(predictor, Dict)
+        assert isinstance(predictor, dict)
         self.predictor = predictor
         self.predictor_output_names = sorted(predictor.keys())
         self.active_metric = assign_active_metric(predictor, active_metric)
@@ -109,7 +108,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         self._check_keys_predict_of_predictors()
         self._current_bests = None
 
-    def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
+    def _output_to_keys_predict(self) -> dict[str, set[str]]:
         """
         Required ``keys_predict`` for each output model. The default requires
         each output model to return "mean" and "std".
@@ -178,7 +177,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         return ActiveMetricCurrentBestProvider(active_metric_current_best)
 
     def compute_acq(
-        self, inputs: np.ndarray, predictor: Optional[OutputPredictor] = None
+        self, inputs: np.ndarray, predictor: OutputPredictor | None = None
     ) -> np.ndarray:
         if predictor is None:
             predictor = self.predictor
@@ -218,15 +217,15 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
     @staticmethod
     def _add_head_gradients(
-        grad1: Dict[str, np.ndarray], grad2: Optional[Dict[str, np.ndarray]]
-    ) -> Dict[str, np.ndarray]:
+        grad1: dict[str, np.ndarray], grad2: dict[str, np.ndarray] | None
+    ) -> dict[str, np.ndarray]:
         if grad2 is None:
             return grad1
         else:
             return {k: v + grad2[k] for k, v in grad1.items()}
 
     def compute_acq_with_gradient(
-        self, input: np.ndarray, predictor: Optional[OutputPredictor] = None
+        self, input: np.ndarray, predictor: OutputPredictor | None = None
     ) -> (float, np.ndarray):
         if predictor is None:
             predictor = self.predictor
@@ -315,7 +314,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> np.ndarray:
         """
         If mean has ``nf > 1`` columns, both ``std`` and ``current_best`` are supposed to
@@ -333,7 +332,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
-        current_best: Optional[np.ndarray],
+        current_best: np.ndarray | None,
     ) -> HeadWithGradient:
         """
         Computes both head value and head gradients, for a single input.

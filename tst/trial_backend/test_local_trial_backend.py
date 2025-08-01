@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 import pytest
 
@@ -151,14 +151,14 @@ def test_start_config_previous_checkpoint(caplog):
     assert results == ["nothing", "nothing", "state-0", "state-1"]
 
 
-def _map_gpu(gpu: int, gpus_to_use: Optional[List[int]]) -> int:
+def _map_gpu(gpu: int, gpus_to_use: list[int] | None) -> int:
     return gpu if gpus_to_use is None else gpus_to_use[gpu]
 
 
 def _assert_cuda_visible_devices(
-    env: Dict[str, Any],
-    gpus_to_use: Optional[List[int]],
-    visible_devices: List[int],
+    env: dict[str, Any],
+    gpus_to_use: list[int] | None,
+    visible_devices: list[int],
 ):
     cuda_visible_devices = ",".join(
         str(_map_gpu(gpu, gpus_to_use)) for gpu in visible_devices

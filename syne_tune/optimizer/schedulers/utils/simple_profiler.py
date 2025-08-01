@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 import time
 import logging
 from dataclasses import dataclass
@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProfilingBlock:
-    meta: Dict[str, Any]
+    meta: dict[str, Any]
     time_stamp: float
-    durations: Dict[str, List[float]]
+    durations: dict[str, list[float]]
 
 
 class SimpleProfiler:
@@ -36,7 +36,7 @@ class SimpleProfiler:
         self.meta_keys = None
         self.prefix = ""
 
-    def begin_block(self, meta: Dict[str, Any]):
+    def begin_block(self, meta: dict[str, Any]):
         assert not self.start_time, "Timers for these tags still running:\n{}".format(
             self.start_time.keys()
         )
@@ -98,7 +98,7 @@ class SimpleProfiler:
             )
         self.start_time = dict()
 
-    def records_as_dict(self) -> Dict[str, Any]:
+    def records_as_dict(self) -> dict[str, Any]:
         """
         Return records as a dict of lists, can be converted into Pandas
         data-frame by:
