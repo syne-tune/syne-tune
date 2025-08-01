@@ -6,12 +6,12 @@ methods like successive halving and Hyperband. These can be run with
 synchronous or asynchronous decision-making. The most important generic
 templates at the moment are:
 
-* `FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`__:
+* `SingleFidelityScheduler <random_search.html#randomsearcher>`__:
   *Full evaluation* scheduler, baseclass for many others. See also
-  :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
-* `HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`__:
+  :class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`.
+* `AsynchronousSuccessiveHalving <extend_async_hb.html#asynchronoussuccessivehalving>`__:
   Asynchronous successive halving and Hyperband. See also
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+  :class:`~syne_tune.optimizer.schedulers.AsynchronousSuccessiveHalving`.
 * `SynchronousHyperbandScheduler <extend_sync_hb.html#synchronous-hyperband>`__:
   Synchronous successive halving and Hyperband. See also
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
@@ -25,7 +25,7 @@ you may even get more than you bargained for.
 In this section, we will walk through an example of how to furnish the
 asynchronous successive halving scheduler with a specific searcher.
 
-HyperbandScheduler
+AsynchronousSuccessiveHalving
 ------------------
 
 Details about asynchronous successive halving and Hyperband are given in the
@@ -34,9 +34,9 @@ multi-fidelity scheduler, where trials report intermediate results (e.g.,
 validation error at the end of each epoch of training). We can formalize this
 notion by the concept of *resource* :math:`r = 1, 2, 3, \dots` (e.g.,
 :math:`r` is the number of epochs trained). A generic implementation of this
-method is provided in class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+method is provided in class:`~syne_tune.optimizer.schedulers.AsynchronousSuccessiveHalving`.
 Let us have a look at its arguments not shared with the base class
-class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
+class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`:
 
 * A mandatory argument is ``resource_attr``, which is the name of a field in
   the ``result`` dictionary passed to ``scheduler.on_trial_report``. This field
@@ -44,7 +44,7 @@ class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
   For example, if a trial reports validation error at the end of the 5-th epoch
   of training, ``result`` contains ``{resource_attr: 5}``.
 * We already noted the arguments ``max_resource_attr`` and ``max_t`` in
-  class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. They are used to
+  class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`. They are used to
   determine the maximum resource :math:`r_{max}` (e.g., the total number of
   epochs a trial is to be trained, if not stopped before). As discussed in
   detail `here <../multifidelity/mf_setup.html#the-launcher-script>`__, it is
@@ -53,7 +53,7 @@ class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
   name should be passed in ``max_resource_attr``. Now, every configuration sent
   to the training script contains :math:`r_{max}`, which should not be hardcoded
   in the script. Moreover, if ``max_resource_attr`` is used, a pause-and-resume
-  scheduler (e.g., :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+  scheduler (e.g., :class:`~syne_tune.optimizer.schedulers.AsynchronousSuccessiveHalving`
   with ``type="stopping"``) can modify this field in the configuration of a trial
   which is only to be run until a certain resource less than :math:`r_{max}`.
   Nevertheless, if ``max_resource_attr`` is not used, then :math:`r_{max}` has
@@ -75,7 +75,7 @@ Kernel Density Estimator Searcher
 ---------------------------------
 
 One of the most flexible ways of extending
-:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is to provide it with
+:class:`~syne_tune.optimizer.schedulers.AsynchronousSuccessiveHalving` is to provide it with
 a novel `searcher <first_example.html#searchers-and-schedulers>`__. In order to
 understand how this is done, we will walk through
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.MultiFidelityKernelDensityEstimator`
@@ -94,7 +94,7 @@ We begin with the base class
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`,
 which works with schedulers implementing
 :class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher`
-(the most important one being :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`),
+(the most important one being :class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`),
 but already implements most of what is needed in the multi-fidelity context.
 
 * The code does quite some bookkeeping concerned with mapping configurations to
@@ -138,7 +138,7 @@ inherits from ``KernelDensityEstimator``:
 * ``configure_scheduler`` restricts usage to schedulers implementing
   :class:`~syne_tune.optimizer.schedulers.multi_fidelity.MultiFidelitySchedulerMixin`,
   which all multi-fidelity schedulers need to inherit from (examples are
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for asynchronous
+  :class:`~syne_tune.optimizer.schedulers.AsynchronousSuccessiveHalving` for asynchronous
   Hyperband and
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
   for synchronous Hyperband). It also calls
@@ -157,7 +157,7 @@ inherits from ``KernelDensityEstimator``:
 
 While being functional and simple, the
 ``MultiFidelityKernelDensityEstimator`` does not showcase the full range of
-information exchanged between ``HyperbandScheduler`` and a searcher. In
+information exchanged between ``AsynchronousSuccessiveHalving`` and a searcher. In
 particular:
 
 * ``register_pending``: BOHB does not take pending evaluations into account.
@@ -173,7 +173,7 @@ Moreover, it can be configured with a Gaussian process model and an acquisition
 function, which is optimized in a gradient-based manner.
 
 Moreover, as already noted `here <first_example.html#searchers-and-schedulers>`__,
-``HyperbandScheduler`` also allows to configure the decision rule for
+``AsynchronousSuccessiveHalving`` also allows to configure the decision rule for
 stop/continue or pause/resume as part of ``on_trial_report``. Examples for this
 are found in
 :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,

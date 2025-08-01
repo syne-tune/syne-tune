@@ -18,7 +18,6 @@ work for your setup.
    basics_randomsearch
    basics_bayesopt
    basics_asha
-   basics_mobster
    basics_promotion
    basics_backend
    basics_outlook

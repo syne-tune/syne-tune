@@ -10,23 +10,23 @@ would make sure that the same configuration is not suggested twice.
 In this section, we walk through the Syne Tune implementation of random search,
 thereby discussing some additional concepts. This will also be a first example
 of the modular concept just described: random search is implemented as generic
-:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` configured by a
+:class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler` configured by a
 :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
 A self-contained implementation of random search would be shorter. On the other
 hand, as seen in
-:mod:`syne_tune.optimizer.baselines`, ``FIFOScheduler`` also powers GP-based
+:mod:`syne_tune.optimizer.baselines`, ``SingleFidelityScheduler`` also powers GP-based
 Bayesian optimization, grid search, BORE, regularized evolution and constrained
 BO simply by specifying different searchers. A number of concepts, to be
 discussed here, have to be implemented once only and can be maintained much more
 easily.
 
-FIFOScheduler and RandomSearcher
+SingleFidelityScheduler and RandomSearcher
 --------------------------------
 
 We will have a close look at
-:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` and
+:class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler` and
 :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`. Let us first
-consider the arguments of ``FIFOScheduler``:
+consider the arguments of ``SingleFidelityScheduler``:
 
 * ``searcher``, ``search_options``: These are used to configure the scheduler
   with a searcher. For ease of use, ``searcher`` can be a name, and additional
@@ -38,7 +38,7 @@ consider the arguments of ``FIFOScheduler``:
   in ``SimpleScheduler``.
 * ``random_seed``: Several pseudo-random number generators may be used in
   scheduler and searcher. Seeds for these are drawn from a random seed generator
-  maintained in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, whose
+  maintained in :class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`, whose
   seed can be passed here. As a general rule, all schedulers and searchers
   implemented in Syne Tune carefully manage such generators (and contributed
   schedulers are strongly encourage to adopt this pattern).
@@ -52,7 +52,7 @@ consider the arguments of ``FIFOScheduler``:
   to use ``max_resource_attr``. More details are given
   `below <extend_async_hb.html#hyperbandscheduler>`__.
 
-The most important use case is to configure ``FIFOScheduler`` with a new
+The most important use case is to configure ``SingleFidelityScheduler`` with a new
 searcher, and we will concentrate on this one. First, the base class of all
 searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
 
@@ -93,7 +93,7 @@ searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
 * ``get_state``, ``clone_from_state``: Used in order to serialize and
   de-serialize the searcher
 * ``debug_log``: There is some built-in support for a detailed log, embedded in
-  ``FIFOScheduler`` and the Syne Tune searchers.
+  ``SingleFidelityScheduler`` and the Syne Tune searchers.
 
 Below ``BaseSearcher``, there is
 :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`, which

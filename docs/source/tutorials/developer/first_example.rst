@@ -73,18 +73,18 @@ schedulers which can be implemented in Syne Tune, some examples are:
 * Simple “full evaluation” schedulers. These suggest configurations for new
   trials, but do not try to interact with running trials, even if the latter
   post intermediate results. A basic example is
-  :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, to be discussed
-  `below <random_search.html#fifoscheduler-and-randomsearcher>`__.
+  :class:`~syne_tune.optimizer.schedulers.SingleFidelityScheduler`, to be discussed
+  `below <random_search.html#randomsearcher>`__.
 * Early-stopping schedulers. These require trials to post intermediate results
   (e.g., validation errors after every epoch), and their ``on_trial_result``
   may stop underperforming trials early. An example is
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  :class:`~syne_tune.optimizer.schedulers.ASHA` with
   ``type="stopping"``.
 * Pause-and-resume schedulers. These require trials to post intermediate
   results (e.g., validation errors after every epoch). Their ``on_trial_result``
   may pause trials at certain points in time, and their ``_suggest`` may decide
   to resume a paused trial instead of starting a new one. An example is
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  :class:`~syne_tune.optimizer.schedulers.ASHA` with
   ``type="promotion"``.
 
 .. note::

@@ -1,125 +1,58 @@
+.. _syne_tune_concepts:
+
 Concepts and Terminology
 ========================
 
-Syne Tune is a library for large-scale distributed hyperparameter optimization
-(HPO). Here is some basic terminology. A specific set of values for
-hyperparameters is called a *configuration*. The *configuration space* is the
-domain of a configuration, prescribing type and valid range of each hyperparameter.
-Finally, a *trial* refers to an evaluation of the underlying machine learning
-model on a given configuration. A trial may result in one or more observations, for
-example the validation error after each epoch of training the model. Some HPO
-algorithms may pause a trial and restart it later in time.
-
-HPO experiments in Syne Tune involve the interplay between three components:
-*Tuner*, *Backend*, and *Scheduler*.
-
+To get started, it's helpful to understand a few key concepts.
+A **configuration** is a specific set of hyperparameter values (e.g., ``learning_rate=0.01``, ``num_layers=2``). The **configuration space** defines the range of possible values for each hyperparameter. A **trial** is a single training run that evaluates a specific configuration.
+In Syne Tune, an HPO experiment is coordinated by four main components: the **Tuner**, **Backend**, **Scheduler**, and **Searcher**.
 
 Tuner
 -----
-
-The :class:`~syne_tune.Tuner` orchestrates the overall search for the best
-configuration. It does so by interacting with *scheduler* and *backend*. It
-queries the scheduler for a new configuration to evaluate whenever a worker is
-free, and passes this suggestion to the backend for the execution of this trial.
-
-
-Scheduler
----------
-
-In Syne Tune, HPO algorithms are called *schedulers* (base class
-:class:`~syne_tune.optimizer.scheduler.TrialScheduler`). They search for a new,
-most promising configuration and suggest it as a new trial to the tuner. Some
-schedulers may decide to resume a paused trial instead of suggesting a new one.
-Schedulers may also be in charge of stopping running trials. Syne Tune supports
-`many schedulers <../../getting_started.html#supported-hpo-methods>`__, including
-`multi-fidelity <../multifidelity/README.html>`__ methods.
-
+The :class:`~syne_tune.Tuner` is the main entry point for your HPO experiment. You interact with it directly to start, stop, and monitor the optimization process. The Tuner acts as a conductor, coordinating the other components to find the best hyperparameter configuration. It requests new configurations to test, sends them to the backend to be executed, and collects the results.
 
 Backend
 -------
+The **Backend** is the workhorse of the experiment. It is responsible for executing the actual training code for each trial. Syne Tune provides different backends for different scenarios:
 
-The *backend* module is responsible for starting, stopping, pausing and resuming
-trials, as well as accessing results reported by trials and their statuses (base
-class :class:`~syne_tune.backend.trial_backend.TrialBackend`). Syne Tune currently supports three
-execution backends to facilitate experimentations: **local backend**,
-**Python backend**, and **simulator backend**.
-Recall that an HPO experiment is defined by two scripts. First, a launcher script
-which configures the configuration space, the backend, and the scheduler, then
-starts the tuning loop. Second, a training script, in which the machine learning
-model of interest (e.g., a deep neural network, or gradient boosted decision trees)
-is trained for a fixed hyperparameter configuration, and some validation metric is
-reported, either at the end or after each epoch of training. It is the responsibility
-of the backend to execute the training script for different configurations, often in
-parallel, and to relay their reports back to the tuner.
+*   **Local Backend**: Runs trials as separate processes on the same machine where your script is launched. This is ideal for getting started or for using a single powerful machine with multiple GPUs.
+*   **Python Backend**: Works the same as the local backend but allows you to pass a Python function that defines the training logic.
+*   **Simulator Backend**: Runs experiments on pre-computed data (benchmarks). This is extremely fast and useful for testing new HPO algorithms or for academic research, as it allows for reproducible and low-cost comparisons.
 
+Searcher and Scheduler: The Brains of the Operation
+---------------------------------------------------
+The **Searcher** and **Scheduler** work together to decide which hyperparameter configurations to test and for how long. This is where the "intelligence" of the HPO process lies. Although they work closely, they have distinct responsibilities.
 
-Local Backend
-~~~~~~~~~~~~~
+Searcher
+~~~~~~~~
+The **Searcher** is responsible for **proposing new hyperparameter configurations**. Think of it as the component that explores the search space. It implements a specific search algorithm to decide which configuration to try next.
 
-Class :class:`~syne_tune.backend.LocalBackend`. This backend runs
-each training job locally, on the same machine as the tuner. Each training job is
-run as a subprocess. Importantly, this means that the *number of workers*, as
-specified by ``n_workers`` passed to :class:`~syne_tune.Tuner`, must be smaller or
-equal to the number of independent resources on this machine, e.g. the number of
-GPUs or CPU cores. Experiments with the local backend can either be launched on
-your current machine (in which case this needs to own the resources you are
-requesting, such as GPUs). The figure
-below demonstrates the local backend. On the left, both scripts are executed on
-the local machine, while on the right, scripts are run remotely.
+Examples of searchers include:
 
-.. |image1| image:: img/local1.png
-            :width: 200
-.. |image2| image:: img/local2.png
-            :width: 530
+*   **Random Search**: Samples configurations randomly from the search space.
+*   **Bayesian Optimization**: Builds a probabilistic model of the objective function and uses it to select the most promising configurations to evaluate.
+*   **Grid Search**: Exhaustively tries all combinations of a predefined set of hyperparameter values.
 
-+----------------------------------------------------------+----------------------------------------------------------------------+
-| |image1|                                                 | |image2|                                                             |
-+==========================================================+======================================================================+
-| Local backend on a local machine                         | Local backend when running on a cloud instance for example SageMaker |
-+----------------------------------------------------------+----------------------------------------------------------------------+
+The searcher's only job is to say: "Here is a new set of hyperparameters I think we should try."
 
-Syne Tune support rotating multiple GPUs on the machine, assigning the next trial
-to the least busy GPU, e.g. the GPU with the smallest amount of trials currently
-running.
-
-The local backend is simple and has very small delays for starting, stopping, or
-resuming trials. However, it also has shortcomings. Most importantly, the number
-of trials which can run concurrently, is limited by the resources of the chosen
-instance. If GPUs are required, each trial is limited to using a single GPU, so
-that several trials can run in parallel.
-
-The **Python backend** (:class:`~syne_tune.backend.PythonBackend`) is simply a
-wrapper around the local backend, which allows you to define an experiment in a
-single script (instead of two).
+Syne Tune distinguishes between following classes of searchers:
+- **BaseSearchers**: These are the core search algorithms that generate new configurations based on the search space and past results.
+- **Single-Objective Searchers**: Focus on optimizing a single objective metric (e.g., validation accuracy).
+- **LastValueMultiFidelitySearcher**: This implements a multi-fidelity search strategy as described by `Salinas et al`<>__, where the last observed value for each trial is passed to the searcher. It expects a SingleObjectveSearcher as input.
 
 
-Simulator Backend
-~~~~~~~~~~~~~~~~~
+Scheduler
+~~~~~~~~~
+The **Scheduler** manages the overall experiment and the lifecycle of each trial. It takes the configurations suggested by the Searcher and decides **how to run them and for how long**. A key feature of modern HPO is the ability to stop unpromising trials early, and this logic lives in the scheduler.
 
-Class :class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend`.
-This backend is useful for comparing HPO methods, or variations of such methods.
-It runs on a *tabulated or surrogate benchmark*, where validation metric data
-typically obtained online by running a training script has been precomputed
-offline. In a corporate setting, simulation experiments are useful for unit and
-regression testing, but also to speed up evaluations of prototypes. More details
-are given `here <../benchmarking/bm_simulator.html>`__, and in
-`this example <../../examples.html#launch-hpo-experiment-with-simulator-backend>`__.
+For example, a simple scheduler would run each trial to completion, whereas a more advanced method like **Asynchronous Successive Halving (ASHA)** would stops the worst-performing trials early.
 
-The main advantage of the simulator backend is that it allows for realistic
-experimentation at very low cost, and running order of magnitude faster than
-real time. A drawback is the upfront cost of generating a tabulated benchmark
-of sufficient complexity to match the real problem of interest.
+**The Key Difference:**
 
+A helpful way to understand the distinction is:
 
-Importantly, Syne Tune is agnostic to which execution backend is being used. You
-can easily switch between backends by changing the ``trial_backend`` argument
-in :class:`~syne_tune.Tuner`:
+*   The **Searcher** answers the question: "**What** configuration should we try next?"
+*   The **Scheduler** answers the question: "**How** should we run this trial and for how long?"
 
-* `launch_height_baselines.py <../../examples.html#launch-hpo-experiment-locally>`__
-  provides an example for launching experiments with the local backend
-* `launch_height_python_backend.py <../../examples.html#launch-hpo-experiment-with-python-backend>`__
-  provides an example for launching experiments with the Python backend
-* `launch_height_sagemaker.py <../../examples.html#launch-hpo-experiment-with-sagemaker-backend>`__
-  provides an example for launching experiments with the SageMaker backend
-* `launch_nasbench201_simulated.py <../../examples.html#launch-hpo-experiment-with-simulator-backend>`__
-  provides an example for launching experiments with the simulator backend
+A scheduler uses a searcher to get new configurations. For instance,
+you can pair an `ASHA` scheduler with a `CQR` searcher. In this setup, `RandomSearch` provides the novel configurations, and `ASHA` manages the trials, promoting the good ones and stopping the bad ones early to save time and resources. This modular design allows you to mix and match different search and scheduling strategies to create powerful and customized HPO workflows.

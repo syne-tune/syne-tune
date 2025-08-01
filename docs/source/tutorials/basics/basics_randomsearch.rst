@@ -82,8 +82,7 @@ Let us walk through the script, keeping this special case in mind:
   configurations for new trials, and also to make scheduling decisions about
   running trials. Most schedulers supported in Syne Tune can be imported from
   :mod:`syne_tune.optimizer.baselines`. In our example, we use
-  :class:`~syne_tune.optimizer.baselines.RandomSearch`, see also
-  :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
+  :class:`~syne_tune.optimizer.baselines.RandomSearch`.
 
   Schedulers need to know how the target metric is referred to in the ``report``
   call of the training script (``metric``), and whether this criterion is to
@@ -178,5 +177,4 @@ the order given there.
    for ``points_to_evaluate`` is ``[dict()]``, namely one configuration where
    all values are selected by the mid-point rule. If you want to run pure
    random search from the start (which is not recommended), you need to set
-   ``points_to_evaluate=[]``. Details are provided
-   `here <../../schedulers.html#fifoscheduler>`__.
+   ``points_to_evaluate=[]``.

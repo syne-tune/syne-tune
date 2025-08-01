@@ -17,7 +17,7 @@ experimental. Here is an incomplete overview:
   `this tutorial <../benchmarking/README.html>`__, see also the
   `FAQ <../../faq.html#how-can-i-run-many-experiments-in-parallel>`__.
 * **Multi-fidelity Schedulers**: Syne Tune provides many more multi-fidelity
-  schedulers than ASHA and MOBSTER. An overview and categorization of supported
+  schedulers than ASHA. An overview and categorization of supported
   methods is given in `this tutorial <../multifidelity/README.html>`__.
 * **Population-based Training**: This is a popular scheduler for tuning
   reinforcement learning, where optimization hyperparameters like learning rate

@@ -22,14 +22,6 @@ import syne_tune
 sys.path.insert(0, os.path.abspath("../../"))
 
 
-def copy_notebooks_into_docs_folder(app):
-    # .ipynb files must be inside the docs/ folder for Jupyter to be able to convert them
-    source = Path(__file__).parent.parent.parent / "examples" / "notebooks"
-    destination = Path(__file__).parent / "notebooks"
-    print(f"Jupyter notebook source path: {source}; destination path: {destination}")
-    shutil.copytree(source, destination, dirs_exist_ok=True)
-
-
 def run_apidoc(app):
     """Generate doc stubs using sphinx-apidoc."""
     module_dir = os.path.join(app.srcdir, "../../")
@@ -70,7 +62,6 @@ def run_apidoc(app):
 
 def setup(app):
     """Register our sphinx-apidoc hook."""
-    app.connect("builder-inited", copy_notebooks_into_docs_folder)
     app.connect("builder-inited", run_apidoc)
 
 
