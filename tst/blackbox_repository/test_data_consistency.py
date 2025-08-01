@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional, List
 import pytest
 import numpy as np
 
@@ -20,8 +19,8 @@ class BenchmarkDefinition:
     blackbox_name: str
     dataset_name: str
     max_resource_attr: str
-    surrogate: Optional[str] = None
-    surrogate_kwargs: Optional[dict] = None
+    surrogate: str | None = None
+    surrogate_kwargs: dict | None = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -108,7 +107,7 @@ def create_blackbox(benchmark: BenchmarkDefinition):
     return blackbox
 
 
-def _assert_strictly_increasing(elapsed_times: List[float], error_prefix: str):
+def _assert_strictly_increasing(elapsed_times: list[float], error_prefix: str):
     error_msg_parts = []
     for pos, (et1, et2) in enumerate(zip(elapsed_times[:-1], elapsed_times[1:])):
         if et1 >= et2:
@@ -120,7 +119,7 @@ def _assert_strictly_increasing(elapsed_times: List[float], error_prefix: str):
     assert not error_msg, error_msg
 
 
-def _assert_no_extreme_deviations(elapsed_times: List[float], error_prefix: str):
+def _assert_no_extreme_deviations(elapsed_times: list[float], error_prefix: str):
     pairs = list(zip(elapsed_times[:-1], elapsed_times[1:]))
     epoch_times = [et2 - et1 for et1, et2 in pairs]
     median_val = np.median(epoch_times)

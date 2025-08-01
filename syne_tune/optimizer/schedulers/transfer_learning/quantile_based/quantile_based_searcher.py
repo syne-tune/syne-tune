@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any, Tuple
+from typing import Any
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
@@ -86,9 +86,9 @@ def eval_model(model_pipeline, X, y):
 def subsample(
     X: pd.DataFrame,
     y: np.array,
-    max_samples: Optional[int] = 10000,
+    max_samples: int | None = 10000,
     random_state: np.random.RandomState = None,
-) -> Tuple[pd.DataFrame, np.array]:
+) -> tuple[pd.DataFrame, np.array]:
     """
     Subsample both X and y with `max_samples` elements. If `max_samples` is not set then X and y are returned as such
     and if it is set, the index of X is reset.
@@ -134,8 +134,8 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
         random_seed: int = None,
@@ -167,13 +167,13 @@ class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         pass
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> dict[str, Any] | None:
         samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
         candidate = self.X_candidates.loc[np.argmin(samples)]
         return dict(candidate)

@@ -1,7 +1,7 @@
 import numpy as np
 import autograd.numpy as anp
 from autograd.builtins import isinstance
-from typing import List, Optional, Dict, Any
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -40,14 +40,14 @@ class GaussianProcessModel:
         return self._random_state
 
     @property
-    def states(self) -> Optional[List[PosteriorState]]:
+    def states(self) -> list[PosteriorState] | None:
         """
         :return: Current posterior states (one per MCMC sample; just a single
             state if model parameters are optimized)
         """
         raise NotImplementedError
 
-    def fit(self, data: Dict[str, Any]):
+    def fit(self, data: dict[str, Any]):
         """
         Adjust model parameters based on training data ``data``. Can be done via
         optimization or MCMC sampling. The posterior states are computed at the
@@ -57,7 +57,7 @@ class GaussianProcessModel:
         """
         raise NotImplementedError
 
-    def recompute_states(self, data: Dict[str, Any]):
+    def recompute_states(self, data: dict[str, Any]):
         """
         Recomputes posterior states for current model parameters.
 
@@ -169,7 +169,7 @@ class GaussianProcessModel:
         return _concatenate_samples(samples_list)
 
 
-def _concatenate_samples(samples_list: List[anp.ndarray]) -> anp.ndarray:
+def _concatenate_samples(samples_list: list[anp.ndarray]) -> anp.ndarray:
     return anp.concatenate(samples_list, axis=-1)
 
 
@@ -181,7 +181,7 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
 
     def __init__(
         self,
-        optimization_config: Optional[OptimizationConfig] = None,
+        optimization_config: OptimizationConfig | None = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):
@@ -193,14 +193,14 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
         self.optimization_config = optimization_config
 
     @property
-    def states(self) -> Optional[List[PosteriorState]]:
+    def states(self) -> list[PosteriorState] | None:
         return self._states
 
     @property
     def likelihood(self) -> MarginalLikelihood:
         raise NotImplementedError
 
-    def fit(self, data: Dict[str, Any]):
+    def fit(self, data: dict[str, Any]):
         """
         Fit the model parameters by optimizing the marginal likelihood,
         and set posterior states.
@@ -262,23 +262,23 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
         # Recompute posterior state for new hyperparameters
         self._recompute_states(data)
 
-    def _set_likelihood_params(self, params: Dict[str, Any]):
+    def _set_likelihood_params(self, params: dict[str, Any]):
         for param in self.likelihood.collect_params().values():
             vec = params.get(param.name)
             if vec is not None:
                 param.set_data(vec)
 
-    def recompute_states(self, data: Dict[str, Any]):
+    def recompute_states(self, data: dict[str, Any]):
         self._recompute_states(data)
 
-    def _recompute_states(self, data: Dict[str, Any]):
+    def _recompute_states(self, data: dict[str, Any]):
         self.likelihood.data_precomputations(data)
         self._states = [self.likelihood.get_posterior_state(data)]
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self.likelihood.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self.likelihood.set_params(param_dict)
 
     def reset_params(self):

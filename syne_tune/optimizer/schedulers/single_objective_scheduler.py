@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Union
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -30,10 +30,10 @@ class SingleObjectiveScheduler(SingleFidelityScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
+        do_minimize: bool | None = True,
+        searcher: str | SingleObjectiveBaseSearcher | None = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
     ):

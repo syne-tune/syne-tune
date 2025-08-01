@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, List, Tuple, Optional
+from collections.abc import Callable
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     OptimizationConfig,
@@ -59,12 +59,12 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         self,
         kernel: KernelFunction,
         mean_factory: Callable[[int], MeanFunction],
-        resource_attr_range: Tuple[int, int],
-        target_transform: Optional[ScalarTargetTransform] = None,
+        resource_attr_range: tuple[int, int],
+        target_transform: ScalarTargetTransform | None = None,
         separate_noise_variances: bool = False,
-        initial_noise_variance: Optional[float] = None,
-        initial_covariance_scale: Optional[float] = None,
-        optimization_config: Optional[OptimizationConfig] = None,
+        initial_noise_variance: float | None = None,
+        initial_covariance_scale: float | None = None,
+        optimization_config: OptimizationConfig | None = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):
@@ -85,7 +85,7 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         }
         self._likelihood = None  # Delayed creation
 
-    def create_likelihood(self, rung_levels: List[int]):
+    def create_likelihood(self, rung_levels: list[int]):
         """
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.

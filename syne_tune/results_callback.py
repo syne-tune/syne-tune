@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Any
 from time import perf_counter
 import copy
 import pandas as pd
@@ -27,7 +27,7 @@ class ExtraResultsComposer:
     functions are not.
     """
 
-    def __call__(self, tuner) -> Optional[Dict[str, Any]]:
+    def __call__(self, tuner) -> dict[str, Any] | None:
         """
         Called in :meth:`StoreResultsCallback.on_trial_result`. The dictionary
         returned is appended (as extra columns) to the results dataframe.
@@ -39,7 +39,7 @@ class ExtraResultsComposer:
         """
         raise NotImplementedError
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         """
         :return: Key names of dictionaries returned in :meth:`__call__`, or
             ``[]`` if nothing is returned
@@ -63,7 +63,7 @@ class StoreResultsCallback(TunerCallback):
     def __init__(
         self,
         add_wallclock_time: bool = True,
-        extra_results_composer: Optional[ExtraResultsComposer] = None,
+        extra_results_composer: ExtraResultsComposer | None = None,
     ):
         self.results = []
         self.csv_file = None
@@ -73,7 +73,7 @@ class StoreResultsCallback(TunerCallback):
         self._start_time_stamp = None
         self._tuner = None
 
-    def _set_time_fields(self, result: Dict[str, Any]):
+    def _set_time_fields(self, result: dict[str, Any]):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the backend)
@@ -81,14 +81,14 @@ class StoreResultsCallback(TunerCallback):
         if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
 
-    def _append_extra_results(self, result: Dict[str, Any]):
+    def _append_extra_results(self, result: dict[str, Any]):
         if self._extra_results_composer is not None:
             extra_results = self._extra_results_composer(self._tuner)
             if extra_results is not None:
                 result.update(extra_results)
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         assert (
             self.save_results_at_frequency is not None

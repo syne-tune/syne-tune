@@ -1,5 +1,4 @@
 import logging
-from typing import List
 import numpy as np
 
 try:
@@ -35,7 +34,7 @@ def hypervolume(
     return indicator_fn(results_array)
 
 
-def linear_interpolate(hv_indicator: np.ndarray, indices: List[int]):
+def linear_interpolate(hv_indicator: np.ndarray, indices: list[int]):
     for first, last in zip(indices[:-1], indices[1:]):
         num = last - first + 1
         v_first = hv_indicator[first]

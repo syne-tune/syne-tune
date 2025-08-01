@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional
 import numpy as np
 import logging
 
@@ -63,9 +62,9 @@ class GaussProcAdditivePredictor(BasePredictor):
         self,
         state: TuningJobState,
         gpmodel: GaussianProcessLearningCurveModel,
-        fantasy_samples: List[FantasizedPendingEvaluation],
+        fantasy_samples: list[FantasizedPendingEvaluation],
         active_metric: str,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
+        filter_observed_data: ConfigurationFilter | None = None,
         normalize_mean: float = 0.0,
         normalize_std: float = 1.0,
     ):
@@ -75,7 +74,7 @@ class GaussProcAdditivePredictor(BasePredictor):
         self.std = normalize_std
         self.fantasy_samples = fantasy_samples
 
-    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+    def predict(self, inputs: np.ndarray) -> list[dict[str, np.ndarray]]:
         """
         Input features ``inputs`` are w.r.t. extended configs ``(x, r)``.
 
@@ -99,8 +98,8 @@ class GaussProcAdditivePredictor(BasePredictor):
         return predictions_list
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: list[dict[str, np.ndarray]]
+    ) -> list[np.ndarray]:
         poster_states = self.posterior_states
         assert (
             poster_states is not None
@@ -124,7 +123,7 @@ class GaussProcAdditivePredictor(BasePredictor):
         return False
 
     @property
-    def posterior_states(self) -> Optional[List[GaussProcAdditivePosteriorState]]:
+    def posterior_states(self) -> list[GaussProcAdditivePosteriorState] | None:
         return self._gpmodel.states
 
 
@@ -152,8 +151,8 @@ class GaussProcAdditiveEstimator(Estimator):
         active_metric: str,
         config_space_ext: ExtendedConfiguration,
         normalize_targets: bool = False,
-        debug_log: Optional[DebugLogPrinter] = None,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
+        debug_log: DebugLogPrinter | None = None,
+        filter_observed_data: ConfigurationFilter | None = None,
     ):
         self._gpmodel = gpmodel
         self.active_metric = active_metric
@@ -171,7 +170,7 @@ class GaussProcAdditiveEstimator(Estimator):
         self.normalize_targets = normalize_targets
 
     @property
-    def debug_log(self) -> Optional[DebugLogPrinter]:
+    def debug_log(self) -> DebugLogPrinter | None:
         return self._debug_log
 
     def get_params(self):
@@ -243,7 +242,7 @@ class GaussProcAdditiveEstimator(Estimator):
         )
 
     def predictor_for_fantasy_samples(
-        self, state: TuningJobState, fantasy_samples: List[FantasizedPendingEvaluation]
+        self, state: TuningJobState, fantasy_samples: list[FantasizedPendingEvaluation]
     ) -> Predictor:
         """
         Same as ``model`` with ``fit_params=False``, but ``fantasy_samples`` are

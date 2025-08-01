@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import autograd.numpy as anp
 from autograd.tracer import getval
 
@@ -70,10 +70,10 @@ class IdentityTargetTransform(ScalarTargetTransform):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         pass
 
 
@@ -179,10 +179,10 @@ class BoxCoxTargetTransform(ScalarTargetTransform):
     def set_boxcox_lambda(self, boxcox_lambda):
         self.encoding.set(self.boxcox_lambda_internal, boxcox_lambda)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {BOXCOX_LAMBDA_NAME: self.get_boxcox_lambda()}
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         if not self._boxcox_lambda_fixed:
             self.set_boxcox_lambda(param_dict[BOXCOX_LAMBDA_NAME])
 

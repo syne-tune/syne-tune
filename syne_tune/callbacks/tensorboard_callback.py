@@ -1,7 +1,7 @@
 import numbers
 import os
 from time import perf_counter
-from typing import Optional, List, Dict, Any
+from typing import Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -29,9 +29,9 @@ class TensorboardCallback(TunerCallback):
 
     def __init__(
         self,
-        ignore_metrics: Optional[List[str]] = None,
-        target_metric: Optional[str] = None,
-        mode: Optional[str] = None,
+        ignore_metrics: list[str] | None = None,
+        target_metric: str | None = None,
+        mode: str | None = None,
         log_hyperparameters: bool = True,
     ):
         if mode is None:
@@ -57,7 +57,7 @@ class TensorboardCallback(TunerCallback):
         self.output_path = None
         self.log_hyperparameters = log_hyperparameters
 
-    def _set_time_fields(self, result: Dict[str, Any]):
+    def _set_time_fields(self, result: dict[str, Any]):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the backend)
@@ -66,7 +66,7 @@ class TensorboardCallback(TunerCallback):
             result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp
 
     def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+        self, trial: Trial, status: str, result: dict[str, Any], decision: str
     ):
         self._set_time_fields(result)
         walltime = result[ST_TUNER_TIME]

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
@@ -130,7 +130,7 @@ class SkipNoMaxResourcePredicate(SkipOptimizationPredicate):
         self.lastrec_max_resource_cases = None
 
     def _num_max_resource_cases(self, state: TuningJobState):
-        def is_max_resource(metrics: Dict[str, Any]) -> int:
+        def is_max_resource(metrics: dict[str, Any]) -> int:
             return int(self.max_resource in metrics[self.metric_name])
 
         return sum(is_max_resource(ev.metrics) for ev in state.trials_evaluations)

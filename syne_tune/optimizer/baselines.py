@@ -1,18 +1,9 @@
-from typing import Dict, Optional, Any, List
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
-    BoTorchSearcher,
-)
-from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
-    ConformalQuantileRegression,
-)
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
-from syne_tune.optimizer.schedulers.searchers.bore import Bore
-from syne_tune.optimizer.schedulers.searchers.kde import (
-    KernelDensityEstimator,
-)
+
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
@@ -40,11 +31,11 @@ class RandomSearch(SingleFidelityScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metrics: List[str],
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        metrics: list[str],
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(RandomSearch, self).__init__(
             config_space=config_space,
@@ -77,12 +68,14 @@ class BORE(SingleObjectiveScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.bore import Bore
+
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -134,18 +127,22 @@ class TPE(SingleObjectiveScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
-        num_min_data_points: Optional[int] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
+        num_min_data_points: int | None = None,
         top_n_percent: int = 15,
         min_bandwidth: float = 1e-3,
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
     ):
+        from syne_tune.optimizer.schedulers.searchers.kde import (
+            KernelDensityEstimator,
+        )
+
         super(TPE, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -185,13 +182,13 @@ class REA(SingleObjectiveScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
         population_size: int = 100,
         sample_size: int = 10,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(REA, self).__init__(
             config_space=config_space,
@@ -221,12 +218,16 @@ class BOTorch(SingleObjectiveScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
+            BoTorchSearcher,
+        )
+
         super(BOTorch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -266,13 +267,13 @@ class ASHA(AsynchronousSuccessiveHalving):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         time_attr: str,
         max_t: int,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(ASHA, self).__init__(
             config_space=config_space,
@@ -307,13 +308,13 @@ class ASHABORE(AsynchronousSuccessiveHalving):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         time_attr: str,
         max_t: int,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(ASHABORE, self).__init__(
             config_space=config_space,
@@ -348,13 +349,13 @@ class ASHACQR(AsynchronousSuccessiveHalving):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         time_attr: str,
         max_t: int,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(ASHACQR, self).__init__(
             config_space=config_space,
@@ -389,19 +390,19 @@ class BOHB(AsynchronousSuccessiveHalving):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
         time_attr: str,
         max_t: int,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        num_min_data_points: Optional[int] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        num_min_data_points: int | None = None,
         top_n_percent: int = 15,
         min_bandwidth: float = 1e-3,
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
         super(BOHB, self).__init__(
             config_space=config_space,
@@ -443,12 +444,16 @@ class CQR(SingleObjectiveScheduler):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[dict]] = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
     ):
+        from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
+            ConformalQuantileRegression,
+        )
+
         super(CQR, self).__init__(
             config_space=config_space,
             metric=metric,

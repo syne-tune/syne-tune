@@ -1,4 +1,3 @@
-from typing import List, Optional
 import numpy as np
 import logging
 
@@ -23,24 +22,24 @@ class BasePredictor(Predictor):
     def __init__(
         self,
         state: TuningJobState,
-        active_metric: Optional[str] = None,
-        filter_observed_data: Optional[ConfigurationFilter] = None,
+        active_metric: str | None = None,
+        filter_observed_data: ConfigurationFilter | None = None,
     ):
         super().__init__(state, active_metric)
         self._current_best = None
         self._filter_observed_data = filter_observed_data
 
     @property
-    def filter_observed_data(self) -> Optional[ConfigurationFilter]:
+    def filter_observed_data(self) -> ConfigurationFilter | None:
         return self._filter_observed_data
 
     def set_filter_observed_data(
-        self, filter_observed_data: Optional[ConfigurationFilter]
+        self, filter_observed_data: ConfigurationFilter | None
     ):
         self._filter_observed_data = filter_observed_data
         self._current_best = None
 
-    def predict_mean_current_candidates(self) -> List[np.ndarray]:
+    def predict_mean_current_candidates(self) -> list[np.ndarray]:
         """
         Returns the predictive mean (signal with key 'mean') at all current candidates
         in the state (observed, pending).
@@ -68,7 +67,7 @@ class BasePredictor(Predictor):
             all_means.append(means)
         return all_means
 
-    def current_best(self) -> List[np.ndarray]:
+    def current_best(self) -> list[np.ndarray]:
         if self._current_best is None:
             all_means = self.predict_mean_current_candidates()
             result = [np.min(means, axis=0) for means in all_means]

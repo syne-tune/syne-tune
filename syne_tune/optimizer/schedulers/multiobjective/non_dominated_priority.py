@@ -1,5 +1,3 @@
-from typing import Optional, List, Union
-
 import numpy as np
 
 
@@ -36,7 +34,7 @@ def pareto_efficient(X: np.ndarray) -> np.ndarray:
     return mask
 
 
-def compute_epsilon_net(X: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
+def compute_epsilon_net(X: np.ndarray, dim: int | None = None) -> np.ndarray:
     """
     Outputs an order of the items in the provided array such that the items are spaced well. This
     means that after choosing a seed item, the next item is chosen to be the farthest from the seed
@@ -92,10 +90,10 @@ def compute_epsilon_net(X: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
 
 def nondominated_sort(
     X: np.ndarray,
-    dim: Optional[int] = None,
-    max_items: Optional[int] = None,
+    dim: int | None = None,
+    max_items: int | None = None,
     flatten: bool = True,
-) -> Union[List[int], List[List[int]]]:
+) -> list[int] | list[list[int]]:
     """
     Performs a multi-objective sort by iteratively computing the Pareto front and sparsifying the
     items within the Pareto front. This is a non-dominated sort leveraging an epsilon-net.

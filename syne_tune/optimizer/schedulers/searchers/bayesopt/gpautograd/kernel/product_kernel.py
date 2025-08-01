@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
     KernelFunction,
 )
@@ -69,14 +69,14 @@ class ProductKernelFunction(KernelFunction):
         """
         return self.kernel1.param_encoding_pairs() + self.kernel2.param_encoding_pairs()
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         result = dict()
         prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
             result.update({(pref + k): v for k, v in kernel.get_params().items()})
         return result
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
             len_pref = len(pref)

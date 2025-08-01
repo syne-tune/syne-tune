@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any
+from typing import Any
 
 import pandas as pd
 
@@ -33,10 +33,10 @@ class BlackboxOffline(Blackbox):
     def __init__(
         self,
         df_evaluations: pd.DataFrame,
-        configuration_space: Dict[str, Any],
-        fidelity_space: Optional[dict] = None,
-        objectives_names: Optional[List[str]] = None,
-        seed_col: Optional[str] = None,
+        configuration_space: dict[str, Any],
+        fidelity_space: dict | None = None,
+        objectives_names: list[str] | None = None,
+        seed_col: str | None = None,
     ):
         if objectives_names is not None:
             for col in objectives_names:
@@ -85,9 +85,9 @@ class BlackboxOffline(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Optional[dict] = None,
-        seed: Optional[int] = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
+        seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         """
         Return the dictionary of objectives for a configuration/fidelity/seed.
@@ -133,7 +133,7 @@ class BlackboxOffline(Blackbox):
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxOffline], path: str, categorical_cols: List[str] = []
+    bb_dict: dict[str, BlackboxOffline], path: str, categorical_cols: list[str] = []
 ):
     """
     :param bb_dict:
@@ -186,7 +186,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]:
+def deserialize(path: str) -> dict[str, BlackboxOffline] | BlackboxOffline:
     """
     :param path: where to find blackbox serialized information (at least data.csv.zip and configspace.json)
     :param groupby_col: separate evaluations into a list of blackbox with different task if the column is provided

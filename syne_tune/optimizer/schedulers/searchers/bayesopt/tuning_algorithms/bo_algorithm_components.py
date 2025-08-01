@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Iterator
+from collections.abc import Iterable, Iterator
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 import logging
@@ -36,8 +36,8 @@ class IndependentThompsonSampling(ScoringFunction):
     def __init__(
         self,
         predictor: OutputPredictor = None,
-        active_metric: Optional[str] = None,
-        random_state: Optional[RandomState] = None,
+        active_metric: str | None = None,
+        random_state: RandomState | None = None,
     ):
         super().__init__(predictor, active_metric)
         if random_state is None:
@@ -47,8 +47,8 @@ class IndependentThompsonSampling(ScoringFunction):
     def score(
         self,
         candidates: Iterable[Configuration],
-        predictor: Optional[Predictor] = None,
-    ) -> List[float]:
+        predictor: Predictor | None = None,
+    ) -> list[float]:
         if predictor is None:
             predictor = self.predictor
         predictions_list = predictor.predict_candidates(candidates)
@@ -80,7 +80,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         self.num_evaluations = None
 
     def optimize(
-        self, candidate: Configuration, predictor: Optional[OutputPredictor] = None
+        self, candidate: Configuration, predictor: OutputPredictor | None = None
     ) -> Configuration:
         # Before local minimization, the model for this state_id should have been fitted.
         if predictor is None:
@@ -129,7 +129,7 @@ class NoOptimization(LocalOptimizer):
         pass
 
     def optimize(
-        self, candidate: Configuration, predictor: Optional[Predictor] = None
+        self, candidate: Configuration, predictor: Predictor | None = None
     ) -> Configuration:
         return candidate
 
@@ -159,7 +159,7 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         if exclusion_list is None:
             return self.hp_ranges.random_configs(self.random_state, num_cands)
         else:
@@ -198,7 +198,7 @@ def generate_unique_candidates(
     candidates_generator: CandidateGenerator,
     num_candidates: int,
     exclusion_candidates: ExclusionList,
-) -> List[Configuration]:
+) -> list[Configuration]:
     exclusion_candidates = exclusion_candidates.copy()  # Copy
     result = []
     num_results = 0
@@ -249,9 +249,9 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
 
     def __init__(
         self,
-        base_set: List[Configuration],
+        base_set: list[Configuration],
         random_state: np.random.RandomState,
-        ext_config: Optional[Configuration] = None,
+        ext_config: Configuration | None = None,
     ):
         self.random_state = random_state
         self.base_set = base_set
@@ -267,7 +267,7 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
             config = self._extend_configs([self.base_set[pos]])[0]
             yield config
 
-    def _extend_configs(self, configs: List[Configuration]) -> List[Configuration]:
+    def _extend_configs(self, configs: list[Configuration]) -> list[Configuration]:
         if self._ext_config is None:
             return configs
         else:
@@ -275,7 +275,7 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
-    ) -> List[Configuration]:
+    ) -> list[Configuration]:
         if num_cands >= self.num_base:
             if exclusion_list is None:
                 configs = self.base_set.copy()
