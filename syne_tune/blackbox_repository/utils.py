@@ -1,15 +1,15 @@
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 
 
 def metrics_for_configuration(
     blackbox: Blackbox,
-    config: Dict[str, Any],
+    config: dict[str, Any],
     resource_attr: str,
-    fidelity_range: Optional[Tuple[float, float]] = None,
-    seed: Optional[int] = None,
-) -> List[dict]:
+    fidelity_range: tuple[float, float] | None = None,
+    seed: int | None = None,
+) -> list[dict]:
     """
     Returns all results for configuration ``config`` at fidelities in range
     ``fidelity_range``.

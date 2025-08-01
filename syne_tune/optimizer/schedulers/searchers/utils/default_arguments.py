@@ -1,4 +1,4 @@
-from typing import Set, Tuple, Dict, Optional, Any
+from typing import Any
 import logging
 import numbers
 
@@ -66,7 +66,7 @@ class IntegerOrNone(Integer):
 
 
 class Categorical(CheckType):
-    def __init__(self, choices: Tuple[str, ...]):
+    def __init__(self, choices: tuple[str, ...]):
         self.choices = set(choices)
 
     def assert_valid(self, key: str, value):
@@ -95,12 +95,12 @@ class Dictionary(CheckType):
 
 
 def check_and_merge_defaults(
-    options: Dict[str, Any],
-    mandatory: Set[str],
-    default_options: Dict[str, Any],
-    constraints: Optional[Dict[str, CheckType]] = None,
-    dict_name: Optional[str] = None,
-) -> Dict[str, Any]:
+    options: dict[str, Any],
+    mandatory: set[str],
+    default_options: dict[str, Any],
+    constraints: dict[str, CheckType] | None = None,
+    dict_name: str | None = None,
+) -> dict[str, Any]:
     """
     First, check that all keys in mandatory appear in options. Second, create
     result_options by merging ``options`` and ``default_options``, where entries in
@@ -154,7 +154,7 @@ def check_and_merge_defaults(
     return result_options
 
 
-def filter_by_key(options: Dict[str, Any], remove_keys: Set[str]) -> Dict[str, Any]:
+def filter_by_key(options: dict[str, Any], remove_keys: set[str]) -> dict[str, Any]:
     """
     Filter options by removing entries whose keys are in ``remove_keys``.
     Used to filter kwargs passed to a constructor, before passing it to
@@ -167,6 +167,6 @@ def filter_by_key(options: Dict[str, Any], remove_keys: Set[str]) -> Dict[str, A
     return {k: v for k, v in options.items() if k not in remove_keys}
 
 
-def assert_no_invalid_options(options: Dict[str, Any], all_keys: Set[str], name: str):
+def assert_no_invalid_options(options: dict[str, Any], all_keys: set[str], name: str):
     for k in options:
         assert k in all_keys, "{}: Invalid argument '{}'".format(name, k)

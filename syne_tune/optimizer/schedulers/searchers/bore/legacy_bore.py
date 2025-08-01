@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Any
 import time
 import xgboost
 import logging
@@ -54,20 +54,20 @@ class LegacyBore(StochasticAndFilterDuplicatesSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
-        allow_duplicates: Optional[bool] = None,
-        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
-        mode: Optional[str] = None,
-        gamma: Optional[float] = None,
-        calibrate: Optional[bool] = None,
-        classifier: Optional[str] = None,
-        acq_optimizer: Optional[str] = None,
-        feval_acq: Optional[int] = None,
-        random_prob: Optional[float] = None,
-        init_random: Optional[int] = None,
-        classifier_kwargs: Optional[dict] = None,
+        points_to_evaluate: list[dict] | None = None,
+        allow_duplicates: bool | None = None,
+        restrict_configurations: list[dict[str, Any]] | None = None,
+        mode: str | None = None,
+        gamma: float | None = None,
+        calibrate: bool | None = None,
+        classifier: str | None = None,
+        acq_optimizer: str | None = None,
+        feval_acq: int | None = None,
+        random_prob: float | None = None,
+        init_random: int | None = None,
+        classifier_kwargs: dict | None = None,
         **kwargs,
     ):
         super().__init__(
@@ -262,9 +262,9 @@ class LegacyBore(StochasticAndFilterDuplicatesSearcher):
         )
         return True
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(result[self._metric])
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError

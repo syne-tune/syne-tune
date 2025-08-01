@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional, List
 import pytest
 import numpy as np
 
@@ -9,7 +8,7 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
 from syne_tune.blackbox_repository import load_blackbox, add_surrogate
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
-from syne_tune.optimizer.schedulers.searchers import LegacyRandomSearcher
+from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
 
 
 @dataclass
@@ -20,8 +19,8 @@ class BenchmarkDefinition:
     blackbox_name: str
     dataset_name: str
     max_resource_attr: str
-    surrogate: Optional[str] = None
-    surrogate_kwargs: Optional[dict] = None
+    surrogate: str | None = None
+    surrogate_kwargs: dict | None = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -108,7 +107,7 @@ def create_blackbox(benchmark: BenchmarkDefinition):
     return blackbox
 
 
-def _assert_strictly_increasing(elapsed_times: List[float], error_prefix: str):
+def _assert_strictly_increasing(elapsed_times: list[float], error_prefix: str):
     error_msg_parts = []
     for pos, (et1, et2) in enumerate(zip(elapsed_times[:-1], elapsed_times[1:])):
         if et1 >= et2:
@@ -120,7 +119,7 @@ def _assert_strictly_increasing(elapsed_times: List[float], error_prefix: str):
     assert not error_msg, error_msg
 
 
-def _assert_no_extreme_deviations(elapsed_times: List[float], error_prefix: str):
+def _assert_no_extreme_deviations(elapsed_times: list[float], error_prefix: str):
     pairs = list(zip(elapsed_times[:-1], elapsed_times[1:]))
     epoch_times = [et2 - et1 for et1, et2 in pairs]
     median_val = np.median(epoch_times)
@@ -153,7 +152,7 @@ def test_elapsed_time_consistency(name, benchmark):
         seeds = list(range(blackbox.num_seeds))
     else:
         seeds = [None]
-    random_searcher = LegacyRandomSearcher(
+    random_searcher = RandomSearcher(
         config_space=blackbox.configuration_space,
         metric=benchmark.metric,
         random_seed=random_seed,

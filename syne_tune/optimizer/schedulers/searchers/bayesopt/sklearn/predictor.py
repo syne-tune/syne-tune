@@ -1,5 +1,3 @@
-from typing import Tuple, Dict
-
 import numpy as np
 
 
@@ -11,7 +9,7 @@ class SKLearnPredictor:
     This is only for predictors who return means and stddevs in :meth:`predict`.
     """
 
-    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns signals which are statistics of the predictive distribution at
         input points ``inputs``.
@@ -23,7 +21,7 @@ class SKLearnPredictor:
         raise NotImplementedError
 
     def backward_gradient(
-        self, input: np.ndarray, head_gradients: Dict[str, np.ndarray]
+        self, input: np.ndarray, head_gradients: dict[str, np.ndarray]
     ) -> np.ndarray:
         r"""
         Needs to be implemented only if gradient-based local optimization of

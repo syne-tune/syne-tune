@@ -1,7 +1,8 @@
 import numpy as np
 import autograd.numpy as anp
 from autograd.tracer import getval
-from typing import Optional, Tuple, List, Union, Dict, Callable, Any
+from typing import Any
+from collections.abc import Callable
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
@@ -28,7 +29,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base im
 
 
 class ExtendFeaturesByResourceMixin:
-    def __init__(self, resource: int, resource_attr_range: Tuple[int, int]):
+    def __init__(self, resource: int, resource_attr_range: tuple[int, int]):
         hp_range = HyperparameterRangeInteger(
             name="resource",
             lower_bound=resource_attr_range[0],
@@ -60,7 +61,7 @@ class PosteriorStateClampedResource(
         self,
         poster_state_extended: PosteriorStateWithSampleJoint,
         resource: int,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
     ):
         ExtendFeaturesByResourceMixin.__init__(self, resource, resource_attr_range)
         self._poster_state_extended = poster_state_extended
@@ -80,7 +81,7 @@ class PosteriorStateClampedResource(
     def neg_log_likelihood(self) -> anp.ndarray:
         return self._poster_state_extended.neg_log_likelihood()
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         return self._poster_state_extended.predict(
             self.extend_features_by_resource(test_features)
         )
@@ -89,7 +90,7 @@ class PosteriorStateClampedResource(
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         return self._poster_state_extended.sample_marginals(
             test_features=self.extend_features_by_resource(test_features),
@@ -101,7 +102,7 @@ class PosteriorStateClampedResource(
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         return self._poster_state_extended.sample_joint(
             test_features=self.extend_features_by_resource(test_features),
@@ -112,7 +113,7 @@ class PosteriorStateClampedResource(
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:
@@ -133,7 +134,7 @@ class MeanFunctionClampedResource(MeanFunction, ExtendFeaturesByResourceMixin):
         self,
         mean_extended: MeanFunction,
         resource: int,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
         **kwargs,
     ):
         MeanFunction.__init__(self, **kwargs)
@@ -143,10 +144,10 @@ class MeanFunctionClampedResource(MeanFunction, ExtendFeaturesByResourceMixin):
     def param_encoding_pairs(self):
         return self._mean_extended.param_encoding_pairs()
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self._mean_extended.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self._mean_extended.set_params(param_dict)
 
     def forward(self, X):
@@ -158,7 +159,7 @@ class KernelFunctionClampedResource(KernelFunction, ExtendFeaturesByResourceMixi
         self,
         kernel_extended: KernelFunction,
         resource: int,
-        resource_attr_range: Tuple[int, int],
+        resource_attr_range: tuple[int, int],
         **kwargs,
     ):
         KernelFunction.__init__(self, dimension=kernel_extended.dimension - 1, **kwargs)
@@ -168,10 +169,10 @@ class KernelFunctionClampedResource(KernelFunction, ExtendFeaturesByResourceMixi
     def param_encoding_pairs(self):
         return self._kernel_extended.param_encoding_pairs()
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return self._kernel_extended.get_params()
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         self._kernel_extended.set_params(param_dict)
 
     def diagonal(self, X):
@@ -193,7 +194,7 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
     def __init__(
         self,
         poster_state: GaussProcPosteriorState,
-        rung_levels: List[int],
+        rung_levels: list[int],
     ):
         self._poster_state = poster_state
         self._rung_levels = rung_levels
@@ -217,14 +218,14 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
     def neg_log_likelihood(self) -> anp.ndarray:
         return self._poster_state.neg_log_likelihood()
 
-    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         return self._poster_state.predict(test_features)
 
     def sample_marginals(
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         return self._poster_state.sample_marginals(
             test_features=test_features,
@@ -236,7 +237,7 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
         self,
         test_features: np.ndarray,
         num_samples: int = 1,
-        random_state: Optional[RandomState] = None,
+        random_state: RandomState | None = None,
     ) -> np.ndarray:
         return self._poster_state.sample_joint(
             test_features=test_features,
@@ -247,7 +248,7 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
     def backward_gradient(
         self,
         input: np.ndarray,
-        head_gradients: Dict[str, np.ndarray],
+        head_gradients: dict[str, np.ndarray],
         mean_data: float,
         std_data: float,
     ) -> np.ndarray:
@@ -259,21 +260,20 @@ class GaussProcPosteriorStateAndRungLevels(PosteriorStateWithSampleJoint):
         )
 
     @property
-    def rung_levels(self) -> List[int]:
+    def rung_levels(self) -> list[int]:
         return self._rung_levels
 
 
-PerResourcePosteriorState = Union[
-    IndependentGPPerResourcePosteriorState,
-    GaussProcPosteriorStateAndRungLevels,
-]
+PerResourcePosteriorState = (
+    IndependentGPPerResourcePosteriorState | GaussProcPosteriorStateAndRungLevels
+)
 
 
 def _posterior_state_for_rung_level(
     poster_state: PerResourcePosteriorState,
     resource: int,
-    resource_attr_range: Tuple[int, int],
-) -> Union[GaussProcPosteriorState, PosteriorStateClampedResource]:
+    resource_attr_range: tuple[int, int],
+) -> GaussProcPosteriorState | PosteriorStateClampedResource:
     if isinstance(poster_state, IndependentGPPerResourcePosteriorState):
         return poster_state.state(resource)
     else:
@@ -286,10 +286,10 @@ def _posterior_state_for_rung_level(
 
 def hypertune_ranking_losses(
     poster_state: PerResourcePosteriorState,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     num_samples: int,
-    resource_attr_range: Tuple[int, int],
-    random_state: Optional[RandomState] = None,
+    resource_attr_range: tuple[int, int],
+    random_state: RandomState | None = None,
 ) -> np.ndarray:
     """
     Samples ranking loss values as defined in the Hyper-Tune paper. We return a
@@ -388,10 +388,10 @@ def hypertune_ranking_losses(
 
 
 def number_supported_levels_and_data_highest_level(
-    rung_levels: List[int],
-    data: Dict[str, Any],
-    resource_attr_range: Tuple[int, int],
-) -> Tuple[int, dict]:
+    rung_levels: list[int],
+    data: dict[str, Any],
+    resource_attr_range: tuple[int, int],
+) -> tuple[int, dict]:
     """
     Finds ``num_supp_levels`` as maximum such that
     rung levels up to there have ``>= 6`` labeled datapoints. The set
@@ -425,8 +425,8 @@ def number_supported_levels_and_data_highest_level(
 
 
 def _extract_data_at_resource(
-    data: Dict[str, Any], resource: int, resource_attr_range: Tuple[int, int]
-) -> Dict[str, Any]:
+    data: dict[str, Any], resource: int, resource_attr_range: tuple[int, int]
+) -> dict[str, Any]:
     features_ext = data["features"]
     targets = data["targets"]
     num_fantasies = targets.shape[1] if targets.ndim == 2 else 1
@@ -449,9 +449,9 @@ def _losses_for_maximum_rung_by_cross_validation(
     poster_state_for_fold: Callable[
         [np.ndarray, np.ndarray], PosteriorStateWithSampleJoint
     ],
-    data_max_resource: Dict[str, Any],
+    data_max_resource: dict[str, Any],
     num_samples: int,
-    random_state: Optional[RandomState],
+    random_state: RandomState | None,
 ) -> np.ndarray:
     """
     Estimates loss samples at highest rung by K-fold cross-validation, where
@@ -508,9 +508,9 @@ def _losses_for_maximum_rung_by_cross_validation(
 
 def _losses_for_rung(
     poster_state: PosteriorStateWithSampleJoint,
-    data_max_resource: Dict[str, Any],
+    data_max_resource: dict[str, Any],
     num_samples: int,
-    random_state: Optional[RandomState],
+    random_state: RandomState | None,
 ) -> np.ndarray:
     joint_sample = poster_state.sample_joint(
         test_features=data_max_resource["features"],

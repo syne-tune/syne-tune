@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ class TransferLearningTaskEvaluations:
             (num_evals, num_seeds, num_fidelities, num_objectives)
     """
 
-    configuration_space: Dict
+    configuration_space: dict
     hyperparameters: pd.DataFrame
-    objectives_names: List[str]
+    objectives_names: list[str]
     objectives_evaluations: np.array
 
     def __post_init__(self):
@@ -49,7 +49,7 @@ class TransferLearningTaskEvaluations:
 
     def top_k_hyperparameter_configurations(
         self, k: int, objective: str, do_minimize: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Returns the best k hyperparameter configurations.
         :param k: The number of top hyperparameters to return.

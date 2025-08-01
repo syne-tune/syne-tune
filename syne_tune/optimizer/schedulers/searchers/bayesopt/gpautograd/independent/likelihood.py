@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Tuple, Any
+from typing import Any
 import numpy as np
 import autograd.numpy as anp
 
@@ -72,13 +72,13 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     def __init__(
         self,
         kernel: KernelFunction,
-        mean: Dict[int, MeanFunction],
-        resource_attr_range: Tuple[int, int],
-        target_transform: Optional[ScalarTargetTransform] = None,
+        mean: dict[int, MeanFunction],
+        resource_attr_range: tuple[int, int],
+        target_transform: ScalarTargetTransform | None = None,
         separate_noise_variances: bool = False,
-        initial_noise_variance: Optional[float] = None,
-        initial_covariance_scale: Optional[float] = None,
-        encoding_type: Optional[str] = None,
+        initial_noise_variance: float | None = None,
+        initial_covariance_scale: float | None = None,
+        encoding_type: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -150,7 +150,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             for resource, internal in self.covariance_scale_internal.items()
         }
 
-    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
+    def get_posterior_state(self, data: dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = self.target_transform(data["targets"])
         return IndependentGPPerResourcePosteriorState(
@@ -163,19 +163,19 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             resource_attr_range=self.resource_attr_range,
         )
 
-    def forward(self, data: Dict[str, Any]):
+    def forward(self, data: dict[str, Any]):
         return self.get_posterior_state(
             data
         ).neg_log_likelihood() + self.target_transform.negative_log_jacobian(
             data["targets"]
         )
 
-    def _components(self) -> List[Tuple[str, MeanFunction]]:
+    def _components(self) -> dict[tuple[str, MeanFunction]]:
         return [("kernel_", self.kernel), ("ytrans_", self.target_transform)] + [
             (f"mean{resource}_", mean) for resource, mean in self.mean.items()
         ]
 
-    def param_encoding_pairs(self) -> List[tuple]:
+    def param_encoding_pairs(self) -> dict[tuple]:
         result = [
             x
             for _, component in self._components()
@@ -218,7 +218,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         assert internal is not None, f"resource = {resource} not supported"
         self.encoding_covscale.set(internal, val)
 
-    def get_params(self) -> Dict[str, np.ndarray]:
+    def get_params(self) -> dict[str, np.ndarray]:
         result = dict()
         for pref, func in self._components():
             result.update({(pref + k): v for k, v in func.get_params().items()})
@@ -231,7 +231,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             result["noise_variance"] = self._noise_variance()
         return result
 
-    def set_params(self, param_dict: Dict[str, np.ndarray]):
+    def set_params(self, param_dict: dict[str, np.ndarray]):
         for pref, func in self._components():
             len_pref = len(pref)
             stripped_dict = {
@@ -250,7 +250,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         else:
             self._set_noise_variance(1, param_dict["noise_variance"])
 
-    def on_fit_start(self, data: Dict[str, Any]):
+    def on_fit_start(self, data: dict[str, Any]):
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = data["targets"]
         assert (

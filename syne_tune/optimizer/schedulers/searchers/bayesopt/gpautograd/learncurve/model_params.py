@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import autograd.numpy as anp
 from autograd.tracer import getval
 
@@ -64,7 +64,7 @@ class ISSModelParameters(MeanFunction):
             gamma = encode_unwrap_parameter(self.gamma_internal, self.gamma_encoding)
             return anp.reshape(gamma, (1,))[0]
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         if self.gamma_is_one:
             return dict()
         else:
@@ -74,11 +74,11 @@ class ISSModelParameters(MeanFunction):
         assert not self.gamma_is_one, "Cannot set gamma (fixed to 1)"
         self.gamma_encoding.set(self.gamma_internal, val)
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         if not self.gamma_is_one:
             self.set_gamma(param_dict["gamma"])
 
-    def get_issm_params(self, features) -> Dict[str, Any]:
+    def get_issm_params(self, features) -> dict[str, Any]:
         """
         Given feature matrix X, returns ISSM parameters which configure the
         likelihood: alpha, beta vectors (size n), gamma scalar.
@@ -132,7 +132,7 @@ class IndependentISSModelParameters(ISSModelParameters):
         beta = encode_unwrap_parameter(self.beta_internal, self.beta_encoding)
         return anp.reshape(beta, (1,))[0]
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         _params = super().get_params()
         return dict(_params, alpha=self.get_alpha(), beta=self.get_beta())
 
@@ -142,12 +142,12 @@ class IndependentISSModelParameters(ISSModelParameters):
     def set_beta(self, val):
         self.beta_encoding.set(self.beta_internal, val)
 
-    def set_params(self, param_dict: Dict[str, Any]):
+    def set_params(self, param_dict: dict[str, Any]):
         super().set_params(param_dict)
         self.set_alpha(param_dict["alpha"])
         self.set_beta(param_dict["beta"])
 
-    def get_issm_params(self, features) -> Dict[str, Any]:
+    def get_issm_params(self, features) -> dict[str, Any]:
         n = getval(features.shape[0])
         one_vec = anp.ones((n,))
         return {

@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.symmetric_conf
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
 
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quantile_based_searcher import (
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
     subsample,
 )
 
@@ -23,10 +22,10 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.legacy_quan
 class QuantileRegressionSurrogateModel(SurrogateModel):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         mode: str,
-        random_state: Optional[np.random.RandomState] = None,
-        max_fit_samples: Optional[int] = None,
+        random_state: np.random.RandomState | None = None,
+        max_fit_samples: int | None = None,
         quantiles: int = 5,
         valid_fraction: float = 0.0,
         min_samples_to_conformalize: int = None,

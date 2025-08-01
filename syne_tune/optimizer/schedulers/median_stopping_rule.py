@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, Any
+from typing import Any
 
 import numpy as np
 
@@ -56,12 +56,12 @@ class MedianStoppingRule(TrialScheduler):
         scheduler: TrialScheduler,
         resource_attr: str,
         running_average: bool = True,
-        metric: Optional[str] = None,
-        grace_time: Optional[int] = 1,
+        metric: str | None = None,
+        grace_time: int | None = 1,
         grace_population: int = 5,
         rank_cutoff: float = 0.5,
         random_seed: int = None,
-        do_minimize: Optional[bool] = True,
+        do_minimize: bool | None = True,
     ):
         super(MedianStoppingRule, self).__init__(random_seed=random_seed)
         if metric is None and hasattr(scheduler, "metric"):
@@ -80,10 +80,10 @@ class MedianStoppingRule(TrialScheduler):
         if running_average:
             self.trial_to_results = defaultdict(list)
 
-    def suggest(self) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
         return self.scheduler.suggest()
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         new_metric = result[self.metric] * self.metric_multiplier
 
         time_step = result[self.resource_attr]
@@ -127,7 +127,7 @@ class MedianStoppingRule(TrialScheduler):
             return True
         return False
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         """
         :return: Metadata for the scheduler
         """

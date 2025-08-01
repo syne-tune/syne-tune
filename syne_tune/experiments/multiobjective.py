@@ -1,5 +1,3 @@
-from typing import List, Tuple, Optional
-
 import pandas as pd
 import numpy as np
 
@@ -7,8 +5,8 @@ from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumu
 
 
 def hypervolume_indicator_column_generator(
-    metrics_and_modes: List[Tuple[str, str]],
-    reference_point: Optional[np.ndarray] = None,
+    metrics_and_modes: list[tuple[str, str]],
+    reference_point: np.ndarray | None = None,
     increment: int = 1,
 ):
     """

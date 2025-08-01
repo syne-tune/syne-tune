@@ -4,7 +4,6 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Optional
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
@@ -306,7 +305,7 @@ MAX_RESOURCE_LEVEL = 100
 # since the HPO-B dataset does not provide the same number of evaluations for each blackbox.
 # This is a constraint in the original serialize() function.
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: dict[str, BlackboxTabular], path: str, metadata: dict | None = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -357,7 +356,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+def deserialize(path: str) -> dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
     TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.

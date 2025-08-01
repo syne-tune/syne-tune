@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -26,15 +26,15 @@ class RandomSearcher(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: list[dict] | None = None,
         random_seed: int = None,
     ):
         super().__init__(
             config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
         )
 
-    def suggest(self) -> Optional[dict]:
+    def suggest(self) -> dict | None:
         """Sample a new configuration at random
 
         If ``allow_duplicates == False``, this is done without replacement, so
@@ -55,15 +55,15 @@ class MultiObjectiveRandomSearcher(BaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: list[dict] | None = None,
         random_seed: int = None,
     ):
         super().__init__(
             config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
         )
 
-    def suggest(self) -> Optional[dict]:
+    def suggest(self) -> dict | None:
         """Sample a new configuration at random
 
         If ``allow_duplicates == False``, this is done without replacement, so

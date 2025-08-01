@@ -1,4 +1,3 @@
-from typing import Optional, Tuple
 import tempfile
 import time
 
@@ -23,7 +22,6 @@ from examples.training_scripts.height_example.train_height import (
     height_config_space,
     RESOURCE_ATTR,
     METRIC_ATTR,
-    METRIC_MODE,
     MAX_RESOURCE_ATTR,
 )
 from examples.training_scripts.height_example.blackbox_height import (
@@ -34,7 +32,7 @@ from examples.training_scripts.height_example.blackbox_height import (
 class TestPredictor(SKLearnPredictor):
     def predict(
         self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones(nexamples), np.ones(nexamples)
 
@@ -74,14 +72,10 @@ def wait_until_all_trials_completed(backend):
 def run_experiment_with_height(
     make_scheduler: callable,
     simulated: bool,
-    mode: Optional[str] = None,
-    config_space: Optional[dict] = None,
+    config_space: dict | None = None,
     **kwargs,
 ):
     random_seed = 382378624
-    if mode is None:
-        mode = METRIC_MODE
-
     if simulated:
         max_steps = 9
         num_workers = 4
@@ -127,10 +121,9 @@ def run_experiment_with_height(
     myscheduler = make_scheduler(
         config_space,
         metric=metric,
-        mode=mode,
+        do_minimize=True,
         random_seed=random_seed,
-        resource_attr=RESOURCE_ATTR,
-        max_resource_attr=MAX_RESOURCE_ATTR,
+        time_attr=RESOURCE_ATTR,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)

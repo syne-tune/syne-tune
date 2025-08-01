@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Callable, Union
+from collections.abc import Callable
 import logging
 import copy
 
@@ -39,9 +39,9 @@ def _assert_same_keys(dict1, dict2):
 # that work both in the standard case of a single output model and in the
 # multi-output case
 
-SkipOptimizationOutputPredicate = Union[
-    SkipOptimizationPredicate, Dict[str, SkipOptimizationPredicate]
-]
+SkipOptimizationOutputPredicate = (
+    SkipOptimizationPredicate | dict[str, SkipOptimizationPredicate]
+)
 
 
 class StateForModelConverter:
@@ -108,8 +108,8 @@ class ModelStateTransformer:
         self,
         estimator: OutputEstimator,
         init_state: TuningJobState,
-        skip_optimization: Optional[SkipOptimizationOutputPredicate] = None,
-        state_converter: Optional[StateForModelConverter] = None,
+        skip_optimization: SkipOptimizationOutputPredicate | None = None,
+        state_converter: StateForModelConverter | None = None,
     ):
         self._use_single_model = False
         if isinstance(estimator, Estimator):
@@ -118,7 +118,7 @@ class ModelStateTransformer:
             assert isinstance(estimator, dict), (
                 f"{estimator} is not an instance of Estimator. "
                 f"It is assumed that we are in the multi-output case and that it "
-                f"must be a Dict. No other types are supported. "
+                f"must be a dict. No other types are supported. "
             )
             # Default: Always refit model parameters for each output model
             if skip_optimization is None:
@@ -127,8 +127,8 @@ class ModelStateTransformer:
                     for output_name in estimator.keys()
                 }
             else:
-                assert isinstance(skip_optimization, Dict), (
-                    f"{skip_optimization} must be a Dict, consistently "
+                assert isinstance(skip_optimization, dict), (
+                    f"{skip_optimization} must be a dict, consistently "
                     f"with {estimator}."
                 )
                 _assert_same_keys(estimator, skip_optimization)
@@ -155,7 +155,7 @@ class ModelStateTransformer:
         self._state_converter = state_converter
         self._state = copy.copy(init_state)
         # OutputPredictor computed on demand
-        self._predictor: Optional[OutputPredictor] = None
+        self._predictor: OutputPredictor | None = None
         # Observed data for which model parameters were re-fit most
         # recently, separately for each model
         self._num_evaluations = {output_name: 0 for output_name in estimator.keys()}
@@ -214,8 +214,8 @@ class ModelStateTransformer:
     def append_trial(
         self,
         trial_id: str,
-        config: Optional[Configuration] = None,
-        resource: Optional[int] = None,
+        config: Configuration | None = None,
+        resource: int | None = None,
     ):
         """
         Appends new pending evaluation to the state.
@@ -230,7 +230,7 @@ class ModelStateTransformer:
         self._state.append_pending(trial_id, config=config, resource=resource)
 
     def drop_pending_evaluation(
-        self, trial_id: str, resource: Optional[int] = None
+        self, trial_id: str, resource: int | None = None
     ) -> bool:
         """
         Drop pending evaluation from state. If it is not listed as pending,
@@ -247,7 +247,7 @@ class ModelStateTransformer:
         self,
         trial_id: str,
         metric_name: str = INTERNAL_METRIC_NAME,
-        key: Optional[str] = None,
+        key: str | None = None,
     ):
         """
         Removes specific observation from the state.
@@ -274,9 +274,7 @@ class ModelStateTransformer:
             )
             del metric_vals[key]
 
-    def label_trial(
-        self, data: TrialEvaluations, config: Optional[Configuration] = None
-    ):
+    def label_trial(self, data: TrialEvaluations, config: Configuration | None = None):
         """
         Adds observed data for a trial. If it has observations in the state
         already, ``data.metrics`` are appended. Otherwise, a new entry is

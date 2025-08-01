@@ -2,7 +2,6 @@ import logging
 import numpy as np
 
 from dataclasses import dataclass
-from typing import Optional, Dict
 
 from syne_tune.tuning_status import TuningStatus
 
@@ -46,9 +45,9 @@ class StoppingCriterion:
     max_cost: float = None
     max_num_trials_finished: int = None
     # minimum value for metrics, any value below this threshold will trigger a stop
-    min_metric_value: Optional[Dict[str, float]] = None
+    min_metric_value: dict[str, float] | None = None
     # maximum value for metrics, any value above this threshold will trigger a stop
-    max_metric_value: Optional[Dict[str, float]] = None
+    max_metric_value: dict[str, float] | None = None
 
     # todo we should have unit-test for all those cases.
     def __call__(self, status: TuningStatus) -> bool:

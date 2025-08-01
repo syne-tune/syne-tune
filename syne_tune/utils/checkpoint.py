@@ -1,4 +1,5 @@
-from typing import Callable, Any, Optional, Dict
+from typing import Any
+from collections.abc import Callable
 import argparse
 import os
 
@@ -17,7 +18,7 @@ def add_checkpointing_to_argparse(parser: argparse.ArgumentParser):
 
 
 def resume_from_checkpointed_model(
-    config: Dict[str, Any], load_model_fn: Callable[[str], int]
+    config: dict[str, Any], load_model_fn: Callable[[str], int]
 ) -> int:
     """
     Checks whether there is a checkpoint to be resumed from. If so, the
@@ -49,7 +50,7 @@ def resume_from_checkpointed_model(
 
 
 def checkpoint_model_at_rung_level(
-    config: Dict[str, Any], save_model_fn: Callable[[str, int], Any], resource: int
+    config: dict[str, Any], save_model_fn: Callable[[str, int], Any], resource: int
 ):
     """
     If checkpointing is supported, checks whether a checkpoint is to be
@@ -86,8 +87,8 @@ MUTABLE_STATE_PREFIX = "st_mutable_"
 
 
 def pytorch_load_save_functions(
-    state_dict_objects: Dict[str, Any],
-    mutable_state: Optional[dict] = None,
+    state_dict_objects: dict[str, Any],
+    mutable_state: dict | None = None,
     fname: str = "checkpoint.json",
 ):
     """

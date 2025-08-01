@@ -1,7 +1,7 @@
 import sys
 import logging
 from collections import defaultdict
-from typing import Dict, Optional, List, Any, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 )
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.util import catchtime
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_dict
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
     def __init__(
         self,
-        config_space: Dict,
-        random_seed: Optional[int] = None,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        config_space: dict,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
         num_init_random_draws: int = 5,
         update_frequency: int = 1,
         max_fit_samples: int = None,
-        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "kde",
+        searcher: str | SingleObjectiveBaseSearcher | None = "kde",
         searcher_kwargs: dict[str, Any] = None,
     ):
         """
@@ -70,13 +70,13 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
             self.searcher_kwargs = searcher_kwargs
 
         if isinstance(searcher, str):
-            assert searcher in searcher_dict
-            self.searcher_cls = searcher_dict.get(searcher)
+
+            self.searcher_cls = searcher_cls(searcher)
         else:
             self.searcher_cls = searcher
         self.searcher = None
 
-    def suggest(self, **kwargs) -> Optional[Dict[str, Any]]:
+    def suggest(self, **kwargs) -> dict[str, Any] | None:
         config = self._next_points_to_evaluate()
 
         if config is None:
@@ -139,7 +139,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
         resource_level: int = None,
     ):
@@ -149,18 +149,18 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
     def on_trial_result(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
         resource_level: int = None,
     ):
         self.trial_configs[trial_id] = config
         self.trial_results[trial_id].append(metric)
 
-    def sample_random(self) -> Dict:
+    def sample_random(self) -> dict:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.config_space.items()
         }
 
-    def configs_to_df(self, configs: List[Dict]) -> pd.DataFrame:
+    def configs_to_df(self, configs: list[dict]) -> pd.DataFrame:
         return pd.DataFrame(configs)
