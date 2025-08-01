@@ -7,7 +7,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_dict
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_cls
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +48,7 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
             self.searcher_kwargs = searcher_kwargs
 
         if isinstance(searcher, str):
-            assert searcher in searcher_dict
-            self.searcher = searcher_dict.get(searcher)
+            self.searcher = searcher_cls(searcher)
         else:
             self.searcher = searcher
 

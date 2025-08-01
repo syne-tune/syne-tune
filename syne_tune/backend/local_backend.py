@@ -37,6 +37,9 @@ class LocalBackend(TrialBackend):
     :class:`~syne_tune.backend.trial_backend.TrialBackend`:
 
     :param entry_point: Path to Python main file to be tuned
+    :param binary: Binary to use when evaluating configurations, defaults to the current python environment but can
+    be overrided with `"java"` to tune a Java program or `"torchrun --standalone --nproc_per_node=4"` to tune a
+    distributed setup in pytorch.
     :param rotate_gpus: In case several GPUs are present, each trial is
         scheduled on a different GPU. A new trial is preferentially
         scheduled on a free GPU, and otherwise the GPU with least prior
@@ -53,6 +56,7 @@ class LocalBackend(TrialBackend):
     def __init__(
         self,
         entry_point: str,
+        binary: Optional[str] = None,
         delete_checkpoints: bool = False,
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
@@ -67,6 +71,7 @@ class LocalBackend(TrialBackend):
             entry_point
         ).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
+        self.binary = sys.executable if binary is None else binary
         self.local_path = None
         self.trial_subprocess = dict()
 
@@ -206,7 +211,7 @@ class LocalBackend(TrialBackend):
                 )
 
                 dump_json_with_numpy(config, config_json_fname)
-                cmd = f"{sys.executable} {self.entry_point} {config_str}"
+                cmd = f"{self.binary} {self.entry_point} {config_str}"
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
                 logger.info(f"running subprocess with command: {cmd}")
