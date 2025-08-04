@@ -108,7 +108,7 @@ extra = [
 "Bug Tracker" = "https://github.com/awslabs/syne-tune/issues"
 
 [tool.setuptools.packages.find]
-include = ["syne_tune", "syne_tune.*"]
+include = ["syne_tune", "syne_tune.*", "examples", "examples.*"]
 exclude = []
 
 [tool.setuptools.dynamic]
