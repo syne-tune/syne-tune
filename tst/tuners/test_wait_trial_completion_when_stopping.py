@@ -37,7 +37,6 @@ def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_
     sleep_time_bench = 0.02
     sleep_time_tuner = 0.01
     max_wallclock_time = 0.1
-    do_minimize = True
     metric = "mean_loss"
     num_workers = 1
 
