@@ -73,12 +73,10 @@ rung levels to the training script, but this is currently not done in Syne
 Tune.
 
 Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
-runs promotion-based ASHA with the argument ``--method ASHA-PROM``, and
-promotion-based MOBSTER with ``--method MOBSTER-PROM``:
+runs promotion-based ASHA with the argument ``--method ASHA-PROM``:
 
-* Recall that the argument ``max_resource_attr`` for
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` allows the
-  scheduler to infer the maximum resource level ``r_max``. For
+* Recall that the argument ``max_resource_attr`` for the scheduler allows it
+  to infer the maximum resource level ``r_max``. For
   promotion-based scheduling, this argument has a second function. Namely, it
   allows the scheduler to inform the training script until which epoch it has
   to train, so it does not have to be stopped anymore from the outside. For
@@ -113,15 +111,15 @@ occupied, or even the disk filling up. Syne Tune supports checkpoints being
 removed once they are not needed anymore, or even speculatively, as is detailed
 `here <../../faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__.
 
-Results for promotion-based ASHA and MOBSTER
---------------------------------------------
+Results for promotion-based ASHA
+--------------------------------
 
-.. |Results for promotion-based ASHA and MOBSTER| image:: img/tutorial_rs_bo_shrs_shbo_prom.png
+.. |Results for promotion-based ASHA| image:: img/tutorial_rs_bo_shrs_shbo_prom.png
 
 +-----------------------------------------------------------------------+
-| |Results for promotion-based ASHA and MOBSTER|                        |
+| |Results for promotion-based ASHA|                        |
 +=======================================================================+
-| Results for promotion-based ASHA and MOBSTER                          |
+| Results for promotion-based ASHA                          |
 +-----------------------------------------------------------------------+
 
 Here are results for our running example (4 workers; 3 hours; median, 25/75
