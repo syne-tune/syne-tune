@@ -65,7 +65,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         else:
             if "points_to_evaluate" in searcher_kwargs:
                 logger.warning(
-                    f"points_to_evaluate is pass as in searcher_kwargs, but is set to f{points_to_evaluate} in the constructor. I will use the one from the constructor."
+                    f"points_to_evaluate is passed in searcher_kwargs, but is set to f{points_to_evaluate} in the constructor. I will use the one from the constructor."
                 )
                 searcher_kwargs.pop(
                     "points_to_evaluate"
