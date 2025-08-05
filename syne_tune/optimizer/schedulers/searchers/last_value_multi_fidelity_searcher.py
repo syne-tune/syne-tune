@@ -63,7 +63,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         if searcher_kwargs is None:
             self.searcher_kwargs = dict()
         else:
-            if 'points_to_evaluate' in searcher_kwargs:
+            if "points_to_evaluate" in searcher_kwargs:
                 logger.warning(
                     f"points_to_evaluate is pass as in searcher_kwargs, but is set to f{points_to_evaluate} in the constructor. I will use the one from the constructor."
                 )
