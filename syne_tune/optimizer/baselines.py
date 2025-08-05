@@ -411,9 +411,7 @@ class BOHB(AsynchronousSuccessiveHalving):
             max_t=max_t,
             searcher="kde",
             searcher_kwargs={
-                "config_space": config_space,
                 "points_to_evaluate": points_to_evaluate,
-                "random_seed": random_seed,
                 "num_min_data_points": num_min_data_points,
                 "top_n_percent": top_n_percent,
                 "min_bandwidth": min_bandwidth,
