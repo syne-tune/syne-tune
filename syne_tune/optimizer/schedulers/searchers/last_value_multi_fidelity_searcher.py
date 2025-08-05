@@ -1,4 +1,3 @@
-import sys
 import logging
 from collections import defaultdict
 from typing import Any
@@ -124,7 +123,7 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         self.searcher = self.searcher_cls(
             config_space=self.config_space,
             # TODO BaseSearcher expects a int for random_seed, so we cannot pass a random state, we could change to pass both
-            random_seed=self.random_seed + self.random_state.randint(0, sys.maxsize),
+            random_seed=self.random_state.randint(0, 2**31 - 1),
             points_to_evaluate=None,
             **self.searcher_kwargs,
         )
