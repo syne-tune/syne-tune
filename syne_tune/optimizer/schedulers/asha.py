@@ -94,12 +94,14 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         if isinstance(searcher, str):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
-
+            # this will be handled by LastValueMultiFidelitySearcher
+            points_to_evaluate = searcher_kwargs.get("points_to_evaluate")
             self.searcher = LastValueMultiFidelitySearcher(
                 searcher=searcher,
                 config_space=config_space,
                 random_seed=random_seed,
-                **searcher_kwargs,
+                searcher_kwargs=searcher_kwargs,
+                points_to_evaluate=points_to_evaluate,
             )
         else:
             self.searcher = searcher
