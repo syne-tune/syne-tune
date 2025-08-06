@@ -7,6 +7,9 @@ Object definitions that are used for testing.
 from collections.abc import Iterator
 import numpy as np
 
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    dictionarize_objective,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
@@ -17,6 +20,13 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    TrialEvaluations,
+    PendingEvaluation,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     MCMCConfig,
@@ -40,6 +50,34 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
 )
 from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 
+
+def build_kernel(state: TuningJobState, do_warping: bool = False) -> KernelFunction:
+    hp_ranges = state.hp_ranges
+    dims = hp_ranges.ndarray_size
+    kernel = Matern52(dims, ARD=True)
+    if do_warping:
+        kernel = kernel_with_warping(kernel, hp_ranges)
+    return kernel
+
+
+def default_gpmodel(
+    state: TuningJobState, random_seed: int, optimization_config: OptimizationConfig
+) -> GaussianProcessRegression:
+    return GaussianProcessRegression(
+        kernel=build_kernel(state),
+        optimization_config=optimization_config,
+        random_seed=random_seed,
+    )
+
+
+def default_gpmodel_mcmc(
+    state: TuningJobState, random_seed: int, mcmc_config: MCMCConfig
+) -> GPRegressionMCMC:
+    return GPRegressionMCMC(
+        build_kernel=lambda: build_kernel(state),
+        mcmc_config=mcmc_config,
+        random_seed=random_seed,
+    )
 
 
 class RepeatedCandidateGenerator(CandidateGenerator):
