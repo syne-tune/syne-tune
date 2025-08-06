@@ -20,24 +20,23 @@ _parameterizations = [
 @pytest.mark.parametrize("wait_for_completion, desired_status", _parameterizations)
 def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_status):
     """
-    This test check the behavior of the wait_trial_completion_when_stopping parametr of the tuner.
+    This test check the behavior of the wait_trial_completion_when_stopping parameter of the tuner.
 
-    In this scenario, starting the tuner will start n_workes (1) workers,
+    In this scenario, starting the tuner will start n_workers (1) workers,
     each aiming to evaluate the objective for 0.2s (100 steps of 0.02s) given a set of params.
 
     In case the tuner does not wait until worker completion (wait_trial_completion_when_stopping=False)
-    the jobs will be stopped after the stopping criterion is fulfilled (walltime reachig 0.1s).
-    This means all worker jobs will be aborted and and with Status.stopped
+    the jobs will be stopped after the stopping criterion is fulfilled (wall-clock time reaching 0.1s).
+    This means all worker jobs will be aborted and with Status.stopped
 
     In case the tuner does wait until worker completion (wait_trial_completion_when_stopping=True)
-    the jobs will not be stopped after the stopping criterion is fulfilled (walltime reachig 0.1s).
-    They will run until completion 0.1s later (full 0.2s passed) and then conclude naturally with Status.compled
+    the jobs will not be stopped after the stopping criterion is fulfilled (wall-clock time reaching 0.1s).
+    They will run until completion 0.1s later (full 0.2s passed) and then conclude naturally with Status.completed
     """
     max_steps = 10
     sleep_time_bench = 0.02
     sleep_time_tuner = 0.01
     max_wallclock_time = 0.1
-    do_minimize = True
     metric = "mean_loss"
     num_workers = 1
 
