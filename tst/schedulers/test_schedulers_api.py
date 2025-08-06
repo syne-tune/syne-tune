@@ -33,6 +33,8 @@ from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.transfer_learning.zero_shot import ZeroShotTransfer
+from syne_tune.optimizer.baselines import BOHB
+
 
 config_space = {
     "steps": 100,
@@ -175,6 +177,14 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
         time_attr=resource_attr,
+    ),
+    # Multi-fidelity methods
+    BOHB(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        time_attr=resource_attr,
+        max_t=max_t,
     ),
     MedianStoppingRule(
         scheduler=SingleObjectiveScheduler(

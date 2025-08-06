@@ -63,9 +63,13 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
         if searcher_kwargs is None:
             self.searcher_kwargs = dict()
         else:
-            searcher_kwargs.pop(
-                "points_to_evaluate"
-            )  # this is handled by the SurrogateSearcher class
+            if "points_to_evaluate" in searcher_kwargs:
+                logger.warning(
+                    f"points_to_evaluate is passed in searcher_kwargs, but is set to f{points_to_evaluate} in the constructor. I will use the one from the constructor."
+                )
+                searcher_kwargs.pop(
+                    "points_to_evaluate"
+                )  # this is handled by the SurrogateSearcher class
             self.searcher_kwargs = searcher_kwargs
 
         if isinstance(searcher, str):
