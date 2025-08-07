@@ -120,7 +120,7 @@ def script_checkpoint_example_path() -> Path:
 
 def script_height_example_path() -> Path:
     """
-    :return: Path of ``train_heigth`` example
+    :return: Path of ``train_height`` example
     """
     path = (
         repository_root_path()
