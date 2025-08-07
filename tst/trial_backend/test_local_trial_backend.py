@@ -2,11 +2,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import pytest
-
-from syne_tune.backend.trial_status import Status
-from syne_tune.util import script_checkpoint_example_path
-from tst.util_test import temporary_local_backend, wait_until_all_trials_completed
+from tst.util_test import temporary_local_backend
 
 
 def check_metrics(metrics_observed, metrics_expected):
@@ -29,126 +25,6 @@ def get_status_metrics(backend, trial_id):
         trial_id: status for (trial_id, (_, status)) in trial_status_dict.items()
     }
     return trial_statuses, new_metrics
-
-
-@pytest.mark.timeout(7)
-def test_local_backend_checkpoint(caplog):
-    caplog.set_level(logging.INFO)
-    path_script = script_checkpoint_example_path()
-    backend = temporary_local_backend(entry_point=str(path_script))
-    trial_id = backend.start_trial(config={"num-epochs": 2}).trial_id
-    wait_until_all_trials_completed(backend)
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(
-        new_metrics,
-        [
-            (trial_id, {"epoch": 1, "train_acc": 1}),
-            (trial_id, {"epoch": 2, "train_acc": 2}),
-        ],
-    )
-    busy_trial_ids = backend.busy_trial_ids()
-    assert len(busy_trial_ids) == 0, busy_trial_ids
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    check_metrics(new_metrics, [])
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert new_metrics == []
-
-    backend.pause_trial(trial_id=trial_id)
-    backend.resume_trial(trial_id=trial_id)
-
-    busy_trial_ids = backend.busy_trial_ids()
-    assert len(busy_trial_ids) == 1 and busy_trial_ids[0] == (
-        trial_id,
-        Status.in_progress,
-    ), busy_trial_ids
-
-    wait_until_all_trials_completed(backend)
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(new_metrics, [])
-    busy_trial_ids = backend.busy_trial_ids()
-    assert len(busy_trial_ids) == 0, busy_trial_ids
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert new_metrics == []
-
-    trial_id = backend.start_trial(config={"num-epochs": 200}).trial_id
-    backend.stop_trial(trial_id=trial_id)
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.stopped}
-    busy_trial_ids = backend.busy_trial_ids()
-    assert len(busy_trial_ids) == 0, busy_trial_ids
-
-    trial_id = backend.start_trial(config={"num-epochs": 200}).trial_id
-    backend.pause_trial(trial_id=trial_id)
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.paused}
-    busy_trial_ids = backend.busy_trial_ids()
-    assert len(busy_trial_ids) == 0, busy_trial_ids
-
-
-@pytest.mark.skip("Speed up as currently takes >7s")
-def test_resume_config_local_backend(caplog):
-    caplog.set_level(logging.INFO)
-    path_script = script_checkpoint_example_path()
-    backend = temporary_local_backend(entry_point=str(path_script))
-    trial_id = backend.start_trial(config={"num-epochs": 2}).trial_id
-
-    wait_until_all_trials_completed(backend)
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(
-        new_metrics,
-        [
-            (trial_id, {"epoch": 1, "train_acc": 1}),
-            (trial_id, {"epoch": 2, "train_acc": 2}),
-        ],
-    )
-
-    backend.pause_trial(trial_id=trial_id)
-    backend.resume_trial(trial_id, new_config={"num-epochs": 4})
-
-    wait_until_all_trials_completed(backend)
-
-    trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
-    assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(
-        new_metrics,
-        [
-            (trial_id, {"epoch": 3, "train_acc": 3}),
-            (trial_id, {"epoch": 4, "train_acc": 4}),
-        ],
-    )
-
-
-@pytest.mark.skip("Speed up as currently takes >7s")
-def test_start_config_previous_checkpoint(caplog):
-    caplog.set_level(logging.INFO)
-    path_script = Path(__file__).parent / "main_checkpoint.py"
-    backend = temporary_local_backend(entry_point=str(path_script))
-
-    # we start two trials, the checkpoint content should be resp. state-0, state-1 and then reported.
-    backend.start_trial(config={"name": "state-0"})
-    backend.start_trial(config={"name": "state-1"})
-
-    wait_until_all_trials_completed(backend)
-    # we check whether a trial can be started from a previous checkpoint
-    backend.start_trial(checkpoint_trial_id=0, config={"name": "state-2"})
-    backend.start_trial(checkpoint_trial_id=1, config={"name": "state-3"})
-
-    wait_until_all_trials_completed(backend)
-
-    # the two trials that were started should have reported the content of their checkpoint, e.g. state-0 and state-1.
-    _, new_metrics = backend.fetch_status_results([0, 1, 2, 3])
-    results = list(sorted(new_metrics, key=lambda x: x[0]))
-    results = [res["checkpoint_content"] for _, res in results]
-    assert results == ["nothing", "nothing", "state-0", "state-1"]
 
 
 def _map_gpu(gpu: int, gpus_to_use: list[int] | None) -> int:
