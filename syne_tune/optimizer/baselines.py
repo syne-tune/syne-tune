@@ -464,6 +464,7 @@ class CQR(SingleObjectiveScheduler):
             random_seed=random_seed,
         )
 
+
 class HEBO(SingleObjectiveScheduler):
     """
     HEBO

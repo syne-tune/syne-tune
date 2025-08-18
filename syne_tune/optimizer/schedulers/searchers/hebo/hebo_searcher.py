@@ -46,8 +46,13 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
         choices = _get_attr(dom, "categories", "choices", default=None)
         if choices is None:
             # fallback: try repr
-            raise RuntimeError(f"Categorical domain {name} has no categories attribute.")
-        return CategoricalDistribution(choices), {"type": "categorical", "choices": choices}
+            raise RuntimeError(
+                f"Categorical domain {name} has no categories attribute."
+            )
+        return CategoricalDistribution(choices), {
+            "type": "categorical",
+            "choices": choices,
+        }
 
     # FiniteRange (discrete set, maybe cast_int)
     if isinstance(dom, sp.FiniteRange):
@@ -66,7 +71,11 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
             # compute step that maps to int grid
             computed_step = (upper - lower) / (size - 1) if size > 1 else 1
             # create IntDistribution with step if integer-valued
-            return IntDistribution(int(lower), int(upper), step=int(computed_step) if computed_step.is_integer() else 1), {
+            return IntDistribution(
+                int(lower),
+                int(upper),
+                step=int(computed_step) if computed_step.is_integer() else 1,
+            ), {
                 "type": "int_finite",
                 "low": lower,
                 "high": upper,
@@ -77,7 +86,11 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
         else:
             # finite floats -> treat as FloatDistribution with step encoded (Optuna FloatDistribution supports step)
             computed_step = (upper - lower) / (size - 1) if size > 1 else None
-            return FloatDistribution(float(lower), float(upper), step=float(computed_step) if computed_step is not None else None), {
+            return FloatDistribution(
+                float(lower),
+                float(upper),
+                step=float(computed_step) if computed_step is not None else None,
+            ), {
                 "type": "float_finite",
                 "low": lower,
                 "high": upper,
@@ -92,7 +105,11 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
         high = _get_attr(dom, "upper", "ub", default=None)
         if low is None or high is None:
             raise RuntimeError(f"Integer domain {name} missing bounds.")
-        return IntDistribution(int(low), int(high)), {"type": "int", "low": int(low), "high": int(high)}
+        return IntDistribution(int(low), int(high)), {
+            "type": "int",
+            "low": int(low),
+            "high": int(high),
+        }
 
     # Float domain
     if isinstance(dom, sp.Float):
@@ -111,7 +128,9 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
     raise NotImplementedError(f"Unsupported domain type for key '{name}': {type(dom)}")
 
 
-def _convert_syne_to_optuna_space(syne_space: Dict[str, Any]) -> Tuple[Dict[str, BaseDistribution], Dict[str, dict]]:
+def _convert_syne_to_optuna_space(
+    syne_space: Dict[str, Any]
+) -> Tuple[Dict[str, BaseDistribution], Dict[str, dict]]:
     """
     Convert entire Syne Tune config space mapping -> optuna distributions dict (only for optimizable params).
     Returns (optuna_space, metadata) where metadata[name] stores info used later for mapping.
@@ -143,20 +162,19 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         self._optuna_space = optuna_space
         self.trials = []
 
-
-        super().__init__(config_space=config_space, points_to_evaluate=None, random_seed=random_seed)
+        super().__init__(
+            config_space=config_space, points_to_evaluate=None, random_seed=random_seed
+        )
 
         self._do_minimize = do_minimize
-
 
         # Instantiate optunahub HEBOSampler
         HEBOSampler = optunahub.load_module("samplers/hebo").HEBOSampler
 
         self._study = optuna.create_study(
             sampler=HEBOSampler(seed=random_seed),
-            direction = "minimize" if do_minimize else "maximize"
+            direction="minimize" if do_minimize else "maximize",
         )
-
 
     def suggest(self, **kwargs):
         trial = self._study.ask(self._optuna_space)
@@ -166,4 +184,3 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
     def on_trial_complete(self, trial_id, config, metric):
         # Report back the objective
         self._study.tell(config, metric, trial=self.trials[-1])
-
