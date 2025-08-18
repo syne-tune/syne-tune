@@ -1,6 +1,5 @@
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any
 import numpy as np
-import pandas as pd
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -33,10 +32,8 @@ def _get_attr(obj: Any, *names, default=None):
 def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
     """
     Convert a Syne Tune domain (sp.*) or literal constant into an Optuna distribution.
-    Returns (optuna_dist or None for constants, info_dict)
-    info_dict stores useful metadata for mapping values back/forth (e.g., step, low, high, cast_int).
+    Returns optuna_dist or None for constants
     """
-    info = {}
     # literal constant
     if isinstance(dom, (int, float, bool, str)):
         return None, {"constant": dom}
@@ -129,36 +126,33 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
 
 
 def _convert_syne_to_optuna_space(
-    syne_space: Dict[str, Any]
-) -> Tuple[Dict[str, BaseDistribution], Dict[str, dict]]:
+    syne_space: dict[str, Any]
+) -> dict[str, BaseDistribution]:
     """
-    Convert entire Syne Tune config space mapping -> optuna distributions dict (only for optimizable params).
-    Returns (optuna_space, metadata) where metadata[name] stores info used later for mapping.
-    Constants are omitted from optuna_space and recorded in metadata as {"constant": val}.
+    Convert entire Syne Tune config space mapping -> optuna distributions dict.
     """
-    optuna_space: Dict[str, BaseDistribution] = {}
-    metadata: Dict[str, dict] = {}
+    optuna_space: dict[str, BaseDistribution] = {}
+
     for name, dom in syne_space.items():
         optuna_dist, info = _syne_tune_domain_to_optuna_dist(name, dom)
-        metadata[name] = info
         if optuna_dist is not None:
             optuna_space[name] = optuna_dist
-    return optuna_space, metadata
+    return optuna_space
 
 
 class HEBOSearcher(SingleObjectiveBaseSearcher):
     """
-    Minimal Syne Tune searcher that converts Syne Tune config-space -> Optuna distributions,
-    instantiates optunahub's HEBOSampler, and uses its HEBO backend for suggest/observe.
+    Syne Tune searcher that converts Syne Tune config-space -> Optuna distributions,
+    instantiates optunahub's HEBOSampler, and uses the ask/tell interface to query the Sampler.
     """
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         do_minimize: bool = True,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ):
-        optuna_space, metadata = _convert_syne_to_optuna_space(config_space)
+        optuna_space = _convert_syne_to_optuna_space(config_space)
         self._optuna_space = optuna_space
         self.trials = []
 
@@ -179,7 +173,7 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
     def suggest(self, **kwargs):
         trial = self._study.ask(self._optuna_space)
         self.trials.append(trial)
-        return trial.params  # already dict[name -> value]
+        return trial.params
 
     def on_trial_complete(self, trial_id, config, metric):
         # Report back the objective
