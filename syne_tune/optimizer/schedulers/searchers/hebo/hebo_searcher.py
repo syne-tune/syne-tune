@@ -35,7 +35,9 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
         # Syne Tune Categorical stores choices in `categories`
         choices = dom.categories
         if choices is None:
-            raise RuntimeError(f"Categorical domain {name} has no categories attribute.")
+            raise RuntimeError(
+                f"Categorical domain {name} has no categories attribute."
+            )
         return CategoricalDistribution(choices), {
             "type": "categorical",
             "choices": choices,
@@ -57,7 +59,11 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
 
         if cast_int:
             # IntDistribution: compute integer step if it maps exactly to ints
-            step_for_int = int(computed_step) if float(computed_step).is_integer() and computed_step != 0 else 1
+            step_for_int = (
+                int(computed_step)
+                if float(computed_step).is_integer() and computed_step != 0
+                else 1
+            )
             return IntDistribution(
                 int(lower),
                 int(upper),
