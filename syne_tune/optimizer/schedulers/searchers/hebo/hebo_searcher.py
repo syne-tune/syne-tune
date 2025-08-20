@@ -21,18 +21,10 @@ import optuna
 logger = logging.getLogger(__name__)
 
 
-# extract attributes from Syne Tune domains
-def _get_attr(obj: Any, *names, default=None):
-    for n in names:
-        if hasattr(obj, n):
-            return getattr(obj, n)
-    return default
-
-
-def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
+def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
     """
     Convert a Syne Tune domain (sp.*) or literal constant into an Optuna distribution.
-    Returns optuna_dist or None for constants
+    Returns (optuna_dist or None for constants, metadata dict)
     """
     # literal constant
     if isinstance(dom, (int, float, bool, str)):
@@ -40,12 +32,10 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
 
     # Syne Tune Categorical
     if isinstance(dom, sp.Categorical):
-        choices = _get_attr(dom, "categories", "choices", default=None)
+        # Syne Tune Categorical stores choices in `categories`
+        choices = dom.categories
         if choices is None:
-            # fallback: try repr
-            raise RuntimeError(
-                f"Categorical domain {name} has no categories attribute."
-            )
+            raise RuntimeError(f"Categorical domain {name} has no categories attribute.")
         return CategoricalDistribution(choices), {
             "type": "categorical",
             "choices": choices,
@@ -53,25 +43,25 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
 
     # FiniteRange (discrete set, maybe cast_int)
     if isinstance(dom, sp.FiniteRange):
-        lower = _get_attr(dom, "lower", "lower_bound", default=None)
-        upper = _get_attr(dom, "upper", "upper_bound", default=None)
-        size = _get_attr(dom, "size", default=None)
-        cast_int = _get_attr(dom, "cast_int", default=False)
-        step = _get_attr(dom, "step", default=None)
+        lower = dom.lower
+        upper = dom.upper
+        size = dom.size
+        cast_int = dom.cast_int if hasattr(dom, "cast_int") else False
+        log_scale = dom.log_scale if hasattr(dom, "log_scale") else False
+
         if size is None:
-            if step is not None:
-                size = int(np.round((upper - lower) / step)) + 1
-            else:
-                raise RuntimeError(f"Cannot infer size/step for FiniteRange '{name}'")
-        # If cast_int -> integer discrete values
+            raise RuntimeError(f"Cannot infer size for FiniteRange '{name}'")
+
+        # compute linear step
+        computed_step = (upper - lower) / (size - 1) if size > 1 else 0.0
+
         if cast_int:
-            # compute step that maps to int grid
-            computed_step = (upper - lower) / (size - 1) if size > 1 else 1
-            # create IntDistribution with step if integer-valued
+            # IntDistribution: compute integer step if it maps exactly to ints
+            step_for_int = int(computed_step) if float(computed_step).is_integer() and computed_step != 0 else 1
             return IntDistribution(
                 int(lower),
                 int(upper),
-                step=int(computed_step) if computed_step.is_integer() else 1,
+                step=step_for_int,
             ), {
                 "type": "int_finite",
                 "low": lower,
@@ -79,14 +69,16 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
                 "size": size,
                 "step": computed_step,
                 "cast_int": True,
+                "log_scale": bool(log_scale),
             }
         else:
-            # finite floats -> treat as FloatDistribution with step encoded (Optuna FloatDistribution supports step)
-            computed_step = (upper - lower) / (size - 1) if size > 1 else None
+            # Finite floats -> use FloatDistribution. If the space is log-spaced,
+            # set log=True so Optuna treats it as log-scale.
             return FloatDistribution(
                 float(lower),
                 float(upper),
-                step=float(computed_step) if computed_step is not None else None,
+                step=float(computed_step) if size > 1 else None,
+                log=bool(log_scale),
             ), {
                 "type": "float_finite",
                 "low": lower,
@@ -94,28 +86,30 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any):
                 "size": size,
                 "step": computed_step,
                 "cast_int": False,
+                "log_scale": bool(log_scale),
             }
 
     # Integer domain
     if isinstance(dom, sp.Integer):
-        low = _get_attr(dom, "lower", "lb", default=None)
-        high = _get_attr(dom, "upper", "ub", default=None)
+        low = dom.lower
+        high = dom.upper
         if low is None or high is None:
             raise RuntimeError(f"Integer domain {name} missing bounds.")
         return IntDistribution(int(low), int(high)), {
             "type": "int",
             "low": int(low),
             "high": int(high),
+            "log": bool(sp.is_log_space(dom)),
         }
 
     # Float domain
     if isinstance(dom, sp.Float):
-        low = _get_attr(dom, "lower", "lb", default=None)
-        high = _get_attr(dom, "upper", "ub", default=None)
-        log_flag = _get_attr(dom, "log", "log_scale", default=False)
+        low = dom.lower
+        high = dom.upper
         if low is None or high is None:
             raise RuntimeError(f"Float domain {name} missing bounds.")
-        return FloatDistribution(float(low), float(high), log=bool(log_flag)), {
+        log_flag = bool(sp.is_log_space(dom))
+        return FloatDistribution(float(low), float(high), log=log_flag), {
             "type": "float",
             "low": low,
             "high": high,
