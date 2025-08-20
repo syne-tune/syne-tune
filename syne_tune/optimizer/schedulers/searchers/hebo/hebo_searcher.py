@@ -4,6 +4,7 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
+
 import syne_tune.config_space as sp
 
 from optuna.distributions import (
@@ -173,5 +174,4 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         return trial.params
 
     def on_trial_complete(self, trial_id, config, metric):
-        # Report back the objective
         self._study.tell(config, metric, trial=self.trials[-1])
