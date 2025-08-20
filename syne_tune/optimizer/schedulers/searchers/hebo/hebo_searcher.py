@@ -1,5 +1,4 @@
 from typing import Any
-import numpy as np
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -7,7 +6,6 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 )
 import syne_tune.config_space as sp
 
-# optuna distributions for conversion
 from optuna.distributions import (
     BaseDistribution,
     CategoricalDistribution,
@@ -30,9 +28,8 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
     if isinstance(dom, (int, float, bool, str)):
         return None, {"constant": dom}
 
-    # Syne Tune Categorical
+    # Categorical
     if isinstance(dom, sp.Categorical):
-        # Syne Tune Categorical stores choices in `categories`
         choices = dom.categories
         if choices is None:
             raise RuntimeError(
@@ -43,7 +40,7 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
             "choices": choices,
         }
 
-    # FiniteRange (discrete set, maybe cast_int)
+    # FiniteRange
     if isinstance(dom, sp.FiniteRange):
         lower = dom.lower
         upper = dom.upper
@@ -58,7 +55,7 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
         computed_step = (upper - lower) / (size - 1) if size > 1 else 0.0
 
         if cast_int:
-            # IntDistribution: compute integer step if it maps exactly to ints
+            # IntDistribution
             step_for_int = (
                 int(computed_step)
                 if float(computed_step).is_integer() and computed_step != 0
@@ -95,7 +92,7 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
                 "log_scale": bool(log_scale),
             }
 
-    # Integer domain
+    # Integer
     if isinstance(dom, sp.Integer):
         low = dom.lower
         high = dom.upper
@@ -108,7 +105,7 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
             "log": bool(sp.is_log_space(dom)),
         }
 
-    # Float domain
+    # Float
     if isinstance(dom, sp.Float):
         low = dom.lower
         high = dom.upper
