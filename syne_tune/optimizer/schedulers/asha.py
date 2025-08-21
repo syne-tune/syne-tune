@@ -148,7 +148,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, resource_level=result[self.resource_attr]
+            trial.trial_id,
+            config,
+            metric=metric,
+            resource_level=result[self.resource_attr],
         )
         self._check_metrics_are_present(result)
         if result[self.resource_attr] >= self.max_t:
@@ -169,7 +172,10 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, resource_level=result[self.resource_attr]
+            trial.trial_id,
+            config,
+            metric=metric,
+            resource_level=result[self.resource_attr],
         )
 
         self._check_metrics_are_present(result)
