@@ -13,7 +13,7 @@ config_space = {
     "steps": max_steps,
     "width": randint(0, 20),
 }
-time_attr = "step"
+resource_attr = "step"
 metric1 = "mean_loss"
 metric2 = "cost"
 

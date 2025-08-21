@@ -102,7 +102,7 @@ def run_experiment_with_height(
         metric=metric,
         do_minimize=True,
         random_seed=random_seed,
-        time_attr=RESOURCE_ATTR,
+        resource_attr=RESOURCE_ATTR,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)

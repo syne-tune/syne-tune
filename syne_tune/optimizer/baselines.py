@@ -252,13 +252,13 @@ class ASHA(AsynchronousSuccessiveHalving):
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
-    :param time_attr: A training result attr to use for comparing time.
+    :param resource_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
         Defaults to "training_iteration"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``time_attr``) have passed.
+        ``max_t`` time units (determined by ``resource_attr``) have passed.
         Defaults to 100
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
@@ -269,7 +269,7 @@ class ASHA(AsynchronousSuccessiveHalving):
         self,
         config_space: dict[str, Any],
         metric: str,
-        time_attr: str,
+        resource_attr: str,
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
@@ -283,7 +283,7 @@ class ASHA(AsynchronousSuccessiveHalving):
             searcher="random_search",
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
             random_seed=random_seed,
-            time_attr=time_attr,
+            resource_attr=resource_attr,
         )
 
 
@@ -293,13 +293,13 @@ class ASHABORE(AsynchronousSuccessiveHalving):
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
-    :param time_attr: A training result attr to use for comparing time.
+    :param resource_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
         Defaults to "training_iteration"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``time_attr``) have passed.
+        ``max_t`` time units (determined by ``resource_attr``) have passed.
         Defaults to 100
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
@@ -310,7 +310,7 @@ class ASHABORE(AsynchronousSuccessiveHalving):
         self,
         config_space: dict[str, Any],
         metric: str,
-        time_attr: str,
+        resource_attr: str,
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
@@ -323,7 +323,7 @@ class ASHABORE(AsynchronousSuccessiveHalving):
             max_t=max_t,
             searcher="bore",
             random_seed=random_seed,
-            time_attr=time_attr,
+            resource_attr=resource_attr,
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
         )
 
@@ -334,13 +334,13 @@ class ASHACQR(AsynchronousSuccessiveHalving):
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
-    :param time_attr: A training result attr to use for comparing time.
+    :param resource_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
         Defaults to "training_iteration"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``time_attr``) have passed.
+        ``max_t`` time units (determined by ``resource_attr``) have passed.
         Defaults to 100
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
@@ -351,7 +351,7 @@ class ASHACQR(AsynchronousSuccessiveHalving):
         self,
         config_space: dict[str, Any],
         metric: str,
-        time_attr: str,
+        resource_attr: str,
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
@@ -364,7 +364,7 @@ class ASHACQR(AsynchronousSuccessiveHalving):
             max_t=max_t,
             searcher="cqr",
             random_seed=random_seed,
-            time_attr=time_attr,
+            resource_attr=resource_attr,
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
         )
 
@@ -392,7 +392,7 @@ class BOHB(AsynchronousSuccessiveHalving):
         self,
         config_space: dict[str, Any],
         metric: str,
-        time_attr: str,
+        resource_attr: str,
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
@@ -420,7 +420,7 @@ class BOHB(AsynchronousSuccessiveHalving):
                 "random_fraction": random_fraction,
             },
             random_seed=random_seed,
-            time_attr=time_attr,
+            resource_attr=resource_attr,
         )
 
 

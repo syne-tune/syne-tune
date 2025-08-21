@@ -35,7 +35,7 @@ if __name__ == "__main__":
     np.random.seed(0)
     scheduler = MOASHA(
         max_t=max_steps,
-        time_attr="step",
+        resource_attr="step",
         metrics=["y1", "y2"],
         config_space=config_space,
     )

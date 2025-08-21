@@ -44,16 +44,16 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
        ``on_trial_result``.
     :param do_minimize: If True, we minimize the objective function specified by ``metric`` . Defaults to True.
     :param searcher: Searcher object to sample configurations.
-    :param time_attr: A training result attr to use for comparing time.
+    :param resource_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
         Defaults to "training_iteration"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``time_attr``) have passed.
+        ``max_t`` time units (determined by ``resource_attr``) have passed.
         Defaults to 100
     :param grace_period: Only stop trials at least this old in time.
-        The units are the same as the attribute named by ``time_attr``.
+        The units are the same as the attribute named by ``resource_attr``.
         Defaults to 1
     :param reduction_factor: Used to set halving rate and amount. This
         is simply a unit-less scalar. Defaults to 3
@@ -72,7 +72,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         | IndependentMultiFidelitySearcher
         | LastValueMultiFidelitySearcher
         | None = "random_search",
-        time_attr: str = "training_iteration",
+        resource_attr: str = "training_iteration",
         max_t: int = 100,
         grace_period: int = 1,
         reduction_factor: float = 3,
@@ -82,7 +82,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
     ):
         super().__init__(random_seed=random_seed)
 
-        assert max_t > 0, "Max (time_attr) not valid!"
+        assert max_t > 0, "Max (resource_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
         assert grace_period > 0, "grace_period must be positive!"
         assert reduction_factor > 1, "reduction factor not valid!"
@@ -122,7 +122,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         ]
         self.num_stopped = 0
         self.metric_multiplier = 1 if self.do_minimize else -1
-        self.time_attr = time_attr
+        self.resource_attr = resource_attr
 
     def suggest(self) -> TrialSuggestion | None:
         config = self.searcher.suggest()
@@ -148,16 +148,16 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, resource_level=result[self.time_attr]
+            trial.trial_id, config, metric=metric, resource_level=result[self.resource_attr]
         )
         self._check_metrics_are_present(result)
-        if result[self.time_attr] >= self.max_t:
+        if result[self.resource_attr] >= self.max_t:
             action = SchedulerDecision.STOP
         else:
             bracket = self.trial_info[trial.trial_id]
             action = bracket.on_result(
                 trial_id=trial.trial_id,
-                cur_iter=result[self.time_attr],
+                cur_iter=result[self.resource_attr],
                 metrics={self.metric: metric},
             )
         if action == SchedulerDecision.STOP:
@@ -169,14 +169,14 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         config = remove_constant_and_cast(trial.config, self.config_space)
         metric = result[self.metric] * self.metric_multiplier
         self.searcher.on_trial_result(
-            trial.trial_id, config, metric=metric, resource_level=result[self.time_attr]
+            trial.trial_id, config, metric=metric, resource_level=result[self.resource_attr]
         )
 
         self._check_metrics_are_present(result)
         bracket = self.trial_info[trial.trial_id]
         bracket.on_result(
             trial_id=trial.trial_id,
-            cur_iter=result[self.time_attr],
+            cur_iter=result[self.resource_attr],
             metrics={self.metric: metric},
         )
         del self.trial_info[trial.trial_id]
@@ -205,7 +205,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         return metadata
 
     def _check_metrics_are_present(self, result: dict[str, Any]):
-        for key in [self.metric, self.time_attr]:
+        for key in [self.metric, self.resource_attr]:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 

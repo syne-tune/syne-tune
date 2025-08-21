@@ -176,14 +176,14 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     ),
     # Multi-fidelity methods
     BOHB(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
         max_t=max_t,
     ),
     MedianStoppingRule(
@@ -202,28 +202,28 @@ list_schedulers_to_test = [
         metric=metric1,
         random_seed=random_seed,
         searcher="random_search",
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="bore",
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="kde",
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="cqr",
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     ),
     BoundingBox(
         scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(

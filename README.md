@@ -113,7 +113,7 @@ tuner = Tuner(
     scheduler=ASHA(
         config_space,
         metric='mean_loss',
-        time_attr='epoch',
+        resource_attr='epoch',
     ),
     stop_criterion=StoppingCriterion(max_wallclock_time=30), # total runtime in seconds
     n_workers=4,  # how many trials are evaluated in parallel
