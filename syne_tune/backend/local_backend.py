@@ -6,7 +6,7 @@ from operator import itemgetter
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
@@ -37,6 +37,9 @@ class LocalBackend(TrialBackend):
     :class:`~syne_tune.backend.trial_backend.TrialBackend`:
 
     :param entry_point: Path to Python main file to be tuned
+    :param binary: Binary to use when evaluating configurations, defaults to the current python environment but can
+    be overrided with `"java"` to tune a Java program or `"torchrun --standalone --nproc_per_node=4"` to tune a
+    distributed setup in pytorch.
     :param rotate_gpus: In case several GPUs are present, each trial is
         scheduled on a different GPU. A new trial is preferentially
         scheduled on a free GPU, and otherwise the GPU with least prior
@@ -53,11 +56,12 @@ class LocalBackend(TrialBackend):
     def __init__(
         self,
         entry_point: str,
+        binary: str | None = None,
         delete_checkpoints: bool = False,
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
         num_gpus_per_trial: int = 1,
-        gpus_to_use: Optional[List[int]] = None,
+        gpus_to_use: list[int] | None = None,
     ):
         super(LocalBackend, self).__init__(
             delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
@@ -67,6 +71,7 @@ class LocalBackend(TrialBackend):
             entry_point
         ).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
+        self.binary = sys.executable if binary is None else binary
         self.local_path = None
         self.trial_subprocess = dict()
 
@@ -152,7 +157,7 @@ class LocalBackend(TrialBackend):
                 # Nothing to rotate over
                 self.rotate_gpus = False
 
-    def _gpus_for_new_trial(self) -> List[int]:
+    def _gpus_for_new_trial(self) -> list[int]:
         """
         Selects ``num_gpus_per_trial`` GPUs for trial to be scheduled on. GPUs
         not assigned to other running trials have precedence. Ties are resolved
@@ -184,7 +189,7 @@ class LocalBackend(TrialBackend):
             self.gpu_times_assigned[gpu] += 1
         return res_gpu
 
-    def _schedule(self, trial_id: int, config: Dict[str, Any]):
+    def _schedule(self, trial_id: int, config: dict[str, Any]):
         self._prepare_for_schedule()
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
@@ -206,7 +211,7 @@ class LocalBackend(TrialBackend):
                 )
 
                 dump_json_with_numpy(config, config_json_fname)
-                cmd = f"{sys.executable} {self.entry_point} {config_str}"
+                cmd = f"{self.binary} {self.entry_point} {config_str}"
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
                 logger.info(f"running subprocess with command: {cmd}")
@@ -216,7 +221,7 @@ class LocalBackend(TrialBackend):
                 )
         self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
-    def _allocate_gpu(self, trial_id: int, env: Dict[str, Any]):
+    def _allocate_gpu(self, trial_id: int, env: dict[str, Any]):
         if self.rotate_gpus:
             gpus = self._gpus_for_new_trial()
             if self.gpus_to_use is not None:
@@ -233,7 +238,7 @@ class LocalBackend(TrialBackend):
         if self.rotate_gpus and trial_id in self.trial_gpu:
             del self.trial_gpu[trial_id]
 
-    def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+    def _all_trial_results(self, trial_ids: list[int]) -> list[TrialResult]:
         res = []
         for trial_id in trial_ids:
             trial_path = self.trial_path(trial_id)
@@ -271,7 +276,7 @@ class LocalBackend(TrialBackend):
         if trial_id in self._busy_trial_id_candidates:
             self._busy_trial_id_candidates.remove(trial_id)
 
-    def _pause_trial(self, trial_id: int, result: Optional[dict]):
+    def _pause_trial(self, trial_id: int, result: dict | None):
         self._file_path(trial_id=trial_id, filename="pause").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
@@ -284,7 +289,7 @@ class LocalBackend(TrialBackend):
         except FileNotFoundError:
             logger.info(f"Pause lock file {str(pause_path)} not found")
 
-    def _stop_trial(self, trial_id: int, result: Optional[dict]):
+    def _stop_trial(self, trial_id: int, result: dict | None):
         self._file_path(trial_id=trial_id, filename="stop").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
@@ -329,7 +334,7 @@ class LocalBackend(TrialBackend):
                 else:
                     return Status.failed
 
-    def _get_busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def _get_busy_trial_ids(self) -> list[tuple[int, str]]:
         busy_list = []
         for trial_id in self._busy_trial_id_candidates:
             status = self._read_status(trial_id)
@@ -337,7 +342,7 @@ class LocalBackend(TrialBackend):
                 busy_list.append((trial_id, status))
         return busy_list
 
-    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+    def busy_trial_ids(self) -> list[tuple[int, str]]:
         # Note that at this point, ``self._busy_trial_id_candidates`` contains
         # trials whose jobs have been busy in the past, but they may have
         # stopped or terminated since. We query the current status for all
@@ -350,17 +355,15 @@ class LocalBackend(TrialBackend):
         else:
             return []
 
-    def stdout(self, trial_id: int) -> List[str]:
+    def stdout(self, trial_id: int) -> list[str]:
         with open(self.trial_path(trial_id=trial_id) / "std.out", "r") as f:
             return f.readlines()
 
-    def stderr(self, trial_id: int) -> List[str]:
+    def stderr(self, trial_id: int) -> list[str]:
         with open(self.trial_path(trial_id=trial_id) / "std.err", "r") as f:
             return f.readlines()
 
-    def set_path(
-        self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
-    ):
+    def set_path(self, results_root: str | None = None, tuner_name: str | None = None):
         self.local_path = Path(results_root)
 
     def entrypoint_path(self) -> Path:

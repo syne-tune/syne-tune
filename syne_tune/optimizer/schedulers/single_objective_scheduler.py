@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Union
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -13,39 +13,27 @@ logger = logging.getLogger(__name__)
 
 class SingleObjectiveScheduler(SingleFidelityScheduler):
     """
-    #TODO: Update docstring
-
-    Schedulers maintain and drive the logic of an experiment, making decisions
-    which configs to evaluate in new trials, and which trials to stop early.
-
-    Some schedulers support pausing and resuming trials. In this case, they
-    also drive the decision when to restart a paused trial.
+    Base class to implement scheduler that optimize a single objective.
 
     :param config_space: Configuration space for evaluation function
-    :type config_space: Dict[str, Any]
     :param searcher: Searcher for ``get_config`` decisions. String values
         are passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
         with ``search_options`` and extra information. Supported values:
         :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_FIFO`.
         Defaults to "random" (i.e., random search)
-    :type searcher: str or
-        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param metric: Name of metric to optimize, key in results obtained via
         ``on_trial_result``.
-    :type metric: str
-    :param random_seed: Master random seed. Generators used in the
-        scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
-        If not given, the master random seed is drawn at random here.
-    :type random_seed: int, optional
+    :param do_minimize: True if we minimize the objective function
+    :param random_seed: Seed used to initialize the random number generators.
     """
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        do_minimize: Optional[bool] = True,
-        searcher: Optional[Union[str, SingleObjectiveBaseSearcher]] = "random_search",
+        do_minimize: bool | None = True,
+        searcher: str | SingleObjectiveBaseSearcher | None = "random_search",
         random_seed: int = None,
         searcher_kwargs: dict = None,
     ):

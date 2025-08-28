@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 import math
 import pytest
 
@@ -18,12 +18,14 @@ from syne_tune.results_callback import StoreResultsCallback
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
+    SingleFidelityScheduler,
+)
+from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
-def _compare_results(res_local: Dict[str, Any], res_simul: Dict[str, Any], num: int):
+def _compare_results(res_local: dict[str, Any], res_simul: dict[str, Any], num: int):
     for key in (ST_TRIAL_ID, ST_DECISION, "epoch", "mean_loss"):
         rloc = res_local[key]
         rsim = res_simul[key]
@@ -94,7 +96,9 @@ def test_compare_local_simulator_backends(scheduler_name):
                 }
             )
         scheduler_cls = (
-            FIFOScheduler if scheduler_name == "fifo" else HyperbandScheduler
+            SingleFidelityScheduler
+            if scheduler_name == "fifo"
+            else AsynchronousSuccessiveHalving
         )
         scheduler = scheduler_cls(benchmark["config_space"], **scheduler_options)
         # Create backend

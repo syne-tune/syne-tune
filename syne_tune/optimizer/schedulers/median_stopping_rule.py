@@ -1,20 +1,21 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Dict, List
+from typing import Any
 
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
+from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
-class MedianStoppingRule(LegacyTrialScheduler):
+class MedianStoppingRule(TrialScheduler):
     """
     Applies median stopping rule in top of an existing scheduler.
 
@@ -46,19 +47,23 @@ class MedianStoppingRule(LegacyTrialScheduler):
         ``grace_population`` have been observed at a resource level. Defaults to 5
     :param rank_cutoff: Results whose quantiles are below this level are
         discarded. Defaults to 0.5 (median)
+    :param random_seed: Seed used to initialize the random number generators.
+    :param do_minimize: True if we minimize the objective function
     """
 
     def __init__(
         self,
-        scheduler: LegacyTrialScheduler,
+        scheduler: TrialScheduler,
         resource_attr: str,
         running_average: bool = True,
-        metric: Optional[str] = None,
-        grace_time: Optional[int] = 1,
+        metric: str | None = None,
+        grace_time: int | None = 1,
         grace_population: int = 5,
         rank_cutoff: float = 0.5,
+        random_seed: int = None,
+        do_minimize: bool | None = True,
     ):
-        super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space)
+        super(MedianStoppingRule, self).__init__(random_seed=random_seed)
         if metric is None and hasattr(scheduler, "metric"):
             metric = getattr(scheduler, "metric")
         self.metric = metric
@@ -69,17 +74,18 @@ class MedianStoppingRule(LegacyTrialScheduler):
         self.grace_time = grace_time
         self.min_samples_required = grace_population
         self.running_average = running_average
+
+        self.metric_multiplier = 1 if do_minimize else -1
+        self.do_minimize = do_minimize
         if running_average:
             self.trial_to_results = defaultdict(list)
-        self.mode = scheduler.metric_mode()
 
-    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        return self.scheduler._suggest(trial_id=trial_id)
+    def suggest(self) -> TrialSuggestion | None:
+        return self.scheduler.suggest()
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
-        new_metric = result[self.metric]
-        if self.mode == "max":
-            new_metric *= -1
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
+        new_metric = result[self.metric] * self.metric_multiplier
+
         time_step = result[self.resource_attr]
 
         if self.running_average:
@@ -121,8 +127,17 @@ class MedianStoppingRule(LegacyTrialScheduler):
             return True
         return False
 
-    def metric_names(self) -> List[str]:
-        return self.scheduler.metric_names()
+    def metadata(self) -> dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        metadata = super().metadata()
+        metadata_scheduler = self.scheduler.metadata()
+
+        return metadata_scheduler | metadata
+
+    def metric_names(self) -> list[str]:
+        return self.metric
 
     def metric_mode(self) -> str:
-        return self.scheduler.metric_mode()
+        return "min" if self.do_minimize else "max"

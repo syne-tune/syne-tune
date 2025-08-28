@@ -1,14 +1,19 @@
 import logging
-from typing import Dict, Callable, Optional, Any
+from typing import Any
+from collections.abc import Callable
 
 import pandas as pd
 
-from syne_tune.optimizer.legacy_scheduler import LegacyTrialScheduler
 from syne_tune.optimizer.scheduler import TrialSuggestion
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.schedulers.transfer_learning import (
-    TransferLearningMixin,
+from syne_tune.optimizer.schedulers.single_objective_scheduler import (
+    SingleObjectiveScheduler,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_mixin import (
+    TransferLearningMixin,
 )
 from syne_tune.config_space import (
     Categorical,
@@ -20,7 +25,7 @@ from syne_tune.config_space import (
 logger = logging.getLogger(__name__)
 
 
-class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
+class BoundingBox(TransferLearningMixin, SingleObjectiveScheduler):
     """
     Simple baseline that computes a bounding-box of the best candidate found in
     previous tasks to restrict the search space to only good candidates. The
@@ -47,7 +52,7 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
        bb_scheduler = BoundingBox(scheduler_fun, ...)
 
     Here, ``bb_scheduler`` represents random search, where the hyperparameter
-    ranges are restricted to contain the best evalutions of previous tasks,
+    ranges are restricted to contain the best evaluations of previous tasks,
     as provided by ``transfer_learning_evaluations``.
 
     :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
@@ -57,7 +62,7 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
         to the bounding of the best evaluations of previous tasks
     :param metric: Objective name to optimize, must be present in transfer
         learning evaluations.
-    :param mode: Mode to be considered, default to "min".
+    :param do_minimize: indicating if the optimization problem is minimized.
     :param transfer_learning_evaluations: Dictionary from task name to
         offline evaluations.
     :param num_hyperparameters_per_task: Number of the best configurations to
@@ -66,47 +71,42 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
 
     def __init__(
         self,
-        scheduler_fun: Callable[[dict, str, str], LegacyTrialScheduler],
-        config_space: Dict[str, Any],
+        scheduler_fun: Callable[[dict, str, bool, int], SingleObjectiveScheduler],
+        config_space: dict[str, Any],
         metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        mode: Optional[str] = None,
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
+        do_minimize: bool | None = True,
         num_hyperparameters_per_task: int = 1,
+        random_seed: int = None,
     ):
         super().__init__(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            metric_names=[metric],
+            metric=metric,
+            random_seed=random_seed,
         )
-        if mode is None:
-            mode = "min"
-        else:
-            assert mode in ["min", "max"], "mode must be either 'min' or 'max'."
 
         config_space = self._compute_box(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            mode=mode,
+            do_minimize=do_minimize,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
-            metric=metric,
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
         print(f"({config_space_size(config_space)} options)")
-        self.scheduler = scheduler_fun(config_space, mode, metric)
+        self.scheduler = scheduler_fun(config_space, metric, do_minimize, random_seed)
 
     def _compute_box(
         self,
-        config_space: Dict[str, Any],
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        mode: str,
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
+        do_minimize: bool,
         num_hyperparameters_per_task: int,
-        metric: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
-            mode=mode,
-            metric=metric,
+            do_minimize=do_minimize,
         )
         hp_df = pd.DataFrame(
             [hp for _, top_k_hp in top_k_per_task.items() for hp in top_k_hp]
@@ -127,7 +127,7 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
                         upper=hp_df.loc[:, name].max(),
                     )
                 else:
-                    # no known way to compute bounding over non numerical domains such as functional
+                    # no known way to compute bounding over non-numerical domains such as functional
                     new_config_space[name] = domain
             else:
                 new_config_space[name] = domain
@@ -137,13 +137,13 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
 
         return new_config_space
 
-    def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        return self.scheduler.suggest(trial_id)
+    def suggest(self) -> TrialSuggestion | None:
+        return self.scheduler.suggest()
 
     def on_trial_add(self, trial: Trial):
         self.scheduler.on_trial_add(trial)
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         self.scheduler.on_trial_complete(trial, result)
 
     def on_trial_remove(self, trial: Trial):
@@ -152,7 +152,7 @@ class BoundingBox(TransferLearningMixin, LegacyTrialScheduler):
     def on_trial_error(self, trial: Trial):
         self.scheduler.on_trial_error(trial)
 
-    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         return self.scheduler.on_trial_result(trial, result)
 
     def metric_mode(self) -> str:

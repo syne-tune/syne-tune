@@ -1,15 +1,17 @@
 import logging
-from typing import Dict, Optional, Any, Tuple
+from typing import Any
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
-from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 
 import pandas as pd
 
-from syne_tune.optimizer.schedulers.transfer_learning import (
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import (
@@ -84,9 +86,9 @@ def eval_model(model_pipeline, X, y):
 def subsample(
     X: pd.DataFrame,
     y: np.array,
-    max_samples: Optional[int] = 10000,
+    max_samples: int | None = 10000,
     random_state: np.random.RandomState = None,
-) -> Tuple[pd.DataFrame, np.array]:
+) -> tuple[pd.DataFrame, np.array]:
     """
     Subsample both X and y with `max_samples` elements. If `max_samples` is not set then X and y are returned as such
     and if it is set, the index of X is reset.
@@ -105,7 +107,7 @@ def subsample(
     return X, y
 
 
-class QuantileBasedSurrogateSearcher(StochasticSearcher):
+class QuantileBasedSurrogateSearcher(SingleObjectiveBaseSearcher):
     """
     Implements the transfer-learning method:
 
@@ -118,10 +120,7 @@ class QuantileBasedSurrogateSearcher(StochasticSearcher):
     configuration performance given a hyperparameter. The surrogate is then sampled
     from and the best configurations are returned as next candidate to evaluate.
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
-
-    :param mode: Whether to minimize or maximize, default to "min".
+    :param config_space: Configuration space for the evaluation function.
     :param transfer_learning_evaluations: Dictionary from task name to offline
         evaluations.
     :param max_fit_samples: Maximum number to use when fitting the method.
@@ -130,25 +129,22 @@ class QuantileBasedSurrogateSearcher(StochasticSearcher):
         and then applies Gaussian inverse CDF. "standard" applies just
         standard normalization (remove mean and divide by variance) but can
         perform significantly worse.
+    :param random_seed: Seed for the random number generator.
     """
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        metric: str,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        mode: Optional[str] = None,
+        config_space: dict[str, Any],
+        transfer_learning_evaluations: dict[str, TransferLearningTaskEvaluations],
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
-        **kwargs,
+        random_seed: int = None,
     ):
         super(QuantileBasedSurrogateSearcher, self).__init__(
-            config_space=config_space,
-            metric=metric,
-            points_to_evaluate=[],
-            **kwargs,
+            config_space=config_space, points_to_evaluate=[], random_seed=random_seed
         )
-        self.mode = mode
+
+        self.random_state = np.random.RandomState(self.random_seed)
         self.model_pipeline, sigma_train, sigma_val = fit_model(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
@@ -171,16 +167,14 @@ class QuantileBasedSurrogateSearcher(StochasticSearcher):
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
 
-    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+    def _update(self, trial_id: str, config: dict[str, Any], result: dict[str, Any]):
         pass
 
-    def clone_from_state(self, state: Dict[str, Any]):
+    def clone_from_state(self, state: dict[str, Any]):
         raise NotImplementedError
 
-    def get_config(self, **kwargs) -> Optional[dict]:
+    def suggest(self, **kwargs) -> dict[str, Any] | None:
         samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
-        if self.mode == "max":
-            samples *= -1
         candidate = self.X_candidates.loc[np.argmin(samples)]
         return dict(candidate)
 

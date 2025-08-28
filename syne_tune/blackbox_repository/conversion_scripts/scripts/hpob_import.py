@@ -4,7 +4,6 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Optional
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.scripts import metric_elapsed_time
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
@@ -15,8 +14,8 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 )
 from syne_tune.config_space import (
     uniform,
-    loguniform,
     randint,
+    choice,
     config_space_to_json_dict,
     config_space_from_json_dict,
 )
@@ -33,218 +32,271 @@ BLACKBOX_NAME = "hpob_"
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 # configuration_space values taken from "https://raw.githubusercontent.com/machinelearningnuremberg/HPO-B/refs/heads/main/hpob-data/meta-dataset-descriptors.json"
+
 SEARCH_SPACE_4796 = {
     "name": "4796",
+    "positions_hps": {"minsplit": 0, "minbucket": 1, "cp": 2},
+    "positions_categorical": {},
     "config_space": {
-        "minsplit": loguniform(2.0, 128.0),
-        "minbucket": loguniform(1.0, 64.0),
-        "cp": loguniform(0.0002, 0.1),
+        "minsplit": uniform(0.0, 1.0),
+        "minbucket": uniform(0.0, 1.0),
+        "cp": uniform(0.0, 1.0),
     },
 }
 
 SEARCH_SPACE_5527 = {
     "name": "5527",
+    "positions_hps": {"cost": 0, "gamma": 1, "degree": 3},
+    "positions_categorical": {"kernel": [4, 5, 6]},
     "config_space": {
-        "cost": loguniform(0.001, 1024.0),
-        "gamma": loguniform(0.0001, 1024.0),
-        "gamma.na": uniform(0.0, 1.0),
-        "degree": uniform(0.0, 5.0),
-        "degree.na": uniform(0.0, 1.0),
-        "kernel.ohe.na": 308190.0,
-        "kernel.ohe.linear": 316563.0,
-        "kernel.ohe.polynomial": 311266.0,
+        "cost": uniform(0.0, 1.0),
+        "gamma": uniform(0.0, 1.0),
+        "degree": uniform(0.0, 1.0),
+        # "kernel": choice(["_INVALID", "_linear", "_polynomial"]),
+        "kernel": choice([0.0, 1.0, 2.0]),
     },
 }
 SEARCH_SPACE_5636 = {
     "name": "5636",
+    "positions_hps": {"minsplit": 0, "cp": 2, "maxdepth": 3, "minbucket": 4},
+    "positions_categorical": {},
     "config_space": {
-        "minsplit": uniform(0.0, 60.0),
-        "minsplit.na": uniform(0.0, 1.0),
-        "minbucket": uniform(1.0, 60.0),
-        "cp": uniform(-9.2, 9.906167518025702e-5),
-        "maxdepth": uniform(0.0, 29.0),
-        "maxdepth.na": uniform(0.0, 1.0),
+        "minsplit": uniform(0.0, 1.0),
+        "minbucket": uniform(0.0, 1.0),
+        "cp": uniform(0.0, 1.0),
+        "maxdepth": uniform(0.0, 1.0),
     },
 }
 SEARCH_SPACE_5859 = {
     "name": "5859",
+    "positions_hps": {"minsplit": 0, "cp": 2, "maxdepth": 3, "minbucket": 4},
+    "positions_categorical": {},
     "config_space": {
-        "minsplit": uniform(0.0, 60.0),
-        "minsplit.na": uniform(0.0, 1.0),
-        "minbucket": uniform(1.0, 60.0),
-        "cp": loguniform(0.0001, 1.0),
-        "maxdepth": uniform(0.0, 29.0),
-        "maxdepth.na": uniform(0.0, 1.0),
+        "minsplit": uniform(0.0, 1.0),
+        "minbucket": uniform(1.0, 1.0),
+        "cp": uniform(0.0, 1.0),
+        "maxdepth": uniform(0.0, 1.0),
     },
 }
 SEARCH_SPACE_5860 = {
     "name": "5860",
+    "positions_hps": {"alpha": 0, "lambda": 1},
+    "positions_categorical": {},
     "config_space": {
-        "alpha": loguniform(0.000578, 1.0),
-        "lambda": loguniform(0.001, 1019.35),
+        "alpha": uniform(0.0, 1.0),
+        "lambda": uniform(0.0, 1.0),
     },
 }
 SEARCH_SPACE_5891 = {
     "name": "5891",
+    "positions_hps": {"cost": 0, "gamma": 1, "degree": 3},
+    "positions_categorical": {"kernel": [5, 6, 7]},
     "config_space": {
-        "cost": uniform(0.001, 1024.0),
-        "gamma": uniform(0.0, 1024.0),
-        "gamma.na": uniform(0.0, 1.0),
-        "degree": uniform(0.0, 5.0),
-        "degree.na": uniform(0.0, 1.0),
-        "kernel.ohe.na": 24627,
-        "kernel.ohe.linear": 24952,
-        "kernel.ohe.polynomial": 24813,
+        "cost": uniform(0.0, 1.0),
+        "gamma": uniform(0.0, 1.0),
+        "degree": uniform(0.0, 1.0),
+        # "kernel": choice(["_INVALID", "_linear", "_polynomial"]),
+        "kernel": choice([0.0, 1.0, 2.0]),
     },
 }
 SEARCH_SPACE_5906 = {
     "name": "5906",
+    "positions_hps": {
+        "eta": 0,
+        "max_depth": 1,
+        "min_child_weight": 3,
+        "subsample": 5,
+        "colsample_bytree": 6,
+        "colsample_bylevel": 8,
+        "lambda": 10,
+        "alpha": 11,
+        "nrounds": 12,
+    },
+    "positions_categorical": {"booster": [14, 15]},
     "config_space": {
-        "eta": loguniform(0.001, 1.0),
-        "max_depth": uniform(0.0, 15.0),
-        "max_depth.na": uniform(0.0, 1.0),
-        "min_child_weight": loguniform(0.0001, 128.0),
-        "min_child_weight.na": uniform(0.0, 1.0),
-        "subsample": uniform(0.1, 1.0),
-        "colsample_bytree": loguniform(0.0001, 1.0),
-        "colsample_bytree.na": uniform(0.0, 1.0),
+        "eta": uniform(0.0, 1.0),
+        "max_depth": uniform(0.0, 1.0),
+        "min_child_weight": uniform(0.0, 1.0),
+        "subsample": uniform(0.0, 1.0),
+        "colsample_bytree": uniform(0.0, 1.0),
         "colsample_bylevel": uniform(0.0, 1.0),
-        "colsample_bylevel.na": uniform(0.0, 1.0),
-        "lambda": loguniform(0.001, 1020.8),
-        "alpha": loguniform(0.001, 1024.0),
-        "nrounds": loguniform(0.0001, 5000.0),
-        "nrounds.na": uniform(0.0, 1.0),
-        "booster.ohe.na": 1449,
-        "booster.ohe.gblinear": 1937,
+        "lambda": uniform(0.0, 1.0),
+        "alpha": uniform(0.0, 1.0),
+        "nrounds": uniform(0.0, 1.0),
+        # "booster": choice(["_INVALID", "_gblinear"]),
+        "booster": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_5965 = {
     "name": "5965",
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
+    },
+    "positions_categorical": {"replace": [6, 7], "respect": [8, 9]},
     "config_space": {
-        "num.trees": loguniform(0.0001, 2000.0),
-        "num.trees.na": uniform(0.0, 1.0),
-        "mtry": loguniform(1.0, 1776.0),
-        "sample.fraction": uniform(0.1, 1.0),
-        "min.node.size": loguniform(0.0001, 45310.0),
-        "min.node.size.na": uniform(0.0, 1.0),
-        "replace.ohe.FALSE": 295436,
-        "replace.ohe.na": 296498,
-        "respect.unordered.factors.ohe.INVALID": 294378,
-        "respect.unordered.factors.ohe.TRUE": 297556,
+        "num.trees": uniform(0.0, 1.0),
+        "mtry": uniform(0.0, 1.0),
+        "sample.fraction": uniform(0.0, 1.0),
+        "min.node.size": uniform(0.0, 1.0),
+        # "replace": choice(["_FALSE", "_INVALID"]),
+        "replace": choice([0.0, 1.0]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
+        "respect": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_5970 = {
     "name": "5970",
+    "positions_hps": {"alpha": 0, "lambda": 1},
+    "positions_categorical": {},
     "config_space": {
-        "alpha": loguniform(1.0, 2.72),
-        "lambda": loguniform(0.001, 1024.0),
+        "alpha": uniform(0.0, 1.0),
+        "lambda": uniform(0.0, 1.0),
     },
 }
 SEARCH_SPACE_5971 = {
     "name": "5971",
+    "positions_hps": {
+        "eta": 0,
+        "max_depth": 1,
+        "min_child_weight": 3,
+        "subsample": 5,
+        "colsample_bytree": 6,
+        "colsample_bylevel": 8,
+        "lambda": 10,
+        "alpha": 11,
+        "nrounds": 12,
+    },
+    "positions_categorical": {"booster": [14, 15]},
     "config_space": {
-        "eta": loguniform(0.001, 1.0),
-        "max_depth": uniform(0.0, 15.0),
-        "max_depth.na": uniform(0.0, 1.0),
-        "min_child_weight": loguniform(0.0001, 128.0),
-        "min_child_weight.na": uniform(0.0, 1.0),
-        "subsample": uniform(0.1, 1.0),
+        "eta": uniform(0.0, 1.0),
+        "max_depth": uniform(0.0, 1.0),
+        "min_child_weight": uniform(0.0, 1.0),
+        "subsample": uniform(0.0, 1.0),
         "colsample_bytree": uniform(0.0, 1.0),
-        "colsample_bytree.na": uniform(0.0, 1.0),
         "colsample_bylevel": uniform(0.0, 1.0),
-        "colsample_bylevel.na": uniform(0.0, 1.0),
-        "lambda": loguniform(0.001, 1024.0),
-        "alpha": loguniform(0.001, 1024.0),
-        "nrounds": uniform(0, 5000),
-        "nrounds.na": uniform(0.0, 1.0),
-        "booster.ohe.na": 34130,
-        "booster.ohe.gblinear": 45096,
+        "lambda": uniform(0.0, 1.0),
+        "alpha": uniform(0.0, 1.0),
+        "nrounds": uniform(0.0, 1.0),
+        # "booster": choice(["_INVALID", "_gblinear"]),
+        "booster": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_6766 = {
     "name": "6766",
+    "positions_hps": {"alpha": 0, "lambda": 1},
+    "positions_categorical": {},
     "config_space": {
-        "alpha": loguniform(1.0, 2.72),
-        "lambda": loguniform(0.001, 1024.0),
+        "alpha": uniform(0.0, 1.0),
+        "lambda": uniform(0.0, 1.0),
     },
 }
 SEARCH_SPACE_6767 = {
     "name": "6767",
+    "positions_hps": {
+        "eta": 0,
+        "subsample": 1,
+        "lambda": 2,
+        "alpha": 3,
+        "nthread": 4,
+        "nrounds": 6,
+        "max_depth": 8,
+        "min_child_weight": 10,
+        "colsample_bytree": 12,
+        "colsample_bylevel": 14,
+    },
+    "positions_categorical": {"booster": [16, 17]},
     "config_space": {
-        "eta": uniform(0.001, 1.0),
-        "subsample": uniform(0.1, 1.0),
-        "lambda": uniform(0.001, 1024.0),
-        "alpha": uniform(0.001, 1024.0),
+        "eta": uniform(0.0, 1.0),
+        "subsample": uniform(0.0, 1.0),
+        "lambda": uniform(0.0, 1.0),
+        "alpha": uniform(0.0, 1.0),
         "nthread": uniform(0.0, 1.0),
-        "nthread.na": uniform(0.0, 1.0),
-        "nrounds": uniform(0.0, 5000.0),
-        "nrounds.na": uniform(0.0, 1.0),
-        "max_depth": uniform(0.0, 15.0),
-        "max_depth.na": uniform(0.0, 1.0),
-        "min_child_weight": uniform(0.0, 128.0),
-        "min_child_weight.na": uniform(0.0, 1.0),
+        "nrounds": uniform(0.0, 1.0),
+        "max_depth": uniform(0.0, 1.0),
+        "min_child_weight": uniform(0.0, 1.0),
         "colsample_bytree": uniform(0.0, 1.0),
-        "colsample_bytree.na": uniform(0.0, 1.0),
         "colsample_bylevel": uniform(0.0, 1.0),
-        "colsample_bylevel.na": uniform(0.0, 1.0),
-        "booster.ohe.na": 430736,
-        "booster.ohe.gblinear": 620644,
+        # "booster": choice(["_INVALID", "_gblinear"]),
+        "booster": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_6794 = {
     "name": "6794",
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
+    },
+    "positions_categorical": {"replace": [6, 7], "respect": [8, 9]},
     "config_space": {
-        "num.trees": uniform(0.0, 2000.0),
-        "num.trees.na": uniform(0.0, 1.0),
-        "mtry": uniform(1.0, 1558.0),
-        "sample.fraction": uniform(0.1, 1.0),
-        "min.node.size": uniform(-9.21, 10.72),
-        "min.node.size.na": uniform(0.0, 3195.0),
-        "replace.ohe.FALSE": 623218,
-        "replace.ohe.na": 625345,
-        "respect.unordered.factors.ohe.INVALID": 625034,
-        "respect.unordered.factors.ohe.TRUE": 623529,
+        "num.trees": uniform(0.0, 1.0),
+        "mtry": uniform(0.0, 1.0),
+        "sample.fraction": uniform(0.0, 1.0),
+        "min.node.size": uniform(0.0, 1.0),
+        # "replace": choice(["_FALSE", "_INVALID"]),
+        "replace": choice([0.0, 1.0]),
+        # "respect": choice(["_INVALID", "_TRUE"]),
+        "respect": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_7607 = {
     "name": "7607",
+    "positions_hps": {
+        "num.trees": 0,
+        "min.node.size": 2,
+        "sample.fraction": 3,
+        "mtry": 4,
+    },
+    "positions_categorical": {"replace": [5, 6], "respect": [7, 8]},
     "config_space": {
-        "num.trees": uniform(0.0, 2000.0),
-        "num.trees.na": uniform(0.0, 1.0),
-        "mtry": uniform(1.0, 1775.0),
-        "min.node.size": loguniform(1.0, 44808.0),
-        "sample.fraction": uniform(0.1, 1.0),
-        "replace.ohe.FALSE": 14478,
-        "replace.ohe.na": 14434,
-        "respect.unordered.factors.ohe.INVALID": 14392,
-        "respect.unordered.factors.ohe.TRUE": 14520,
+        "num.trees": uniform(0.0, 1.0),
+        "mtry": uniform(0.0, 1.0),
+        "min.node.size": uniform(0.0, 1.0),
+        "sample.fraction": uniform(0.0, 1.0),
+        # "respect": choice(["_INVALID", "_TRUE"]),
+        "respect": choice([0.0, 1.0]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
+        "replace": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_7609 = {
     "name": "7609",
+    "positions_hps": {
+        "num.trees": 0,
+        "sample.fraction": 2,
+        "min.node.size": 3,
+        "mtry": 4,
+    },
+    "positions_categorical": {"respect": [5, 6], "replace": [7, 8]},
     "config_space": {
-        "num.trees": uniform(0.0, 2000.0),
-        "num.trees.na": uniform(0.0, 1.0),
-        "mtry": uniform(1.0, 1776.0),
-        "min.node.size": loguniform(1.0, 45280.0),
-        "sample.fraction": uniform(0.1, 1.0),
-        "replace.ohe.FALSE": 32943,
-        "replace.ohe.na": 33003,
-        "respect.unordered.factors.ohe.INVALID": 33007,
-        "respect.unordered.factors.ohe.TRUE": 32939,
+        "num.trees": uniform(0.0, 1.0),
+        "mtry": uniform(0.0, 1.0),
+        "min.node.size": uniform(0.0, 1.0),
+        "sample.fraction": uniform(0.0, 1.0),
+        # "respect": choice(["_INVALID", "_TRUE"]),
+        "respect": choice([0.0, 1.0]),
+        # "replace": choice(["_FALSE", "_INVALID"]),
+        "replace": choice([0.0, 1.0]),
     },
 }
 SEARCH_SPACE_5889 = {
     "name": "5889",
+    "positions_hps": {"num.trees": 0, "mtry": 1, "sample.fraction": 2, "replace": 3},
+    "positions_categorical": {},
     "config_space": {
-        "num.trees": loguniform(0.0001, 2000.0),
-        "num.trees.na": uniform(0.0, 1.0),
-        "mtry": loguniform(1.0, 1324.0),
+        "num.trees": uniform(0.0, 1.0),
+        "mtry": uniform(0.0, 1.0),
         "sample.fraction": uniform(0.1, 1.0),
-        "replace.ohe.FALSE": 1215,
-        "replace.ohe.na": 1226,
+        # "replace": choice(["_FALSE", "_INVALID"]),
+        "replace": choice([0.0, 1.0]),
     },
 }
+
+
 RESOURCE_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 
@@ -253,7 +305,7 @@ MAX_RESOURCE_LEVEL = 100
 # since the HPO-B dataset does not provide the same number of evaluations for each blackbox.
 # This is a constraint in the original serialize() function.
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: dict[str, BlackboxTabular], path: str, metadata: dict | None = None
 ):
     # check all blackboxes share the objectives
     bb_first = next(iter(bb_dict.values()))
@@ -304,7 +356,7 @@ def serialize(
     )
 
 
-def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+def deserialize(path: str) -> dict[str, BlackboxTabular]:
     """
     Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
     TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.
@@ -356,7 +408,7 @@ def generate_hpob(search_space):
     indices_not_nan = df[df[search_space["name"]].notna()].index
     for dataset_name in indices_not_nan:
         bb_dict[dataset_name] = convert_dataset(
-            search_space, dataset_name, df[search_space["name"]][dataset_name]
+            search_space, df[search_space["name"]][dataset_name]
         )
     with catchtime("saving to disk"):
         serialize(
@@ -373,7 +425,18 @@ def convert_dataset(search_space, dataset):
     hps = np.zeros((n_evals, n_hps))
 
     for i, config in enumerate(dataset["X"]):
-        hps[i] = config
+        # collect all continuous hyperparameters
+        final_config = [config[pos] for pos in search_space["positions_hps"].values()]
+
+        # collect categorical hyperparameters and compute encoding
+        for positions in search_space.get("positions_categorical", {}).values():
+            idx = next(
+                (j for j, p in enumerate(positions) if config[p] == 1.0),
+                len(positions) - 1,
+            )
+            final_config.append(float(idx))
+
+        hps[i] = final_config
 
     hyperparameters = pd.DataFrame(data=hps, columns=hp_cols)
 
@@ -412,11 +475,11 @@ def load_data():
         urllib.request.urlretrieve(data_src, hpob_data_file)
 
         with zipfile.ZipFile(hpob_data_file, "r") as zip_ref:
-            zip_ref.extractall()
+            zip_ref.extractall(path=repository_path)
 
-    meta_test_file = "hpob-data/meta-test-dataset.json"
-    meta_train_file = "hpob-data/meta-train-dataset.json"
-    meta_validation_file = "hpob-data/meta-validation-dataset.json"
+    meta_test_file = repository_path / "hpob-data/meta-test-dataset.json"
+    meta_train_file = repository_path / "hpob-data/meta-train-dataset.json"
+    meta_validation_file = repository_path / "hpob-data/meta-validation-dataset.json"
 
     with (
         open(meta_test_file, mode="r", encoding="utf-8") as test_file,
@@ -580,4 +643,4 @@ if __name__ == "__main__":
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=False)
+        instance.generate(upload_on_hub=True)

@@ -6,7 +6,10 @@ import numpy as np
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
+from syne_tune.optimizer.schedulers.multiobjective.moasha import (
+    MOASHA,
+    Bracket,
+)
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
     FixedObjectivePriority,
     LinearScalarizationPriority,
@@ -16,7 +19,7 @@ from syne_tune.config_space import randint
 
 
 def test_bucket():
-    b = _Bracket(1, 10, 2, 0)
+    b = Bracket(1, 10, 2, 0)
     assert b.on_result(0, 1, {metric1: 2}) == "CONTINUE"
     assert b.on_result(1, 1, {metric1: 0}) == "CONTINUE"
     assert b.on_result(2, 1, {metric1: 3}) == "STOP"
@@ -55,14 +58,18 @@ scheduler_fun = partial(
 @pytest.mark.parametrize(
     "scheduler",
     [
-        scheduler_fun(mode="max", multiobjective_priority=FixedObjectivePriority()),
         scheduler_fun(
-            mode="max", multiobjective_priority=LinearScalarizationPriority()
+            do_minimize=False, multiobjective_priority=FixedObjectivePriority()
         ),
         scheduler_fun(
-            mode=["max", "max"], multiobjective_priority=LinearScalarizationPriority()
+            do_minimize=False, multiobjective_priority=LinearScalarizationPriority()
         ),
-        scheduler_fun(mode="max", multiobjective_priority=NonDominatedPriority()),
+        scheduler_fun(
+            do_minimize=False, multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(
+            do_minimize=False, multiobjective_priority=NonDominatedPriority()
+        ),
     ],
 )
 def test_moasha_mode_max(scheduler):
@@ -87,14 +94,16 @@ def test_moasha_mode_max(scheduler):
 @pytest.mark.parametrize(
     "scheduler",
     [
-        scheduler_fun(mode="min", multiobjective_priority=FixedObjectivePriority()),
         scheduler_fun(
-            mode="min", multiobjective_priority=LinearScalarizationPriority()
+            do_minimize=True, multiobjective_priority=FixedObjectivePriority()
         ),
         scheduler_fun(
-            mode=["min", "min"], multiobjective_priority=LinearScalarizationPriority()
+            do_minimize=True, multiobjective_priority=LinearScalarizationPriority()
         ),
-        scheduler_fun(mode="min", multiobjective_priority=NonDominatedPriority()),
+        scheduler_fun(
+            do_minimize=True, multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(do_minimize=True, multiobjective_priority=NonDominatedPriority()),
     ],
 )
 def test_moasha_mode_min(scheduler):

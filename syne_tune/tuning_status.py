@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, Set, Optional, Dict, Any
+from typing import Any
 import numbers
 import logging
 import time
@@ -30,7 +30,7 @@ class MetricsStatistics:
         self.last_metrics = dict()
         self.is_numeric = dict()
 
-    def add(self, metrics: Dict[str, Any]):
+    def add(self, metrics: dict[str, Any]):
         for metric_name, current_metric in metrics.items():
             if metric_name in self.is_numeric:
                 if self.is_numeric[metric_name] != isinstance(
@@ -67,7 +67,7 @@ class TuningStatus:
     """
 
     # TODO: ``metric_names`` not used for anything. Remove?
-    def __init__(self, metric_names: List[str]):
+    def __init__(self, metric_names: list[str]):
         self.metric_names = metric_names
         self.start_time = time.perf_counter()
 
@@ -138,7 +138,7 @@ class TuningStatus:
         """
         return len(self.last_trial_status_seen)
 
-    def _num_trials(self, status: Union[str, Set[str]]):
+    def _num_trials(self, status: str | set[str]):
         if isinstance(status, str):
             status = set([status])
         elif not isinstance(status, set):
@@ -251,8 +251,8 @@ class TuningStatus:
 
 
 def print_best_metric_found(
-    tuning_status: TuningStatus, metric_names: List[str], mode: Optional[str] = None
-) -> Optional[Tuple[int, float]]:
+    tuning_status: TuningStatus, metric_names: list[str], mode: str | None = None
+) -> tuple[int, float] | None:
     """Prints trial status summary and the best metric found.
 
     :param tuning_status: Current tuning status

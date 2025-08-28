@@ -1,5 +1,4 @@
 import logging
-from typing import List, Union, Dict, Optional
 
 from huggingface_hub import snapshot_download
 
@@ -29,7 +28,7 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
 logger = logging.getLogger(__name__)
 
 
-def blackbox_list() -> List[str]:
+def blackbox_list() -> list[str]:
     """
     :return: list of blackboxes available
     """
@@ -38,12 +37,12 @@ def blackbox_list() -> List[str]:
 
 def load_blackbox(
     name: str,
-    custom_repo_id: Optional[str] = None,
-    yahpo_kwargs: Optional[dict] = None,
+    custom_repo_id: str | None = None,
+    yahpo_kwargs: dict | None = None,
     local_files_only: bool = False,
     force_download: bool = False,
     **snapshot_download_kwargs,
-) -> Union[Dict[str, Blackbox], Blackbox]:
+) -> dict[str, Blackbox] | Blackbox:
     """
     :param name: name of a blackbox present in the repository, see
         :func:`blackbox_list` to get list of available blackboxes. Syne Tune
@@ -62,12 +61,21 @@ def load_blackbox(
         * "icml-deepar": 2420 single-fidelity configurations of DeepAR forecasting algorithm evaluated on 10 datasets.
           A quantile-based approach for hyperparameter transfer learning.
           Salinas, D., Shen, H., and Perrone, V. 2021.
+        * "pd1": 23 multi-fidelity benchmarks for hyperparameter optimization of neural networks for image classification
+          Pre-trained Gaussian processes for Bayesian optimization.
+          Wang, Z. and Dahl G. and Swersky K. and Lee C. and Nado Z. and Gilmer J. and Snoek J. and Ghahramani Z. 2021.
         * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
           A quantile-based approach for hyperparameter transfer learning.
           Salinas, D., Shen, H., and Perrone, V. 2021.
         * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
           blackboxes come with surrogates already, so no need to wrap them into
           :class:`SurrogateBlackbox`
+        * "hpob_*": ca. 6.34 million evaluations distributed on 16 search spaces and 101 datasets.
+          HPO-B: A Large-Scale Reproducible Benchmark for Black-Box HPO based on OpenML.
+          S. Arango, H. Jomaa, M. Wistuba, J. Grabocka, 2021.
+        * "tabrepo-*": TabRepo contains the predictions and metrics of 1530 models evaluated on 211 classification and regression datasets.
+          TabRepo: A Large Scale Repository of Tabular Model Evaluations and its AutoML Applications.
+          D. Salinas, N. Erickson, 2024.
     :param custom_repo_id: custom hugging face repoid to use, default to Syne Tune hub
     :param yahpo_kwargs: For a YAHPO blackbox (``name == "yahpo-*"``), these are
         additional arguments to ``instantiate_yahpo``

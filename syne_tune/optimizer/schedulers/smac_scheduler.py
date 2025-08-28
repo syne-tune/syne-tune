@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from ConfigSpace import Configuration
 from smac import Scenario, HyperparameterOptimizationFacade
@@ -20,7 +20,7 @@ from syne_tune.config_space import Domain, Integer, is_log_space, Float
 
 
 def to_smac_configspace(
-    config_space: Dict[str, Domain], random_seed: int
+    config_space: dict[str, Domain], random_seed: int
 ) -> CS.ConfigurationSpace:
     cs = CS.ConfigurationSpace(seed=random_seed)
     for hp_name, hp in config_space.items():
@@ -60,21 +60,21 @@ def to_smac_configspace(
 class SMACScheduler(TrialScheduler):
     def __init__(
         self,
-        config_space: Dict[str, Any],
+        config_space: dict[str, Any],
         metric: str,
-        mode: Optional[str] = None,
+        do_minimize: bool | None = True,
         points_to_evaluate=None,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ):
         """
         Wrapper to SMAC3. Requires SMAC3 to be installed, see https://github.com/automl/SMAC3 for instructions.
         :param config_space:
         :param metric: metric to be optimized, should be present in reported results dictionary
-        :param mode: "min" or "max", default to "min"
+        :param do_minimize: True if we minimize the objective function
         :param points_to_evaluate: list of points to consider before calling the optimizer
         :param random_seed: to fix the behavior of smac
         """
-        super(SMACScheduler, self).__init__(config_space=config_space)
+        super(SMACScheduler, self).__init__(random_seed=random_seed)
 
         # compute part of the config space that are constants to add those when calling the blackbox
         self.config_space_constants = {
@@ -87,7 +87,7 @@ class SMACScheduler(TrialScheduler):
             config_space_non_constants, random_seed=random_seed
         )
         self.metric = metric
-        self.mode = mode if mode is not None else "min"
+        self.do_minimize = do_minimize
         self.points_to_evaluate = points_to_evaluate if points_to_evaluate else []
 
         scenario = Scenario(
@@ -110,10 +110,10 @@ class SMACScheduler(TrialScheduler):
         )
         self.trial_info = {}
 
-    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]) -> str:
+    def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
         info = self.trial_info[trial.trial_id]
         cost = result[self.metric]
-        if self.mode == "max":
+        if not self.do_minimize:
             cost *= -1
         self.smac.tell(
             info,
@@ -123,7 +123,7 @@ class SMACScheduler(TrialScheduler):
             ),
         )
 
-    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+    def suggest(self) -> TrialSuggestion | None:
         if self.points_to_evaluate:
             config = self.points_to_evaluate.pop()
             info = TrialInfo(
@@ -137,6 +137,7 @@ class SMACScheduler(TrialScheduler):
             config = dict(info.config)
             config.update(self.config_space_constants)
 
+        trial_id = len(self.trial_info)
         self.trial_info[trial_id] = info
         return TrialSuggestion.start_suggestion(config)
 
@@ -144,5 +145,17 @@ class SMACScheduler(TrialScheduler):
         # Avoid serialization issues with swig
         return None
 
-    def metric_names(self) -> List[str]:
+    def metric_names(self) -> list[str]:
         return [self.metric]
+
+    def metadata(self) -> dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        metadata = super().metadata()
+        metadata["metric_names"] = self.metric_names()
+        metadata["metric_mode"] = self.metric_mode()
+        return metadata
+
+    def metric_mode(self) -> str:
+        return "min" if self.do_minimize else "max"

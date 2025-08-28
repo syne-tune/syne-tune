@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Optional
 
 from scipy import stats
 
@@ -14,9 +13,7 @@ class GaussianTransform:
      If none use lowest rank of duplicated values.
     """
 
-    def __init__(
-        self, y: np.array, random_state: Optional[np.random.RandomState] = None
-    ):
+    def __init__(self, y: np.array, random_state: np.random.RandomState | None = None):
         assert y.ndim == 2
         self.dim = y.shape[1]
         self.sorted = y.copy()
@@ -25,7 +22,7 @@ class GaussianTransform:
 
     @staticmethod
     def z_transform(
-        series, values_sorted, random_state: Optional[np.random.RandomState] = None
+        series, values_sorted, random_state: np.random.RandomState | None = None
     ):
         """
         :param series: shape (n, dim)
@@ -87,7 +84,7 @@ class StandardTransform:
         return z
 
 
-def from_string(name: str, random_state: Optional[np.random.RandomState] = None):
+def from_string(name: str, random_state: np.random.RandomState | None = None):
     assert name in ["standard", "gaussian"]
     mapping = {
         "standard": StandardTransform,

@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Any
 import logging
 
 import numpy as np
@@ -38,10 +38,8 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     ``qExpectedImprovement`` is used for the acquisition function, given that it
     supports pending evaluations.
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
-
-    :param mode: "min" (default) or "max"
+    :param config_space: Configuration space for the evaluation function.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
     :param num_init_random: :meth:`get_config` returns randomly drawn
         configurations until at least ``init_random`` observations have been
         recorded in :meth:`update`. After that, the BOTorch algorithm is used.
@@ -55,15 +53,16 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         fit the GP. Defaults to 200
     :param input_warping: Whether to apply input warping when fitting the GP.
         Defaults to ``True``
+     :param random_seed: Seed for initializing random number generators.
     """
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[dict]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: list[dict] | None = None,
         num_init_random: int = 3,
         no_fantasizing: bool = False,
-        max_num_observations: Optional[int] = 200,
+        max_num_observations: int | None = 200,
         input_warping: bool = True,
         random_seed: int = None,
     ):
@@ -88,7 +87,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
     ):
         trial_id = int(trial_id)
@@ -105,7 +104,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             for k, v in self.config_space.items()
         }
 
-    def suggest(self) -> Optional[dict]:
+    def suggest(self) -> dict | None:
 
         config_suggested = self._next_points_to_evaluate()
 
@@ -142,7 +141,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     def _config_from_ndarray(self, candidate) -> dict:
         return self._hp_ranges.from_ndarray(candidate)
 
-    def _sample_next_candidate(self) -> Optional[dict]:
+    def _sample_next_candidate(self) -> dict | None:
         """
         :return: A next candidate to evaluate, if possible it is obtained by
             fitting a GP on past data and maximizing EI. If this fails because
@@ -223,7 +222,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
+    def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
@@ -231,14 +230,14 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
     def objectives(self):
         return np.array(list(self.trial_observations.values()))
 
-    def _configs_with_results(self) -> List[dict]:
+    def _configs_with_results(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if not trial in self.pending_trials
         ]
 
-    def _configs_pending(self) -> List[dict]:
+    def _configs_pending(self) -> list[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()

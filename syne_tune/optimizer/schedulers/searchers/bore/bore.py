@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Any
 import time
 import xgboost
 import logging
@@ -33,9 +33,9 @@ class Bore(SingleObjectiveBaseSearcher):
         | Proceedings of the 38th International Conference on Machine Learning
         | https://arxiv.org/abs/2102.09009
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
-
+    :param config_space: Configuration space for the evaluation function.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param random_seed: Seed for initializing random number generators.
     :param gamma: Defines the percentile, i.e how many percent of configurations
         are used to model :math:`l(x)`. Defaults to 0.25
     :param calibrate: If set to true, we calibrate the predictions of the
@@ -58,17 +58,17 @@ class Bore(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        config_space: Dict[str, Any],
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        config_space: dict[str, Any],
+        points_to_evaluate: list[dict[str, Any]] | None = None,
         random_seed: int = None,
-        gamma: Optional[float] = 0.25,
-        calibrate: Optional[bool] = False,
-        classifier: Optional[str] = "xgboost",
-        acq_optimizer: Optional[str] = "rs",
-        feval_acq: Optional[int] = 500,
-        random_prob: Optional[float] = 0.0,
-        init_random: Optional[int] = 6,
-        classifier_kwargs: Optional[dict] = None,
+        gamma: float | None = 0.25,
+        calibrate: bool | None = False,
+        classifier: str | None = "xgboost",
+        acq_optimizer: str | None = "rs",
+        feval_acq: int | None = 500,
+        random_prob: float | None = 0.0,
+        init_random: int | None = 6,
+        classifier_kwargs: dict | None = None,
     ):
         super().__init__(
             config_space=config_space,
@@ -244,8 +244,9 @@ class Bore(SingleObjectiveBaseSearcher):
     def on_trial_complete(
         self,
         trial_id: int,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         metric: float,
+        resource_level: int = None,
     ):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(metric)

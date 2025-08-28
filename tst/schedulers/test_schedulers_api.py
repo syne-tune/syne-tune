@@ -1,6 +1,8 @@
 import tempfile
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import dill
 import pytest
 
@@ -11,14 +13,29 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     MultiObjectiveRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.searchers.random_searcher import RandomSearcher
+from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
+    ExpectedHyperVolumeImprovement,
+)
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.single_fidelity_scheduler import (
     SingleFidelityScheduler,
 )
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
-
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+    QuantileBasedSurrogateSearcher,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.transfer_learning_task_evaluation import (
+    TransferLearningTaskEvaluations,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.config_space import randint, uniform, choice
+from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
+from syne_tune.optimizer.schedulers.transfer_learning.zero_shot import ZeroShotTransfer
+from syne_tune.optimizer.baselines import BOHB
+
 
 config_space = {
     "steps": 100,
@@ -40,6 +57,49 @@ resource_attr = "step"
 max_t = 10
 random_seed = 42
 mode = "max"
+
+
+def make_transfer_learning_evaluations(num_evals: int = 10):
+    num_seeds = 3
+    num_fidelity = 5
+    return {
+        "dummy-task-1": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [
+                    {
+                        k: v.sample() if hasattr(v, "sample") else v
+                        for k, v in config_space.items()
+                    }
+                    for _ in range(10)
+                ]
+            ),
+            objectives_evaluations=np.arange(
+                num_evals * num_seeds * num_fidelity * 2
+            ).reshape(num_evals, num_seeds, num_fidelity, 2),
+            objectives_names=[metric1, metric2],
+        ),
+        "dummy-task-2": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [
+                    {
+                        k: v.sample() if hasattr(v, "sample") else v
+                        for k, v in config_space.items()
+                    }
+                    for _ in range(10)
+                ]
+            ),
+            objectives_evaluations=-np.arange(
+                num_evals * num_seeds * num_fidelity * 2
+            ).reshape(num_evals, num_seeds, num_fidelity, 2),
+            objectives_names=[metric1, metric2],
+        ),
+    }
+
+
+transfer_learning_evaluations = make_transfer_learning_evaluations()
+
 
 list_schedulers_to_test = [
     SingleObjectiveScheduler(
@@ -94,6 +154,17 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    # Multi-objective methods
+    SingleFidelityScheduler(
+        config_space,
+        searcher=ExpectedHyperVolumeImprovement(
+            config_space=config_space,
+            random_seed=random_seed,
+        ),
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
     SingleFidelityScheduler(
         config_space,
         searcher=MultiObjectiveRegularizedEvolution(
@@ -104,13 +175,99 @@ list_schedulers_to_test = [
         do_minimize=False,
         random_seed=random_seed,
     ),
+    MOASHA(
+        config_space,
+        metrics=[metric1, metric2],
+        do_minimize=False,
+        random_seed=random_seed,
+        time_attr=resource_attr,
+    ),
+    # Multi-fidelity methods
+    BOHB(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        time_attr=resource_attr,
+        max_t=max_t,
+    ),
+    MedianStoppingRule(
+        scheduler=SingleObjectiveScheduler(
+            config_space,
+            searcher="random_search",
+            metric=metric1,
+            random_seed=random_seed,
+        ),
+        resource_attr=resource_attr,
+        metric=metric1,
+        random_seed=random_seed,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="random_search",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="bore",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="kde",
+        time_attr=resource_attr,
+    ),
+    AsynchronousSuccessiveHalving(
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        searcher="cqr",
+        time_attr=resource_attr,
+    ),
+    BoundingBox(
+        scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
+            new_config_space,
+            searcher="random_search",
+            metric=metric,
+            random_seed=random_seed,
+            do_minimize=do_minimize,
+        ),
+        do_minimize=False,
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    ZeroShotTransfer(
+        do_minimize=False,
+        config_space=config_space,
+        metric=metric1,
+        random_seed=random_seed,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    SingleObjectiveScheduler(
+        config_space,
+        metric=metric1,
+        searcher=QuantileBasedSurrogateSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+        ),
+        do_minimize=False,
+        random_seed=random_seed,
+    ),
 ]
 
 
 @pytest.mark.timeout(20)
 @pytest.mark.parametrize("scheduler", list_schedulers_to_test)
 def test_schedulers_api(scheduler):
-    trial_ids = range(4)
+    trial_ids = range(6)
 
     # checks suggestions are properly formatted
     trials = []

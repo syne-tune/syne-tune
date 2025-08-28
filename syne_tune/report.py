@@ -4,7 +4,7 @@ import re
 import sys
 from dataclasses import dataclass
 from time import time, perf_counter
-from typing import List, Dict, Any
+from typing import Any
 
 from syne_tune.constants import (
     ST_WORKER_TIME,
@@ -75,7 +75,7 @@ class Reporter:
         _report_logger(**kwargs)
 
     @staticmethod
-    def _check_reported_values(kwargs: Dict[str, Any]):
+    def _check_reported_values(kwargs: dict[str, Any]):
         assert all(
             v is not None for v in kwargs.values()
         ), f"Invalid value in report: kwargs = {kwargs}"
@@ -86,7 +86,7 @@ def _report_logger(**kwargs):
     sys.stdout.flush()
 
 
-def _serialize_report_dict(report_dict: Dict[str, Any]) -> str:
+def _serialize_report_dict(report_dict: dict[str, Any]) -> str:
     """
     :param report_dict: a dictionary of metrics to be serialized
     :return: serialized string of the reported metrics, an exception is raised if the size is too large or
@@ -106,7 +106,7 @@ def _serialize_report_dict(report_dict: Dict[str, Any]) -> str:
         raise e
 
 
-def retrieve(log_lines: List[str]) -> List[Dict[str, float]]:
+def retrieve(log_lines: list[str]) -> list[dict[str, float]]:
     """Retrieves metrics reported with :func:`_report_logger` given log lines.
 
     :param log_lines: Lines in log file to be scanned for metric reports

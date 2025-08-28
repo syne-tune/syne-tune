@@ -5,19 +5,20 @@ from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import ASHA
 
+max_epochs = 100
+
 # Hyperparameter configuration space
 config_space = {
     "width": randint(1, 20),
     "height": randint(1, 20),
-    "epochs": 100,
+    "epochs": max_epochs,
 }
 # Scheduler (i.e., HPO algorithm)
 scheduler = ASHA(
     config_space,
     metric="mean_loss",
-    resource_attr="epoch",
-    max_resource_attr="epochs",
-    search_options={"debug_log": False},
+    time_attr="epoch",
+    max_t=max_epochs,
 )
 
 entry_point = str(

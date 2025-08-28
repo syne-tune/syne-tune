@@ -1,4 +1,3 @@
-from typing import Dict
 import datetime
 
 from syne_tune.backend.trial_status import Trial, Status, TrialResult
@@ -8,7 +7,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 class AskTellScheduler:
     base_scheduler: TrialScheduler
     trial_counter: int
-    completed_experiments: Dict[int, TrialResult]
+    completed_experiments: dict[int, TrialResult]
 
     def __init__(self, base_scheduler: TrialScheduler):
         """
@@ -33,7 +32,7 @@ class AskTellScheduler:
         Ask the scheduler for new trial to run
         :return: Trial to run
         """
-        trial_suggestion = self.base_scheduler.suggest(self.trial_counter)
+        trial_suggestion = self.base_scheduler.suggest()
         trial = Trial(
             trial_id=self.trial_counter,
             config=trial_suggestion.config,
@@ -42,7 +41,7 @@ class AskTellScheduler:
         self.trial_counter += 1
         return trial
 
-    def tell(self, trial: Trial, experiment_result: Dict[str, float]):
+    def tell(self, trial: Trial, experiment_result: dict[str, float]):
         """
         Feed experiment results back to the Scheduler
 
