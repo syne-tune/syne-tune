@@ -12,7 +12,9 @@ from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.multiobjective import (
     MultiObjectiveRegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.searchers.random_searcher import MultiObjectiveRandomSearcher
+from syne_tune.optimizer.schedulers.searchers.random_searcher import (
+    MultiObjectiveRandomSearcher,
+)
 from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
     ExpectedHyperVolumeImprovement,
 )
