@@ -199,6 +199,8 @@ class KernelDensityEstimator(SingleObjectiveBaseSearcher):
         metric: float,
     ):
         self.X.append(self._to_feature(config=config))
+        if not isinstance(metric, float):
+            metric = metric[0]
         self.y.append(metric)
 
     def _get_random_config(self):
