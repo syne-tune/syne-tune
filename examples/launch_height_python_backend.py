@@ -50,7 +50,7 @@ if __name__ == "__main__":
         config_space,
         metric=metric,
         max_t=max_steps,
-        time_attr=resource_attr,
+        resource_attr=resource_attr,
     )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)

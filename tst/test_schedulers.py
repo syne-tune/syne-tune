@@ -9,12 +9,12 @@ from tst.util_test import run_experiment_with_height
 
 
 def make_asha_scheduler(searcher):
-    def maker(config_space, metric, do_minimize, random_seed, time_attr):
+    def maker(config_space, metric, do_minimize, random_seed, resource_attr):
 
         myscheduler = AsynchronousSuccessiveHalving(
             config_space,
             searcher=searcher,
-            time_attr=time_attr,
+            resource_attr=resource_attr,
             random_seed=random_seed,
             do_minimize=do_minimize,
             metric=metric,
@@ -38,7 +38,7 @@ def test_asha_schedulers_local(searcher):
 
 
 def make_single_objective_scheduler(searcher):
-    def maker(config_space, metric, do_minimize, random_seed, time_attr):
+    def maker(config_space, metric, do_minimize, random_seed, resource_attr):
 
         myscheduler = SingleObjectiveScheduler(
             config_space,

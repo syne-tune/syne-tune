@@ -88,14 +88,14 @@ list_schedulers_to_test = [
     ASHA(
         config_space,
         metric="mean_loss",
-        time_attr="epoch",
+        resource_attr="epoch",
         max_t=10,
         points_to_evaluate=points_to_evaluate,
     ),
     ASHACQR(
         config_space,
         metric="mean_loss",
-        time_attr="epoch",
+        resource_attr="epoch",
         max_t=10,
         points_to_evaluate=points_to_evaluate,
     ),

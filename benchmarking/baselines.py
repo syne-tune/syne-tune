@@ -96,7 +96,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="kde",
-        time_attr=method_arguments.resource_attr,
+        resource_attr=method_arguments.resource_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHA: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -105,7 +105,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="random_search",
-        time_attr=method_arguments.resource_attr,
+        resource_attr=method_arguments.resource_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHACQR: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -114,7 +114,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="cqr",
-        time_attr=method_arguments.resource_attr,
+        resource_attr=method_arguments.resource_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHABORE: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -123,7 +123,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="bore",
-        time_attr=method_arguments.resource_attr,
+        resource_attr=method_arguments.resource_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
 }

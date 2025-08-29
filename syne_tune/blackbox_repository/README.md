@@ -64,7 +64,7 @@ trial_backend = BlackboxRepositoryBackend(
 )
 scheduler = AsynchronousSuccessiveHalving(
     config_space=blackbox.configuration_space,
-    time_attr=blackbox.fidelity_name(),
+    resource_attr=blackbox.fidelity_name(),
     metric=metric,
     random_seed=31415927,
 )

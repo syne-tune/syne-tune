@@ -24,13 +24,13 @@ if __name__ == "__main__":
 
     mode = "max"
     metric = "mean_accuracy"
-    time_attr = "training_iteration"
+    resource_attr = "training_iteration"
     population_size = 2
 
     pbt = PopulationBasedTraining(
         config_space=config_space,
         metric=metric,
-        resource_attr=time_attr,
+        resource_attr=resource_attr,
         population_size=population_size,
         do_minimize=False,
         max_t=200,

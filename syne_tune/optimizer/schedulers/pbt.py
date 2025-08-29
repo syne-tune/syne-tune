@@ -72,7 +72,7 @@ class PopulationBasedTraining(TrialScheduler):
     :param resource_attr: Name of resource attribute in results obtained
         via ``on_trial_result``, defaults to "time_total_s"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``time_attr``) have passed.
+        ``max_t`` time units (determined by ``resource_attr``) have passed.
         Defaults to 100
     :param custom_explore_fn: Custom exploration function. This
         function is invoked as ``f(config)`` instead of the built-in perturbations,
