@@ -9,6 +9,9 @@ from syne_tune.config_space import (
     postprocess_config,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 from syne_tune.util import dump_json_with_numpy
 from syne_tune.optimizer.scheduler import (
     TrialScheduler,
@@ -63,6 +66,14 @@ class SingleFidelityScheduler(TrialScheduler):
         else:
             self.searcher = searcher
 
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            assert len(self.metrics) == 1, (
+                f"Searcher {self.searcher} only support single metric optimization "
+                f"{issubclass(type(self.searcher), BaseSearcher)} "
+                f"{issubclass(type(self.searcher), SingleObjectiveBaseSearcher)} "
+                f"but number of metrics is {len(metrics)}"
+            )
+
     def suggest(self) -> TrialSuggestion | None:
 
         config = self.searcher.suggest()
@@ -90,10 +101,14 @@ class SingleFidelityScheduler(TrialScheduler):
         :return: Decision what to do with the trial
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [
+        metrics = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
-        self.searcher.on_trial_result(trial.trial_id, config, metric)
+
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            self.searcher.on_trial_result(trial.trial_id, config, metrics[0])
+        else:
+            self.searcher.on_trial_result(trial.trial_id, config, metrics)
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: dict[str, Any]):
@@ -107,10 +122,14 @@ class SingleFidelityScheduler(TrialScheduler):
         :param result: Result dictionary
         """
         config = remove_constant_and_cast(trial.config, self.config_space)
-        metric = [
+        metrics = [
             result[metric_name] * self.metric_multiplier for metric_name in self.metrics
         ]
-        self.searcher.on_trial_complete(trial.trial_id, config, metric)
+
+        if isinstance(self.searcher, SingleObjectiveBaseSearcher):
+            self.searcher.on_trial_complete(trial.trial_id, config, metrics[0])
+        else:
+            self.searcher.on_trial_complete(trial.trial_id, config, metrics)
 
     def metadata(self) -> dict[str, Any]:
         """
