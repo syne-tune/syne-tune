@@ -12,6 +12,9 @@ from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.multiobjective import (
     MultiObjectiveRegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.searchers.random_searcher import (
+    MultiObjectiveRandomSearcher,
+)
 from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
     ExpectedHyperVolumeImprovement,
 )
@@ -124,7 +127,10 @@ list_schedulers_to_test = [
     ),
     SingleFidelityScheduler(
         config_space,
-        searcher="random_search",
+        searcher=MultiObjectiveRandomSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+        ),
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
