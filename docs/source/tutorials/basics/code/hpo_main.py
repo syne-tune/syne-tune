@@ -15,12 +15,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.legacy_baselines import (
-    RandomSearch,
-    BayesianOptimization,
-    ASHA,
-    MOBSTER,
-)
+from syne_tune.optimizer.baselines import RandomSearch, BOTorch, ASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint, uniform, loguniform
 
@@ -47,10 +42,7 @@ if __name__ == "__main__":
         choices=(
             "RS",
             "BO",
-            "ASHA-STOP",
-            "ASHA-PROM",
-            "MOBSTER-STOP",
-            "MOBSTER-PROM",
+            "ASHA",
         ),
         default="RS",
     )
@@ -82,10 +74,8 @@ if __name__ == "__main__":
     #   what is reported in the training script
     if args.method in ("RS", "BO"):
         train_file = "traincode_report_end.py"
-    elif args.method.endswith("STOP"):
-        train_file = "traincode_report_eachepoch.py"
     else:
-        train_file = "traincode_report_withcheckpointing.py"
+        train_file = "traincode_report_eachepoch.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 81  # Maximum number of training epochs
     mode = "max"
@@ -107,28 +97,31 @@ if __name__ == "__main__":
 
     # Scheduler: Depends on `args.method`  [4]
     scheduler = None
-    # Common scheduler kwargs
-    method_kwargs = dict(
-        metric=metric,
-        mode=mode,
-        random_seed=args.random_seed,
-        max_resource_attr=max_resource_attr,
-        search_options={"num_init_random": args.n_workers + 2},
-    )
-    sch_type = "promotion" if args.method.endswith("PROM") else "stopping"
     if args.method == "RS":
-        scheduler = RandomSearch(config_space, **method_kwargs)
+        scheduler = RandomSearch(
+            config_space,
+            metrics=[metric],
+            do_minimize=mode == "min",
+            random_seed=args.random_seed,
+        )
     elif args.method == "BO":
-        scheduler = BayesianOptimization(config_space, **method_kwargs)
+        scheduler = BOTorch(
+            config_space,
+            metric=metric,
+            do_minimize=mode == "min",
+            random_seed=args.random_seed,
+        )
+    elif args.method == "ASHA":
+        scheduler = ASHA(
+            config_space,
+            metric=metric,
+            time_attr=resource_attr,
+            max_t=max_resource_level,
+            do_minimize=mode == "min",
+            random_seed=args.random_seed,
+        )
     else:
-        # Multi-fidelity method
-        method_kwargs["resource_attr"] = resource_attr
-        if args.method.startswith("ASHA"):
-            scheduler = ASHA(config_space, type=sch_type, **method_kwargs)
-        elif args.method.startswith("MOBSTER"):
-            scheduler = MOBSTER(config_space, type=sch_type, **method_kwargs)
-        else:
-            raise NotImplementedError(args.method)
+        raise NotImplementedError(args.method)
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]

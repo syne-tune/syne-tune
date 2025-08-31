@@ -16,17 +16,13 @@ Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
 .. image:: synetune.gif
 
-This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+Syne Tune is a library for large-scale hyperparameter optimization (HPO) with the following key features:
 
-* Wide coverage (>20) of different HPO methods, including:
+- State-of-the-art HPO methods for multi-fidelity optimization, multi-objective optimization, transfer learning, and population-based training.
 
-  * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
-  * Multi-fidelity methods supporting model-based decisions (BOHB, MOBSTER, Hyper-Tune, DyHPO, BORE);
-  * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
-  * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
+- Tooling that lets you run `large-scale experimentation <https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md>`__ either locally or on SLURM clusters.
 
-* HPO can be run in different environments (locally, simulation) by changing just one line of code.
-* Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
+- Extensive `collection of blackboxes <https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md>`__ including surrogate and tabular benchmarks for efficient HPO simulation.
 
 .. toctree::
    :name: Getting Started
@@ -57,14 +53,12 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
    tutorials/experimentation/README
    tutorials/developer/README
    tutorials/dev_bayesopt/README
-   tutorials/pasha/pasha
    tutorials/transfer_learning/transfer_learning
    tutorials/odsc_tutorial/README
 
 Videos featuring Syne Tune
 --------------------------
 
-* `Andreas Mueller: Mothernet: A Foundational Hypernetwork for Tabular Classification (AutoML Seminar 2024) <https://www.youtube.com/watch?v=-pAuQSAW5w0>`__
 * `Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023) <https://www.youtube.com/watch?v=onX6fXzp9Yk>`__
 * `David Salinas: Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research <https://www.youtube.com/watch?v=DlM-__TTa3U>`__
 
