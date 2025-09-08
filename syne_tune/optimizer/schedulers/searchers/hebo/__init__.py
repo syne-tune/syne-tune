@@ -14,5 +14,5 @@ try:
     )
 except ImportError as e:
     logging.warning(
-        f"Installing Optuna is required to run the HEBO Searcher, please make sure you have it installed. \n Error:{e}"
+        f"Installing Optuna is required to run the HEBOSearcher, please make sure you have it installed. \n Error:{e}"
     )

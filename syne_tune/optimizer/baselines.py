@@ -464,10 +464,13 @@ class CQR(SingleObjectiveScheduler):
             random_seed=random_seed,
         )
 
-
 class HEBO(SingleObjectiveScheduler):
     """
-    HEBO
+    Cowen-Rivers, A. I., Lyu, W., Tutunov, R., Wang, Z., Grosnit, A., Griffiths, R. R., ... & Bou-Ammar, H. (2022).
+    Hebo: Pushing the limits of sample-efficient hyper-parameter optimisation.
+    Journal of Artificial Intelligence Research, 74, 1269-1349.
+
+    This method wraps the Optuna implementation of HEBO.
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
@@ -484,7 +487,7 @@ class HEBO(SingleObjectiveScheduler):
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
     ):
-        from syne_tune.optimizer.schedulers.searchers.hebo.hebo_searcher_hebo_backend import (
+        from syne_tune.optimizer.schedulers.searchers.hebo.hebo_searcher import (
             HEBOSearcher,
         )
 
@@ -501,10 +504,10 @@ class HEBO(SingleObjectiveScheduler):
 
 
 baselines_dict = {
-    "Random Search": RandomSearch,
-    "BORE": BORE,
-    "TPE": TPE,
-    "REA": REA,
-    "BOTorch": BOTorch,
-    "HEBO": HEBO,
-}
+        "Random Search": RandomSearch,
+        "BORE": BORE,
+        "TPE": TPE,
+        "REA": REA,
+        "BOTorch": BOTorch,
+        "HEBO": HEBO,
+    }

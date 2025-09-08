@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -7,13 +7,14 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 
 import syne_tune.config_space as sp
 
+
+if TYPE_CHECKING:
+    from optuna.distributions import BaseDistribution
+
 logger = logging.getLogger(__name__)
 
 
-def _syne_tune_domain_to_optuna_dist(
-    name: str,
-    dom: Any,
-) -> tuple[Any, dict]:
+def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
     """
     Convert a Syne Tune domain (sp.*) or literal constant into an Optuna distribution.
     Returns (optuna_dist or None for constants, metadata dict)
@@ -25,6 +26,10 @@ def _syne_tune_domain_to_optuna_dist(
     # Categorical
     if isinstance(dom, sp.Categorical):
         choices = dom.categories
+        if choices is None:
+            raise RuntimeError(
+                f"Categorical domain {name} has no categories attribute."
+            )
         return CategoricalDistribution(choices), {
             "type": "categorical",
             "choices": choices,
@@ -51,7 +56,11 @@ def _syne_tune_domain_to_optuna_dist(
                 if float(computed_step).is_integer() and computed_step != 0
                 else 1
             )
-            return IntDistribution(int(lower), int(upper), step=step_for_int,), {
+            return IntDistribution(
+                int(lower),
+                int(upper),
+                step=step_for_int,
+            ), {
                 "type": "int_finite",
                 "low": lower,
                 "high": upper,
@@ -109,13 +118,12 @@ def _syne_tune_domain_to_optuna_dist(
 
 
 def _convert_syne_to_optuna_space(
-    syne_space: dict[str, Any],
-    BaseDistribution,
-) -> dict[str, BaseDistribution]:
+    syne_space: dict[str, Any]
+) -> dict[str, "BaseDistribution"]:
     """
     Convert entire Syne Tune config space mapping -> optuna distributions dict.
     """
-    optuna_space: dict[str, BaseDistribution] = {}
+    optuna_space: dict[str, "BaseDistribution"] = {}
 
     for name, dom in syne_space.items():
         optuna_dist, info = _syne_tune_domain_to_optuna_dist(name, dom)
@@ -126,12 +134,8 @@ def _convert_syne_to_optuna_space(
 
 class HEBOSearcher(SingleObjectiveBaseSearcher):
     """
-    Syne Tune searcher wrapper, that uses the HEBOSearcher implemented in Optuna. Converts Syne Tune config-space -> Optuna distributions,
-    instantiates optunahub's HEBOSampler, and uses the ask/tell interface to query the Sampler.
-
-    Cowen-Rivers, A. I., Lyu, W., Tutunov, R., Wang, Z., Grosnit, A., Griffiths, R. R., ... & Bou-Ammar, H. (2022).
-    Hebo: Pushing the limits of sample-efficient hyper-parameter optimisation.
-    Journal of Artificial Intelligence Research, 74, 1269-1349.
+    Syne Tune searcher that converts Syne Tune config-space -> Optuna distributions,
+    instantiates Optunahub's HEBOSampler, and uses the ask/tell interface to query the Sampler.
     """
 
     def __init__(
@@ -143,7 +147,6 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         try:
             import optuna  # type: ignore
             import optunahub  # type: ignore
-
             # import distribution classes into module scope so
             # _syne_tune_domain_to_optuna_dist can reference them
             from optuna.distributions import (
@@ -171,7 +174,7 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
 
         optuna_space = _convert_syne_to_optuna_space(config_space)
         self._optuna_space = optuna_space
-        self.trials = []
+        self._trial_map: dict[int, Any] = {}
 
         super().__init__(
             config_space=config_space, points_to_evaluate=None, random_seed=random_seed
@@ -189,8 +192,8 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
 
     def suggest(self, **kwargs):
         trial = self._study.ask(self._optuna_space)
-        self.trials.append(trial)
+        self._trial_map[trial._trial_id] = trial
         return trial.params
 
     def on_trial_complete(self, trial_id, config, metric):
-        self._study.tell(config, metric, trial=self.trials[-1])
+        self._study.tell(trial=self._trial_map[trial_id])
