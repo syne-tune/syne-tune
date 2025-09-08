@@ -158,7 +158,6 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         random_seed: int | None = None,
     ):
 
-
         globals().update(
             {
                 "optuna": optuna,
