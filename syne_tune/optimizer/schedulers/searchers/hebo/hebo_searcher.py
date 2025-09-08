@@ -10,7 +10,10 @@ import syne_tune.config_space as sp
 logger = logging.getLogger(__name__)
 
 
-def _syne_tune_domain_to_optuna_dist(name: str, dom: Any,) -> tuple[Any, dict]:
+def _syne_tune_domain_to_optuna_dist(
+    name: str,
+    dom: Any,
+) -> tuple[Any, dict]:
     """
     Convert a Syne Tune domain (sp.*) or literal constant into an Optuna distribution.
     Returns (optuna_dist or None for constants, metadata dict)
@@ -48,11 +51,7 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any,) -> tuple[Any, dict]:
                 if float(computed_step).is_integer() and computed_step != 0
                 else 1
             )
-            return IntDistribution(
-                int(lower),
-                int(upper),
-                step=step_for_int,
-            ), {
+            return IntDistribution(int(lower), int(upper), step=step_for_int,), {
                 "type": "int_finite",
                 "low": lower,
                 "high": upper,
@@ -144,6 +143,7 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         try:
             import optuna  # type: ignore
             import optunahub  # type: ignore
+
             # import distribution classes into module scope so
             # _syne_tune_domain_to_optuna_dist can reference them
             from optuna.distributions import (
