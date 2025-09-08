@@ -7,20 +7,10 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 
 import syne_tune.config_space as sp
 
-from optuna.distributions import (
-    BaseDistribution,
-    CategoricalDistribution,
-    FloatDistribution,
-    IntDistribution,
-)
-
-import optunahub
-import optuna
-
 logger = logging.getLogger(__name__)
 
 
-def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
+def _syne_tune_domain_to_optuna_dist(name: str, dom: Any,) -> tuple[Any, dict]:
     """
     Convert a Syne Tune domain (sp.*) or literal constant into an Optuna distribution.
     Returns (optuna_dist or None for constants, metadata dict)
@@ -32,10 +22,6 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
     # Categorical
     if isinstance(dom, sp.Categorical):
         choices = dom.categories
-        if choices is None:
-            raise RuntimeError(
-                f"Categorical domain {name} has no categories attribute."
-            )
         return CategoricalDistribution(choices), {
             "type": "categorical",
             "choices": choices,
@@ -124,7 +110,8 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
 
 
 def _convert_syne_to_optuna_space(
-    syne_space: dict[str, Any]
+    syne_space: dict[str, Any],
+    BaseDistribution,
 ) -> dict[str, BaseDistribution]:
     """
     Convert entire Syne Tune config space mapping -> optuna distributions dict.
@@ -140,8 +127,12 @@ def _convert_syne_to_optuna_space(
 
 class HEBOSearcher(SingleObjectiveBaseSearcher):
     """
-    Syne Tune searcher that converts Syne Tune config-space -> Optuna distributions,
+    Syne Tune searcher wrapper, that uses the HEBOSearcher implemented in Optuna. Converts Syne Tune config-space -> Optuna distributions,
     instantiates optunahub's HEBOSampler, and uses the ask/tell interface to query the Sampler.
+
+    Cowen-Rivers, A. I., Lyu, W., Tutunov, R., Wang, Z., Grosnit, A., Griffiths, R. R., ... & Bou-Ammar, H. (2022).
+    Hebo: Pushing the limits of sample-efficient hyper-parameter optimisation.
+    Journal of Artificial Intelligence Research, 74, 1269-1349.
     """
 
     def __init__(
@@ -150,6 +141,34 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         do_minimize: bool = True,
         random_seed: int | None = None,
     ):
+        try:
+            import optuna  # type: ignore
+            import optunahub  # type: ignore
+            # import distribution classes into module scope so
+            # _syne_tune_domain_to_optuna_dist can reference them
+            from optuna.distributions import (
+                BaseDistribution,
+                CategoricalDistribution,
+                FloatDistribution,
+                IntDistribution,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "HEBOSearcher requires the 'optuna' and 'optunahub' packages. "
+                "Install them with: pip install optuna optunahub"
+            ) from exc
+
+        globals().update(
+            {
+                "optuna": optuna,
+                "optunahub": optunahub,
+                "BaseDistribution": BaseDistribution,
+                "CategoricalDistribution": CategoricalDistribution,
+                "FloatDistribution": FloatDistribution,
+                "IntDistribution": IntDistribution,
+            }
+        )
+
         optuna_space = _convert_syne_to_optuna_space(config_space)
         self._optuna_space = optuna_space
         self.trials = []
