@@ -464,6 +464,7 @@ class CQR(SingleObjectiveScheduler):
             random_seed=random_seed,
         )
 
+
 class HEBO(SingleObjectiveScheduler):
     """
     Cowen-Rivers, A. I., Lyu, W., Tutunov, R., Wang, Z., Grosnit, A., Griffiths, R. R., ... & Bou-Ammar, H. (2022).
@@ -504,10 +505,10 @@ class HEBO(SingleObjectiveScheduler):
 
 
 baselines_dict = {
-        "Random Search": RandomSearch,
-        "BORE": BORE,
-        "TPE": TPE,
-        "REA": REA,
-        "BOTorch": BOTorch,
-        "HEBO": HEBO,
-    }
+    "Random Search": RandomSearch,
+    "BORE": BORE,
+    "TPE": TPE,
+    "REA": REA,
+    "BOTorch": BOTorch,
+    "HEBO": HEBO,
+}

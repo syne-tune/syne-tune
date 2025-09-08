@@ -147,6 +147,7 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         try:
             import optuna  # type: ignore
             import optunahub  # type: ignore
+
             # import distribution classes into module scope so
             # _syne_tune_domain_to_optuna_dist can reference them
             from optuna.distributions import (
