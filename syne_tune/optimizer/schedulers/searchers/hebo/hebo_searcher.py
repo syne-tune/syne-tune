@@ -1,4 +1,4 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
@@ -7,9 +7,26 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 
 import syne_tune.config_space as sp
 
+try:
+    import optuna  # type: ignore
+    import optunahub  # type: ignore
+    import hebo
 
-if TYPE_CHECKING:
-    from optuna.distributions import BaseDistribution
+    # import distribution classes into module scope so
+    # _syne_tune_domain_to_optuna_dist can reference them
+    from optuna.distributions import (
+        BaseDistribution,
+        CategoricalDistribution,
+        FloatDistribution,
+        IntDistribution,
+    )
+except Exception as exc:
+    raise RuntimeError(
+        "HEBOSearcher requires the 'hebo', 'optuna' and 'optunahub' packages. "
+        "Install them with: pip install hebo optuna optunahub"
+        "Note that hebo currently works only with Python version <=3.11 or older."
+    ) from exc
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +43,6 @@ def _syne_tune_domain_to_optuna_dist(name: str, dom: Any) -> tuple[Any, dict]:
     # Categorical
     if isinstance(dom, sp.Categorical):
         choices = dom.categories
-        if choices is None:
-            raise RuntimeError(
-                f"Categorical domain {name} has no categories attribute."
-            )
         return CategoricalDistribution(choices), {
             "type": "categorical",
             "choices": choices,
@@ -144,23 +157,7 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         do_minimize: bool = True,
         random_seed: int | None = None,
     ):
-        try:
-            import optuna  # type: ignore
-            import optunahub  # type: ignore
 
-            # import distribution classes into module scope so
-            # _syne_tune_domain_to_optuna_dist can reference them
-            from optuna.distributions import (
-                BaseDistribution,
-                CategoricalDistribution,
-                FloatDistribution,
-                IntDistribution,
-            )
-        except Exception as exc:
-            raise RuntimeError(
-                "HEBOSearcher requires the 'optuna' and 'optunahub' packages. "
-                "Install them with: pip install optuna optunahub"
-            ) from exc
 
         globals().update(
             {
