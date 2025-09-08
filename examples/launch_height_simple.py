@@ -17,7 +17,7 @@ config_space = {
 scheduler = ASHA(
     config_space,
     metric="mean_loss",
-    resource_attr="epoch",
+    time_attr="epoch",
     max_t=max_epochs,
 )
 

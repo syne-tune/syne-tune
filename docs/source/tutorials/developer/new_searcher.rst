@@ -102,7 +102,7 @@ type, the minimal signature is:
 
 .. code-block:: python
 
-   def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+   def __init__(self, config_space: dict, metric: str, time_attr: str, **kwargs):
 
 If the scheduler accepts a random seed, this must be ``kwargs["random_seed"]``.
 Several wrapper classes in :mod:`syne_tune.optimizer.baselines` have signatures

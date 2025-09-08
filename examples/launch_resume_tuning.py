@@ -33,7 +33,7 @@ def launch_first_tuning(experiment_name: str):
         metric=metric,
         do_minimize=do_minimize,
         max_t=max_epochs,
-        resource_attr="epoch",
+        time_attr="epoch",
     )
 
     trial_backend = LocalBackend(entry_point=str(entry_point))

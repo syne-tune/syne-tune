@@ -16,7 +16,7 @@ from syne_tune.constants import ST_CHECKPOINT_DIR
 report = Reporter()
 
 
-RESOURCE_ATTR = "epoch"
+TIME_ATTR = "epoch"
 
 METRIC_ATTR = "mean_loss"
 
@@ -112,6 +112,6 @@ if __name__ == "__main__":
             **{
                 "step": step,
                 METRIC_ATTR: value,
-                RESOURCE_ATTR: epoch,
+                TIME_ATTR: epoch,
             }
         )

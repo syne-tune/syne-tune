@@ -69,10 +69,10 @@ class PopulationBasedTraining(TrialScheduler):
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of metric to optimize, key in results obtained via
        ``on_trial_result``.
-    :param resource_attr: Name of resource attribute in results obtained
+    :param time_attr: Name of resource attribute in results obtained
         via ``on_trial_result``, defaults to "time_total_s"
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``resource_attr``) have passed.
+        ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
     :param custom_explore_fn: Custom exploration function. This
         function is invoked as ``f(config)`` instead of the built-in perturbations,
@@ -82,7 +82,7 @@ class PopulationBasedTraining(TrialScheduler):
     :param random_seed: Seed for initializing random number generators.
     :param population_size: Size of the population, defaults to 4
     :param perturbation_interval: Models will be considered for perturbation
-        at this interval of ``resource_attr``. Note that perturbation incurs
+        at this interval of ``time_attr``. Note that perturbation incurs
         checkpoint overhead, so you shouldn't set this to be too frequent.
         Defaults to 60
     :param quantile_fraction: Parameters are transferred from the top
@@ -101,7 +101,7 @@ class PopulationBasedTraining(TrialScheduler):
         self,
         config_space: dict[str, Any],
         metric: str,
-        resource_attr: str,
+        time_attr: str,
         max_t: int = 100,
         custom_explore_fn: Callable[[dict], dict] | None = None,
         do_minimize: bool | None = True,
@@ -128,7 +128,7 @@ class PopulationBasedTraining(TrialScheduler):
             random_seed=self.random_seed,
             points_to_evaluate=self.searcher_kwargs.get("points_to_evaluate"),
         )
-        self.resource_attr = resource_attr
+        self.time_attr = time_attr
         self.population_size = population_size
         self.perturbation_interval = perturbation_interval
         self.quantile_fraction = quantile_fraction
@@ -172,7 +172,7 @@ class PopulationBasedTraining(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         for name, value in [
-            ("resource_attr", self.resource_attr),
+            ("time_attr", self.time_attr),
             ("metric", self.metric),
         ]:
             if value not in result:
@@ -183,7 +183,7 @@ class PopulationBasedTraining(TrialScheduler):
                 raise RuntimeError(err_msg)
 
         trial_id = trial.trial_id
-        cost = result[self.resource_attr]
+        cost = result[self.time_attr]
         state = self.trial_state[trial_id]
 
         # Stop if we reached the maximum budget of this configuration

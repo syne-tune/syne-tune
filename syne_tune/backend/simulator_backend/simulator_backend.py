@@ -121,7 +121,7 @@ class SimulatorBackend(LocalBackend):
         elapsed_time_attr: str,
         simulator_config: SimulatorConfig | None = None,
         tuner_sleep_time: float = TUNER_DEFAULT_SLEEP_TIME,
-        debug_resource_attr: str | None = None,
+        debug_time_attr: str | None = None,
     ):
         super().__init__(entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
@@ -130,7 +130,7 @@ class SimulatorBackend(LocalBackend):
         else:
             self.simulator_config = simulator_config
         self.tuner_sleep_time = tuner_sleep_time
-        self._debug_resource_attr = debug_resource_attr
+        self._debug_time_attr = debug_time_attr
         # Start with empty event queue
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
@@ -221,8 +221,8 @@ class SimulatorBackend(LocalBackend):
             time_final_result = max(time_final_result, _time_result)
             # DEBUG:
             if deb_it < 10:
-                if self._debug_resource_attr:
-                    k = self._debug_resource_attr
+                if self._debug_time_attr:
+                    k = self._debug_time_attr
                     debug_kwargs = {k: result.get(k)}
                 else:
                     debug_kwargs = dict()
@@ -280,8 +280,8 @@ class SimulatorBackend(LocalBackend):
     ):
         trial_id = event.trial_id
         result = copy.copy(event.result)
-        if self._debug_resource_attr:
-            k = self._debug_resource_attr
+        if self._debug_time_attr:
+            k = self._debug_time_attr
             debug_kwargs = {k: result.get(k)}
         else:
             debug_kwargs = dict()
@@ -336,11 +336,11 @@ class SimulatorBackend(LocalBackend):
             for trial_id, result_list in self._next_results_to_fetch.items():
                 status = self._trial_dict[trial_id].status
                 msg_line = f"  trial_id {trial_id}: status = {status}, "
-                if self._debug_resource_attr is None:
+                if self._debug_time_attr is None:
                     msg_line += f"num_results = {len(result_list)}"
                 else:
                     resources = [
-                        result[self._debug_resource_attr] for result in result_list
+                        result[self._debug_time_attr] for result in result_list
                     ]
                     msg_line += f"resources = {resources}"
                 warn_msg.append(msg_line)

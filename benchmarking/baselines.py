@@ -16,7 +16,7 @@ class MethodArguments:
     metric: str
     mode: str
     random_seed: int
-    resource_attr: str
+    time_attr: str
     points_to_evaluate: list[dict]
     max_t: int | None = None
     max_resource_attr: str | None = None
@@ -96,7 +96,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="kde",
-        resource_attr=method_arguments.resource_attr,
+        time_attr=method_arguments.time_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHA: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -105,7 +105,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="random_search",
-        resource_attr=method_arguments.resource_attr,
+        time_attr=method_arguments.time_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHACQR: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -114,7 +114,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="cqr",
-        resource_attr=method_arguments.resource_attr,
+        time_attr=method_arguments.time_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.ASHABORE: lambda method_arguments: AsynchronousSuccessiveHalving(
@@ -123,7 +123,7 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher="bore",
-        resource_attr=method_arguments.resource_attr,
+        time_attr=method_arguments.time_attr,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
 }
@@ -171,7 +171,7 @@ if __name__ == "__main__":
                     mode=benchmark.mode,
                     random_seed=0,
                     max_t=max(backend.blackbox.fidelity_values),
-                    resource_attr=next(iter(backend.blackbox.fidelity_space.keys())),
+                    time_attr=next(iter(backend.blackbox.fidelity_space.keys())),
                     use_surrogates=benchmark_name == "lcbench-Fashion-MNIST",
                     points_to_evaluate=points_to_evaluate,
                 )

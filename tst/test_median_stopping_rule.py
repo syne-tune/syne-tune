@@ -15,7 +15,7 @@ config_space = {
     "steps": max_steps,
     "width": randint(0, 20),
 }
-resource_attr = "step"
+time_attr = "step"
 metric = "mean_loss"
 
 
@@ -35,7 +35,7 @@ def test_median_stopping_rule():
             searcher="random_search",
             metric=metric,
         ),
-        resource_attr="step",
+        time_attr="step",
         metric=metric,
         random_seed=random_seed,
         grace_population=1,
@@ -49,7 +49,7 @@ def test_median_stopping_rule():
     scheduler.on_trial_add(trial=trial2)
     scheduler.on_trial_add(trial=trial3)
 
-    make_metric = lambda x: {resource_attr: 1, metric: x}
+    make_metric = lambda x: {time_attr: 1, metric: x}
     decision1 = scheduler.on_trial_result(trial1, make_metric(2.0))
     decision2 = scheduler.on_trial_result(trial2, make_metric(1.0))
     decision3 = scheduler.on_trial_result(trial3, make_metric(5.0))

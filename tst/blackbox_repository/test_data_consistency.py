@@ -145,7 +145,7 @@ def test_elapsed_time_consistency(name, benchmark):
     random_seed = 382378624
 
     blackbox = create_blackbox(benchmark)
-    resource_attr = next(iter(blackbox.fidelity_space.keys()))
+    time_attr = next(iter(blackbox.fidelity_space.keys()))
     elapsed_time_attr = benchmark.elapsed_time_attr
     num_fidelities = len(blackbox.fidelity_values)
     if isinstance(blackbox, BlackboxTabular):
@@ -169,13 +169,13 @@ def test_elapsed_time_consistency(name, benchmark):
             all_results = metrics_for_configuration(
                 blackbox=blackbox,
                 config=config,
-                resource_attr=resource_attr,
+                time_attr=time_attr,
                 seed=seed,
             )
             assert len(all_results) == num_fidelities, error_prefix
             elapsed_times = [np.nan] * num_fidelities
             for result in all_results:
-                resource = int(result[resource_attr])
+                resource = int(result[time_attr])
                 elapsed_time = float(result[elapsed_time_attr])
                 assert 1 <= resource <= num_fidelities, (
                     error_prefix + f", result = {result}"

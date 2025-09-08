@@ -31,7 +31,7 @@ config_space = {
     "steps": max_steps,
     "width": randint(0, 20),
 }
-resource_attr = "step"
+time_attr = "step"
 metric1 = "mean_loss"
 metric2 = "cost"
 
@@ -49,7 +49,7 @@ scheduler_fun = partial(
     max_t=max_steps,
     brackets=1,
     reduction_factor=2.0,
-    resource_attr="step",
+    time_attr="step",
     metrics=[metric1, metric2],
     config_space=config_space,
 )
@@ -82,7 +82,7 @@ def test_moasha_mode_max(scheduler):
     scheduler.on_trial_add(trial=trial2)
     scheduler.on_trial_add(trial=trial3)
 
-    make_metric = lambda x: {resource_attr: 1, metric1: x, metric2: x}
+    make_metric = lambda x: {time_attr: 1, metric1: x, metric2: x}
     decision1 = scheduler.on_trial_result(trial1, make_metric(2.0))
     decision2 = scheduler.on_trial_result(trial2, make_metric(4.0))
     decision3 = scheduler.on_trial_result(trial3, make_metric(1.0))
@@ -116,7 +116,7 @@ def test_moasha_mode_min(scheduler):
     scheduler.on_trial_add(trial=trial2)
     scheduler.on_trial_add(trial=trial3)
 
-    make_metric = lambda x: {resource_attr: 1, metric1: x, metric2: x}
+    make_metric = lambda x: {time_attr: 1, metric1: x, metric2: x}
     decision1 = scheduler.on_trial_result(trial1, make_metric(4.0))
     decision2 = scheduler.on_trial_result(trial2, make_metric(2.0))
     decision3 = scheduler.on_trial_result(trial3, make_metric(10.0))

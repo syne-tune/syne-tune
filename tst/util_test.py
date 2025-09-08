@@ -12,7 +12,7 @@ from syne_tune import Tuner
 from syne_tune import StoppingCriterion
 from examples.training_scripts.height_example.train_height import (
     height_config_space,
-    RESOURCE_ATTR,
+    TIME_ATTR,
     METRIC_ATTR,
     MAX_RESOURCE_ATTR,
 )
@@ -102,7 +102,7 @@ def run_experiment_with_height(
         metric=metric,
         do_minimize=True,
         random_seed=random_seed,
-        resource_attr=RESOURCE_ATTR,
+        time_attr=TIME_ATTR,
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)

@@ -53,7 +53,7 @@ def run(
 
         # todo move into benchmark definition
         max_t = max(backend.blackbox.fidelity_values)
-        resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
+        time_attr = next(iter(backend.blackbox.fidelity_space.keys()))
 
         # 5 candidates initially to be evaluated
         num_random_candidates = 5
@@ -72,7 +72,7 @@ def run(
                 mode=benchmark.mode,
                 random_seed=seed,
                 max_t=max_t,
-                resource_attr=resource_attr,
+                time_attr=time_attr,
                 num_brackets=1,
                 use_surrogates="lcbench" in benchmark_name,
                 points_to_evaluate=points_to_evaluate,

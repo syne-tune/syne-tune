@@ -94,7 +94,7 @@ if __name__ == "__main__":
     method_kwargs = dict(
         metric=benchmark.metric,
         mode=benchmark.mode,
-        resource_attr=blackbox.fidelity_name(),
+        time_attr=blackbox.fidelity_name(),
         random_seed=args.random_seed,
         max_resource_attr=max_resource_attr,
     )

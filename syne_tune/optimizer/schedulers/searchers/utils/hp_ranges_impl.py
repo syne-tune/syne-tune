@@ -810,7 +810,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
 def decode_extended_features(
     features_ext: np.ndarray,
-    resource_attr_range: tuple[int, int],
+    time_attr_range: tuple[int, int],
 ) -> (np.ndarray, np.ndarray):
     """
     Given matrix of features from extended configs, corresponding to
@@ -818,10 +818,10 @@ def decode_extended_features(
     split into feature matrix from normal configs and resource values.
 
     :param features_ext: Matrix of features from extended configs
-    :param resource_attr_range: ``(r_min, r_max)``
+    :param time_attr_range: ``(r_min, r_max)``
     :return: ``(features, resources)``
     """
-    r_min, r_max = resource_attr_range
+    r_min, r_max = time_attr_range
     features = features_ext[:, :-1]
     resources_encoded = features_ext[:, -1].reshape((-1,))
     lower = r_min - 0.5 + EPS

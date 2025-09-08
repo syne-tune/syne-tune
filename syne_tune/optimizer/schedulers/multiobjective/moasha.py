@@ -36,7 +36,7 @@ class MOASHA(TrialScheduler):
     :param config_space: Configuration space
     :param metrics: List of metric names MOASHA optimizes over
     :param do_minimize: If True, we minimize the objective function specified by ``metric`` . Defaults to True.
-    :param resource_attr: A training result attr to use for comparing time.
+    :param time_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
         ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
@@ -46,10 +46,10 @@ class MOASHA(TrialScheduler):
         as non-dominated sort or linear scalarization, default is
         non-dominated sort.
     :param max_t: max time units per trial. Trials will be stopped after
-        ``max_t`` time units (determined by ``resource_attr``) have passed.
+        ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
     :param grace_period: Only stop trials at least this old in time.
-        The units are the same as the attribute named by ``resource_attr``.
+        The units are the same as the attribute named by ``time_attr``.
         Defaults to 1
     :param reduction_factor: Used to set halving rate and amount. This
         is simply a unit-less scalar. Defaults to 3
@@ -63,7 +63,7 @@ class MOASHA(TrialScheduler):
         config_space: dict[str, Any],
         metrics: list[str],
         do_minimize: bool | None = True,
-        resource_attr: str = "training_iteration",
+        time_attr: str = "training_iteration",
         multiobjective_priority: MOPriority | None = None,
         max_t: int = 100,
         grace_period: int = 1,
@@ -72,7 +72,7 @@ class MOASHA(TrialScheduler):
         random_seed: int = None,
     ):
         super(MOASHA, self).__init__(random_seed=random_seed)
-        assert max_t > 0, "Max (resource_attr) not valid!"
+        assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
         assert grace_period > 0, "grace_period must be positive!"
         assert reduction_factor > 1, "reduction factor not valid!"
@@ -99,7 +99,7 @@ class MOASHA(TrialScheduler):
         self.num_stopped = 0
         self.metrics = metrics
         self.metric_multiplier = 1 if self.do_minimize else -1
-        self.resource_attr = resource_attr
+        self.time_attr = time_attr
 
     def metric_names(self) -> list[str]:
         return self.metrics
@@ -123,14 +123,14 @@ class MOASHA(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:
         self.check_metrics_are_present(result)
-        if result[self.resource_attr] >= self.max_t:
+        if result[self.time_attr] >= self.max_t:
             action = SchedulerDecision.STOP
         else:
             bracket = self.trial_info[trial.trial_id]
             metrics = self.metric_dict(result)
             action = bracket.on_result(
                 trial_id=trial.trial_id,
-                cur_iter=result[self.resource_attr],
+                cur_iter=result[self.time_attr],
                 metrics=metrics,
             )
         if action == SchedulerDecision.STOP:
@@ -144,7 +144,7 @@ class MOASHA(TrialScheduler):
         }
 
     def check_metrics_are_present(self, result: dict[str, Any]):
-        for key in [self.resource_attr] + self.metrics:
+        for key in [self.time_attr] + self.metrics:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 
@@ -153,7 +153,7 @@ class MOASHA(TrialScheduler):
         bracket = self.trial_info[trial.trial_id]
         bracket.on_result(
             trial_id=trial.trial_id,
-            cur_iter=result[self.resource_attr],
+            cur_iter=result[self.time_attr],
             metrics=self.metric_dict(result),
         )
         del self.trial_info[trial.trial_id]
