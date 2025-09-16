@@ -465,10 +465,50 @@ class CQR(SingleObjectiveScheduler):
         )
 
 
+class HEBO(SingleObjectiveScheduler):
+    """
+    Cowen-Rivers, A. I., Lyu, W., Tutunov, R., Wang, Z., Grosnit, A., Griffiths, R. R., ... & Bou-Ammar, H. (2022).
+    Hebo: Pushing the limits of sample-efficient hyper-parameter optimisation.
+    Journal of Artificial Intelligence Research, 74, 1269-1349.
+
+    This method wraps the Optuna implementation of HEBO.
+
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    """
+
+    def __init__(
+        self,
+        config_space: dict[str, Any],
+        metric: str,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
+    ):
+        from syne_tune.optimizer.schedulers.searchers.hebo.hebo_searcher import (
+            HEBOSearcher,
+        )
+
+        super(HEBO, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            do_minimize=do_minimize,
+            searcher=HEBOSearcher(
+                config_space=config_space,
+                random_seed=random_seed,
+            ),
+            random_seed=random_seed,
+        )
+
+
 baselines_dict = {
     "Random Search": RandomSearch,
     "BORE": BORE,
     "TPE": TPE,
     "REA": REA,
     "BOTorch": BOTorch,
+    "HEBO": HEBO,
 }
