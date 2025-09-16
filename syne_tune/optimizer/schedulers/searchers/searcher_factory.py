@@ -14,7 +14,7 @@ searchers = [
     "regularized_evolution",
     "cqr",
     "botorch",
-    "hebo"
+    "hebo",
 ]
 
 
