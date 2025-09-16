@@ -10,7 +10,6 @@ import syne_tune.config_space as sp
 try:
     import optuna
     import optunahub
-    import hebo
 
     from optuna.distributions import (
         BaseDistribution,
