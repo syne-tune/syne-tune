@@ -89,7 +89,7 @@ def test_compare_local_simulator_backends(scheduler_name):
             sch_type = scheduler_name[len("hyperband_") :]
             scheduler_options.update(
                 {
-                    "resource_attr": benchmark["resource_attr"],
+                    "time_attr": benchmark["time_attr"],
                     "type": sch_type,
                     "grace_period": 1,
                     "reduction_factor": 3,

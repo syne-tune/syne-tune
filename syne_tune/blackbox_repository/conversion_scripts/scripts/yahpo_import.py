@@ -18,7 +18,7 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     metric_elapsed_time,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
@@ -390,7 +390,7 @@ def serialize_yahpo(scenario: str, target_path: Path, version: str = "1.0"):
         metadata={
             metric_elapsed_time: "time",
             default_metric: "val_accuracy",
-            resource_attr: ST_WORKER_ITER,  # TODO, ressource not present, we can use ST_WORKER_ITER
+            time_attr: ST_WORKER_ITER,  # TODO, ressource not present, we can use ST_WORKER_ITER
         },
     )
 

@@ -38,11 +38,11 @@ method is provided in class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
 Let us have a look at its arguments not shared with the base class
 class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
 
-* A mandatory argument is ``resource_attr``, which is the name of a field in
+* A mandatory argument is ``time_attr``, which is the name of a field in
   the ``result`` dictionary passed to ``scheduler.on_trial_report``. This field
   contains the resource :math:`r` for which metric values have been reported.
   For example, if a trial reports validation error at the end of the 5-th epoch
-  of training, ``result`` contains ``{resource_attr: 5}``.
+  of training, ``result`` contains ``{time_attr: 5}``.
 * We already noted the arguments ``max_resource_attr`` and ``max_t`` in
   class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. They are used to
   determine the maximum resource :math:`r_{max}` (e.g., the total number of
@@ -143,7 +143,7 @@ inherits from ``KernelDensityEstimator``:
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
   for synchronous Hyperband). It also calls
   :meth:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator.configure_scheduler`.
-  Moreover, ``self.resource_attr`` is obtained from the scheduler, so does not
+  Moreover, ``self.time_attr`` is obtained from the scheduler, so does not
   have to be passed.
 
 .. note::

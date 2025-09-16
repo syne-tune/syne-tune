@@ -42,7 +42,7 @@ def height_with_cost_benchmark(params):
         "script": __file__,
         "metric": "mean_loss",
         "mode": "min",
-        "resource_attr": "epoch",
+        "time_attr": "epoch",
         "elapsed_time_attr": "elapsed_time",
         "max_resource_attr": "epochs",
         "config_space": config_space,

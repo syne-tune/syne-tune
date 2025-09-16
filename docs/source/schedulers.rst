@@ -288,7 +288,7 @@ Here is a launcher script using
            search_options=search_options,
            type="stopping",
            max_resource_attr=benchmark.max_resource_attr,
-           resource_attr=benchmark.resource_attr,
+           time_attr=benchmark.time_attr,
            mode=benchmark.mode,
            metric=benchmark.metric,
            grace_period=1,
@@ -310,7 +310,7 @@ Much of this launcher script is the same as for ``FIFOScheduler``, but
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` comes with a number
 of extra arguments we will explain in the sequel (``type``,
 ``max_resource_attr``, ``grace_period``, ``reduction_factor``,
-``resource_attr``). The ``mlp_fashionmnist`` benchmark trains a two-layer MLP
+``time_attr``). The ``mlp_fashionmnist`` benchmark trains a two-layer MLP
 on ``FashionMNIST`` (more details are
 `here <tutorials/basics/basics_setup.html>`__). The accuracy is computed and
 reported at the end of each epoch:
@@ -323,7 +323,7 @@ reported at the end of each epoch:
        report(epoch=epoch, accuracy=accuracy)
 
 While ``metric="accuracy"`` is the criterion to be optimized,
-``resource_attr="epoch"`` is the resource attribute. In the schedulers
+``time_attr="epoch"`` is the resource attribute. In the schedulers
 discussed here, the resource attribute must be a positive integer.
 
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` maintains reported

@@ -36,13 +36,13 @@ class MedianStoppingRule(TrialScheduler):
 
     :param scheduler: Scheduler to be called for trial suggestion or when
         median-stopping-rule decision is to continue.
-    :param resource_attr: Key in the reported dictionary that accounts for the
+    :param time_attr: Key in the reported dictionary that accounts for the
         resource (e.g. epoch).
     :param running_average: If ``True``, then uses the running average of
         observation instead of raw observations. Defaults to ``True``
     :param metric: Metric to be considered, defaults to ``scheduler.metric``
     :param grace_time: Median stopping rule is only applied for results whose
-        ``resource_attr`` exceeds this amount. Defaults to 1
+        ``time_attr`` exceeds this amount. Defaults to 1
     :param grace_population: Median stopping rule when at least
         ``grace_population`` have been observed at a resource level. Defaults to 5
     :param rank_cutoff: Results whose quantiles are below this level are
@@ -54,7 +54,7 @@ class MedianStoppingRule(TrialScheduler):
     def __init__(
         self,
         scheduler: TrialScheduler,
-        resource_attr: str,
+        time_attr: str,
         running_average: bool = True,
         metric: str | None = None,
         grace_time: int | None = 1,
@@ -69,7 +69,7 @@ class MedianStoppingRule(TrialScheduler):
         self.metric = metric
         self.sorted_results = defaultdict(list)
         self.scheduler = scheduler
-        self.resource_attr = resource_attr
+        self.time_attr = time_attr
         self.rank_cutoff = rank_cutoff
         self.grace_time = grace_time
         self.min_samples_required = grace_population
@@ -86,7 +86,7 @@ class MedianStoppingRule(TrialScheduler):
     def on_trial_result(self, trial: Trial, result: dict) -> str:
         new_metric = result[self.metric] * self.metric_multiplier
 
-        time_step = result[self.resource_attr]
+        time_step = result[self.time_attr]
 
         if self.running_average:
             # gets the running average of current observations
@@ -115,7 +115,7 @@ class MedianStoppingRule(TrialScheduler):
 
     def grace_condition(self, time_step: float) -> bool:
         """
-        :param time_step: Value :code:`result[self.resource_attr]`
+        :param time_step: Value :code:`result[self.time_attr]`
         :return: Decide for continue?
         """
         if (

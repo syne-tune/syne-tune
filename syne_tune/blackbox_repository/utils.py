@@ -6,7 +6,7 @@ from syne_tune.blackbox_repository.blackbox import Blackbox
 def metrics_for_configuration(
     blackbox: Blackbox,
     config: dict[str, Any],
-    resource_attr: str,
+    time_attr: str,
     fidelity_range: tuple[float, float] | None = None,
     seed: int | None = None,
 ) -> list[dict]:
@@ -16,7 +16,7 @@ def metrics_for_configuration(
 
     :param blackbox: Blackbox
     :param config: Configuration
-    :param resource_attr: Name of resource attribute
+    :param time_attr: Name of resource attribute
     :param fidelity_range: Range [min_f, max_f], only fidelities in this range
         (both ends inclusive) are returned. Default is no filtering
     :param seed: Seed for queries to blackbox. Drawn at random if not
@@ -37,6 +37,6 @@ def metrics_for_configuration(
     for fidelity, value in enumerate(all_fidelities):
         if fidelity_range[0] <= value <= fidelity_range[1]:
             res_dict = dict(zip(blackbox.objectives_names, objective_values[fidelity]))
-            res_dict[resource_attr] = value
+            res_dict[time_attr] = value
             res.append(res_dict)
     return res

@@ -26,7 +26,7 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     default_metric,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
@@ -41,7 +41,7 @@ METRIC_VALID_LOSS = "metric_valid_loss"
 
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-RESOURCE_ATTR = "hp_epoch"
+TIME_ATTR = "hp_epoch"
 
 MAX_RESOURCE_LEVEL = 100
 
@@ -136,7 +136,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
             m, np.stack([data[key][m][:].astype("float32") for key in keys])
         )
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
+    fidelity_space = {TIME_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
 
     objective_names = [f"metric_{m}" for m in objective_names]
     # Sanity checks:
@@ -187,7 +187,7 @@ def generate_fcnet():
             metadata={
                 metric_elapsed_time: METRIC_ELAPSED_TIME,
                 default_metric: METRIC_VALID_LOSS,
-                resource_attr: RESOURCE_ATTR,
+                time_attr: TIME_ATTR,
             },
         )
 

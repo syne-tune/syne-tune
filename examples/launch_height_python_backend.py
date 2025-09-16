@@ -38,7 +38,7 @@ if __name__ == "__main__":
     n_workers = 4
     metric = "mean_loss"
     mode = "min"
-    resource_attr = "step"
+    time_attr = "step"
 
     config_space = {
         "steps": max_steps,
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         config_space,
         metric=metric,
         max_t=max_steps,
-        time_attr=resource_attr,
+        time_attr=time_attr,
     )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)

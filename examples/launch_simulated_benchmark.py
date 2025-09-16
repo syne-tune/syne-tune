@@ -59,7 +59,7 @@ def simulate_benchmark(blackbox, trial_backend, metric):
             max_resource_attr
         ),
         max_resource_attr=max_resource_attr,
-        resource_attr=blackbox.fidelity_name(),
+        time_attr=blackbox.fidelity_name(),
         metric=metric,
         random_seed=31415927,
     )

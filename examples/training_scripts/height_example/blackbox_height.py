@@ -6,7 +6,7 @@ from syne_tune.config_space import randint
 from examples.training_scripts.height_example.train_height import (
     train_height,
     height_config_space,
-    RESOURCE_ATTR,
+    TIME_ATTR,
     METRIC_ATTR,
 )
 
@@ -19,7 +19,7 @@ class HeightExampleBlackbox(Blackbox):
         elapsed_time_attr: str = "elapsed_time",
     ):
         config_space = height_config_space(max_steps)
-        fidelity_space = {RESOURCE_ATTR: randint(1, max_steps)}
+        fidelity_space = {TIME_ATTR: randint(1, max_steps)}
         super().__init__(
             configuration_space=config_space,
             fidelity_space=fidelity_space,
