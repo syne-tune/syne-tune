@@ -8,12 +8,10 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 import syne_tune.config_space as sp
 
 try:
-    import optuna  # type: ignore
-    import optunahub  # type: ignore
+    import optuna
+    import optunahub
     import hebo
 
-    # import distribution classes into module scope so
-    # _syne_tune_domain_to_optuna_dist can reference them
     from optuna.distributions import (
         BaseDistribution,
         CategoricalDistribution,
@@ -158,17 +156,6 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         random_seed: int | None = None,
     ):
 
-        globals().update(
-            {
-                "optuna": optuna,
-                "optunahub": optunahub,
-                "BaseDistribution": BaseDistribution,
-                "CategoricalDistribution": CategoricalDistribution,
-                "FloatDistribution": FloatDistribution,
-                "IntDistribution": IntDistribution,
-            }
-        )
-
         optuna_space = _convert_syne_to_optuna_space(config_space)
         self._optuna_space = optuna_space
         self._trial_map: dict[int, Any] = {}
@@ -181,7 +168,6 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
 
         # Instantiate optunahub HEBOSampler
         HEBOSampler = optunahub.load_module("samplers/hebo").HEBOSampler
-
         self._study = optuna.create_study(
             sampler=HEBOSampler(seed=random_seed),
             direction="minimize" if do_minimize else "maximize",
@@ -193,4 +179,4 @@ class HEBOSearcher(SingleObjectiveBaseSearcher):
         return trial.params
 
     def on_trial_complete(self, trial_id, config, metric):
-        self._study.tell(trial=self._trial_map[trial_id])
+        self._study.tell(trial=self._trial_map[trial_id], values=metric)
