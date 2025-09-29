@@ -94,7 +94,7 @@ Let us have a walk through this script, assuming it is called with the default
   tutorial. However, choosing a suitable configuration space and specifying a
   surrogate can be important for model-based HPO methods. Some more informations
   are given `here <../../search_space.html>`__.
-* [2] We can determine ``resource_attr`` (name of resource attribute) from the
+* [2] We can determine ``time_attr`` (name of resource attribute) from the
   blackbox as ``blackbox.fidelity_name()``. Next, if ``max_resource_attr`` is
   specified, we attach the information about the largest resource level to the
   configuration space, via

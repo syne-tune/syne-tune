@@ -16,7 +16,7 @@ from syne_tune.utils import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts.nasbench201_import import (
     CONFIG_KEYS,
     METRIC_VALID_ERROR,
-    RESOURCE_ATTR,
+    TIME_ATTR,
     BLACKBOX_NAME,
 )
 
@@ -35,7 +35,7 @@ def objective(config):
     all_metrics = metrics_for_configuration(
         blackbox=blackbox,
         config=essential_config,
-        resource_attr=RESOURCE_ATTR,
+        time_attr=TIME_ATTR,
         fidelity_range=fidelity_range,
     )
     startup_overhead = time.time() - ts_start
@@ -81,7 +81,7 @@ def objective(config):
             time.sleep(time_this_epoch)
 
         report_dict = {
-            RESOURCE_ATTR: epoch,
+            TIME_ATTR: epoch,
             METRIC_VALID_ERROR: valid_error,
             METRIC_ELAPSED_TIME: elapsed_time,
         }

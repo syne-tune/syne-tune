@@ -51,7 +51,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         raise NotImplementedError
 
     @property
-    def resource_attr(self):
+    def time_attr(self):
         return self.blackbox.fidelity_name()
 
     def _pause_trial(self, trial_id: int, result: dict | None):
@@ -61,9 +61,9 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         resume the trial in ``_run_job_and_collect_results``.
         """
         super()._pause_trial(trial_id, result)
-        resource_attr = self.resource_attr
-        if result is not None and resource_attr in result:
-            resource = int(result[resource_attr])
+        time_attr = self.time_attr
+        if result is not None and time_attr in result:
+            resource = int(result[time_attr])
             self._resource_paused_for_trial[trial_id] = resource
 
     def _filter_config(self, config: dict[str, Any]) -> dict[str, Any]:
@@ -83,7 +83,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return metrics_for_configuration(
             blackbox=self.blackbox,
             config=self._filter_config(config),
-            resource_attr=self.resource_attr,
+            time_attr=self.time_attr,
             fidelity_range=fidelity_range,
             seed=seed,
         )
@@ -118,11 +118,11 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
             # can ignore results up until the paused level. Also, the
             # elapsed_time field in later results needs to be corrected
             # to not count the time for skipped results
-            resource_attr = self.resource_attr
+            time_attr = self.time_attr
             elapsed_time_offset = 0
             results = []
             for result in all_results:
-                resource = int(result[resource_attr])
+                resource = int(result[time_attr])
                 if resource > resource_paused:
                     results.append(result)
                 elif resource == resource_paused:

@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     # Here, we specify the training script we want to tune
     # - `mode` and `metric` must match what is reported in the training script
-    # - Metrics need to be reported after each epoch, `resource_attr` must match
+    # - Metrics need to be reported after each epoch, `time_attr` must match
     #   what is reported in the training script
     if args.method in ("RS", "BO"):
         train_file = "traincode_report_end.py"
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     max_resource_level = 81  # Maximum number of training epochs
     mode = "max"
     metric = "accuracy"
-    resource_attr = "epoch"
+    time_attr = "epoch"
     max_resource_attr = "epochs"
 
     # Additional fixed parameters  [2]
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         scheduler = BayesianOptimization(config_space, **method_kwargs)
     else:
         # Multi-fidelity method
-        method_kwargs["resource_attr"] = resource_attr
+        method_kwargs["time_attr"] = time_attr
         if args.method.startswith("ASHA"):
             scheduler = ASHA(config_space, type=sch_type, **method_kwargs)
         elif args.method.startswith("MOBSTER"):
