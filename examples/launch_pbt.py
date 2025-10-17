@@ -30,7 +30,7 @@ if __name__ == "__main__":
     pbt = PopulationBasedTraining(
         config_space=config_space,
         metric=metric,
-        resource_attr=time_attr,
+        time_attr=time_attr,
         population_size=population_size,
         do_minimize=False,
         max_t=200,

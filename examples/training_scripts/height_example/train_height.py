@@ -14,7 +14,7 @@ from syne_tune.config_space import randint
 report = Reporter()
 
 
-RESOURCE_ATTR = "epoch"
+TIME_ATTR = "epoch"
 
 METRIC_ATTR = "mean_loss"
 
@@ -63,6 +63,6 @@ if __name__ == "__main__":
             **{
                 "step": step,
                 METRIC_ATTR: dummy_score,
-                RESOURCE_ATTR: step + 1,
+                TIME_ATTR: step + 1,
             }
         )

@@ -14,7 +14,7 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     metric_elapsed_time,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     download_file,
@@ -43,7 +43,7 @@ METRIC_VALID_ERROR = "metric_valid_error_rate"
 
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-RESOURCE_ATTR = "global_step"
+TIME_ATTR = "global_step"
 
 CONFIGURATION_SPACE = {
     "lr_initial_value": loguniform(1e-5, 10),
@@ -61,7 +61,7 @@ COLUMN_RENAMING = {
     "valid/error_rate": METRIC_VALID_ERROR,
     "epoch": "epoch",
     "eval_time": METRIC_ELAPSED_TIME,
-    "global_step": RESOURCE_ATTR,
+    "global_step": TIME_ATTR,
 }
 
 
@@ -105,7 +105,7 @@ def convert_task(task_data):
         np.stack(objectives_evaluations, axis=-1), 1
     )
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=learning_curve_length)}
+    fidelity_space = {TIME_ATTR: randint(lower=1, upper=learning_curve_length)}
 
     return BlackboxTabular(
         hyperparameters=hyperparameters,
@@ -217,7 +217,7 @@ class PD1Recipe(BlackboxRecipe):
                 metadata={
                     metric_elapsed_time: METRIC_ELAPSED_TIME,
                     default_metric: METRIC_VALID_ERROR,
-                    resource_attr: RESOURCE_ATTR,
+                    time_attr: TIME_ATTR,
                 },
             )
 

@@ -623,7 +623,7 @@ When running schedulers like :class:`~syne_tune.optimizer.baselines.ASHA`,
 :class:`~syne_tune.optimizer.baselines.HyperTune`,
 :class:`~syne_tune.optimizer.baselines.SyncHyperband`,
 or :class:`~syne_tune.optimizer.baselines.DEHB`, there are mandatory parameters
-``resource_attr``, ``max_resource_attr``, ``max_t``, ``max_resource_value``.
+``time_attr``, ``max_resource_attr``, ``max_t``, ``max_resource_value``.
 What are they for?
 
 Full details are given in this
@@ -633,10 +633,10 @@ after every epoch, or for successively larger training datasets. These
 reports are indexed by a *resource value*, which is a positive integer (for
 example, the number of epochs already trained).
 
-* ``resource_attr`` is the name of the resource attribute in the dictionary
+* ``time_attr`` is the name of the resource attribute in the dictionary
   reported by the training script. For example, the script may report
   :code:`report(epoch=5, mean_loss=0.125)` at the end of the 5-th epoch, in
-  which case ``resource_attr = "epoch"``.
+  which case ``time_attr = "epoch"``.
 * The training script needs to know how many resources to spend overall. For
   example, a neural network training script needs to know how many epochs
   to maximally train for. It is best practice to pass this maximum resource value

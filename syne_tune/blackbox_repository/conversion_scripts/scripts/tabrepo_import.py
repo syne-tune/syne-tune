@@ -21,7 +21,7 @@ from syne_tune.config_space import (
 from syne_tune.util import catchtime
 
 BLACKBOX_NAME = "tabrepo_"
-RESOURCE_ATTR = "hp_epoch"
+TIME_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
@@ -236,7 +236,7 @@ def convert_dataset(
 
     # TabRepo does not have multi-fidelity evaluations. We initialize the fidelity space as a constant.
     fidelity_space = {
-        RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
+        TIME_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
 
     return BlackboxTabular(

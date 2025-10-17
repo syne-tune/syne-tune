@@ -11,7 +11,7 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     default_metric,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.config_space import randint, lograndint, uniform, loguniform, choice
 from syne_tune.util import catchtime
@@ -27,7 +27,7 @@ METRIC_ACCURACY = "val_accuracy"
 
 METRIC_ELAPSED_TIME = "time"
 
-RESOURCE_ATTR = "epoch"
+TIME_ATTR = "epoch"
 
 MAX_RESOURCE_LEVEL = 50
 
@@ -67,7 +67,7 @@ def convert_task(bench, dataset_name):
     objectives_evaluations = np.zeros(
         (n_config, 1, MAX_RESOURCE_LEVEL, len(objectives))
     )
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
+    fidelity_space = {TIME_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
     for j, tag in enumerate(objectives):
         for i in range(n_config):
             # Drop first evaluation (before training) as well as last.
@@ -130,7 +130,7 @@ class LCBenchRecipe(BlackboxRecipe):
                 metadata={
                     metric_elapsed_time: METRIC_ELAPSED_TIME,
                     default_metric: METRIC_ACCURACY,
-                    resource_attr: RESOURCE_ATTR,
+                    time_attr: TIME_ATTR,
                 },
             )
 

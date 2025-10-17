@@ -11,7 +11,7 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     default_metric,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
@@ -35,7 +35,7 @@ METRIC_ELAPSED_TIME = "metric_elapsed_time"
 # since start of training
 METRIC_TIME_THIS_RESOURCE = "metric_runtime"
 
-RESOURCE_ATTR = "hp_epoch"
+TIME_ATTR = "hp_epoch"
 
 
 def str_to_list(arch_str):
@@ -182,7 +182,7 @@ def convert_dataset(data, dataset):
         for node in hp_cols
     }
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=201)}
+    fidelity_space = {TIME_ATTR: randint(lower=1, upper=201)}
 
     objective_names = [f"metric_{m}" for m in objective_names]
     # Sanity checks:
@@ -264,7 +264,7 @@ class NASBench201Recipe(BlackboxRecipe):
                 metadata={
                     metric_elapsed_time: METRIC_ELAPSED_TIME,
                     default_metric: METRIC_VALID_ERROR,
-                    resource_attr: RESOURCE_ATTR,
+                    time_attr: TIME_ATTR,
                 },
             )
 

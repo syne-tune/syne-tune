@@ -297,7 +297,7 @@ SEARCH_SPACE_5889 = {
 }
 
 
-RESOURCE_ATTR = "hp_epoch"
+TIME_ATTR = "hp_epoch"
 MAX_RESOURCE_LEVEL = 100
 
 
@@ -455,7 +455,7 @@ def convert_dataset(search_space, dataset):
     )
     # fidelity space initialized as constant value, since it is required as an argument
     fidelity_space = {
-        RESOURCE_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
+        TIME_ATTR: randint(lower=MAX_RESOURCE_LEVEL, upper=MAX_RESOURCE_LEVEL)
     }
 
     return BlackboxTabular(

@@ -16,9 +16,9 @@ hp_names = ["hp_x1", "hp_x2"]
 cs = {name: randint(0, n - 1) for name in hp_names}
 
 n_epochs = 5
-resource_attr = "hp_epoch"
+time_attr = "hp_epoch"
 cs_fidelity = {
-    resource_attr: randint(1, n_epochs),
+    time_attr: randint(1, n_epochs),
 }
 
 
@@ -64,7 +64,7 @@ def test_pause_and_resume():
     _, results = backend.fetch_status_results(trial_ids=[0, 1])
     num_found = [0, 0]
     for trial_id, result in results:
-        resource = result[resource_attr]
+        resource = result[time_attr]
         fval = result[metric]
         elapsed_time = result[elapsed_time_attr]
         assert fval == metrics[trial_id][resource - 1]
@@ -80,7 +80,7 @@ def test_pause_and_resume():
         {
             metric: fval,
             elapsed_time_attr: elapsed_time,
-            resource_attr: resource,
+            time_attr: resource,
         }
         for fval, elapsed_time, resource in zip(metrics, elapsed_times, pause_resources)
     ]
@@ -93,7 +93,7 @@ def test_pause_and_resume():
     _, results = backend.fetch_status_results(trial_ids=[0, 1])
     got_it = [False, False]
     for trial_id, result in results:
-        resource = result[resource_attr]
+        resource = result[time_attr]
         fval = result[metric]
         assert fval == metrics[trial_id][resource - 1]
         pause_resource = pause_resources[trial_id]

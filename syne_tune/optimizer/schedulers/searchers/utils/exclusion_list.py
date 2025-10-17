@@ -32,11 +32,11 @@ class ExclusionList:
         self.hp_ranges = hp_ranges
         keys = self.hp_ranges.internal_keys
         # Remove resource attribute from ``self.keys`` if present
-        resource_attr = self.hp_ranges.name_last_pos
-        if resource_attr is None:
+        time_attr = self.hp_ranges.name_last_pos
+        if time_attr is None:
             self.keys = keys
         else:
-            pos = keys.index(resource_attr)
+            pos = keys.index(time_attr)
             self.keys = keys[:pos] + keys[(pos + 1) :]
         self.configspace_size = config_space_size(self.hp_ranges.config_space)
         if configurations is None:

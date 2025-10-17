@@ -4,7 +4,7 @@ class MultiFidelitySchedulerMixin:
     """
 
     @property
-    def resource_attr(self) -> str:
+    def time_attr(self) -> str:
         """
         :return: Name of resource attribute in reported results
         """
@@ -29,7 +29,7 @@ class MultiFidelitySchedulerMixin:
     def searcher_data(self) -> str:
         """
         :return: Relevant only if a model-based searcher is used.
-            Example: For NN tuning and ``resource_attr == "epoch"``, we receive
+            Example: For NN tuning and ``time_attr == "epoch"``, we receive
             a result for each epoch, but not all epoch values are also rung
             levels. ``searcher_data`` determines which of these results are
             passed to the searcher. As a rule, the more data the searcher
