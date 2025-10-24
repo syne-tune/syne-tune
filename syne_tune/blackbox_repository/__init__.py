@@ -11,6 +11,10 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (  # noqa: F
     BlackboxRepositoryBackend,
     UserBlackboxBackend,
 )
+from syne_tune.blackbox_repository.synthetic import (  # noqa: F401
+    SyntheticFunction,
+    Rosenbrock,
+)
 
 __all__ = [
     "BlackboxOffline",
@@ -20,4 +24,6 @@ __all__ = [
     "add_surrogate",
     "BlackboxRepositoryBackend",
     "UserBlackboxBackend",
+    "SyntheticFunction",
+    "Rosenbrock",
 ]
