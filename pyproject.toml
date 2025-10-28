@@ -72,6 +72,8 @@ extra = [
     # smac
     "swig",
     "smac>=2.0",
+    # moo
+    "pymoo>=0.6.0",
 ]
 
 [project.urls]
