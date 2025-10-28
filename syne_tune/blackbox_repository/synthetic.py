@@ -47,11 +47,17 @@ class Rosenbrock(SyntheticFunction):
     See https://www.sfu.ca/~ssurjano/rosen.html for details.
     """
 
-    def __init__(self, dimension: int, lower_bound: float = -5.0, upper_bound: float = 10.0):
-        self.configuration_space = {f'x{i}': uniform(lower_bound, upper_bound) for i in range(dimension)}
-        super().__init__(dimension=dimension,
-                         configuration_space=self.configuration_space,
-                         objectives_names=["y"])
+    def __init__(
+        self, dimension: int, lower_bound: float = -5.0, upper_bound: float = 10.0
+    ):
+        self.configuration_space = {
+            f"x{i}": uniform(lower_bound, upper_bound) for i in range(dimension)
+        }
+        super().__init__(
+            dimension=dimension,
+            configuration_space=self.configuration_space,
+            objectives_names=["y"],
+        )
 
     def _objective_function(
         self,
@@ -60,9 +66,7 @@ class Rosenbrock(SyntheticFunction):
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
-        val = np.sum(
-            100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (x[:-1] - 1.0) ** 2.0
-        )
+        val = np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (x[:-1] - 1.0) ** 2.0)
         return {self.objectives_names[0]: float(val)}
 
 
