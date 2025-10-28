@@ -47,10 +47,8 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     Bayesian Optimization.
     Advances in Neural Information Processing Systems 33, 2020.
 
-    Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
-
-    :param mode: "min" (default) or "max"
+    :param config_space: The configuration space to sample from.
+    :param points_to_evaluate: A list of configurations to evaluate initially (in the given order).
     :param num_init_random: :meth:`get_config` returns randomly drawn
         configurations until at least ``init_random`` observations have been
         recorded in :meth:`update`. After that, the BOTorch algorithm is used.
@@ -64,6 +62,8 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         fit the GP. Defaults to 200
     :param input_warping: Whether to apply input warping when fitting the GP.
         Defaults to ``True``
+        :param config_space: The configuration space to sample from.
+    :param random_seed: Seed used to initialize the random number generators.
     """
 
     def __init__(
