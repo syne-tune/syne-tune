@@ -38,7 +38,7 @@ selected upon construction of the scheduler:
        ),
        metric=benchmark.metric,
        mode=benchmark.mode,
-       resource_attr=resource_attr,
+       time_attr=time_attr,
        random_seed=random_seed,
        max_resource_attr=max_resource_attr,
    )

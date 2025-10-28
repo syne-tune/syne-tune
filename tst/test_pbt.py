@@ -9,7 +9,7 @@ max_steps = 10
 config_space = {
     "learning_rate": loguniform(1e-3, 1),
 }
-resource_attr = "step"
+time_attr = "step"
 metric = "mean_loss"
 
 total_steps = 10
@@ -20,7 +20,7 @@ random_seed = 31415927
 pbt = PopulationBasedTraining(
     config_space=config_space,
     metric=metric,
-    resource_attr=resource_attr,
+    time_attr=time_attr,
     population_size=population_size,
     max_t=total_steps,
     perturbation_interval=1,
@@ -71,7 +71,7 @@ def test_ptb():
         trial_id = update_state(suggest, state)
         t = state[trial_id]["trial"]
         pbt.on_trial_add(t)
-        results = {metric: i, resource_attr: state[trial_id]["step"]}
+        results = {metric: i, time_attr: state[trial_id]["step"]}
 
         s = pbt.on_trial_result(t, results)
 
@@ -83,14 +83,14 @@ def test_ptb():
     trial_id = update_state(suggest, state)
     t = state[trial_id]["trial"]
     pbt.on_trial_add(t)
-    results = {metric: -1, resource_attr: state[trial_id]["step"]}
+    results = {metric: -1, time_attr: state[trial_id]["step"]}
 
     s = pbt.on_trial_result(t, results)
     assert s == "CONTINUE"
 
     # config 0's performance dropped
     t = state[0]["trial"]
-    results = {metric: 100, resource_attr: state[trial_id]["step"] + 1}
+    results = {metric: 100, time_attr: state[trial_id]["step"] + 1}
     s = pbt.on_trial_result(t, results)
     assert s == "STOP"
 

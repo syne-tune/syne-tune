@@ -162,7 +162,7 @@ Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search
 runs stopping-based ASHA with the argument ``--method ASHA-STOP``. Note that
 the entry point is ``traincode_report_eachepoch.py`` in this case, and the
 scheduler is ``ASHA``. Also, we need to pass the name of the resource attribute
-in ``resource_attr``. Finally, ``mode="stopping"`` selects the stopping
+in ``time_attr``. Finally, ``mode="stopping"`` selects the stopping
 variant. Further details about ASHA and relevant additional arguments (for
 which we use defaults here) are found in
 `this tutorial <../multifidelity/README.html>`__.

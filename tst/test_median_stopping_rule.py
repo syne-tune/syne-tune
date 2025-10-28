@@ -35,7 +35,7 @@ def test_median_stopping_rule():
             searcher="random_search",
             metric=metric,
         ),
-        resource_attr="step",
+        time_attr="step",
         metric=metric,
         random_seed=random_seed,
         grace_population=1,

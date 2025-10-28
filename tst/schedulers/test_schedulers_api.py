@@ -12,6 +12,9 @@ from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.multiobjective import (
     MultiObjectiveRegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.searchers.random_searcher import (
+    MultiObjectiveRandomSearcher,
+)
 from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
     ExpectedHyperVolumeImprovement,
 )
@@ -52,7 +55,7 @@ categorical_config_space = {
 
 metric1 = "objective1"
 metric2 = "objective2"
-resource_attr = "step"
+time_attr = "step"
 max_t = 10
 random_seed = 42
 mode = "max"
@@ -124,7 +127,10 @@ list_schedulers_to_test = [
     ),
     SingleFidelityScheduler(
         config_space,
-        searcher="random_search",
+        searcher=MultiObjectiveRandomSearcher(
+            config_space=config_space,
+            random_seed=random_seed,
+        ),
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
@@ -176,14 +182,14 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         do_minimize=False,
         random_seed=random_seed,
-        time_attr=resource_attr,
+        time_attr=time_attr,
     ),
     # Multi-fidelity methods
     BOHB(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
-        time_attr=resource_attr,
+        time_attr=time_attr,
         max_t=max_t,
     ),
     MedianStoppingRule(
@@ -193,7 +199,7 @@ list_schedulers_to_test = [
             metric=metric1,
             random_seed=random_seed,
         ),
-        resource_attr=resource_attr,
+        time_attr=time_attr,
         metric=metric1,
         random_seed=random_seed,
     ),
@@ -202,28 +208,28 @@ list_schedulers_to_test = [
         metric=metric1,
         random_seed=random_seed,
         searcher="random_search",
-        time_attr=resource_attr,
+        time_attr=time_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="bore",
-        time_attr=resource_attr,
+        time_attr=time_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="kde",
-        time_attr=resource_attr,
+        time_attr=time_attr,
     ),
     AsynchronousSuccessiveHalving(
         config_space=config_space,
         metric=metric1,
         random_seed=random_seed,
         searcher="cqr",
-        time_attr=resource_attr,
+        time_attr=time_attr,
     ),
     BoundingBox(
         scheduler_fun=lambda new_config_space, metric, do_minimize, random_seed: SingleObjectiveScheduler(
@@ -278,7 +284,7 @@ def test_schedulers_api(scheduler):
         scheduler.on_trial_add(trial=trial)
 
     # checks results can be transmitted with appropriate scheduling decisions
-    make_metric = lambda t, x: {resource_attr: t, metric1: x, metric2: -x}
+    make_metric = lambda t, x: {time_attr: t, metric1: x, metric2: -x}
     for i, trial in enumerate(trials):
         for t in range(1, max_t + 1):
             decision = scheduler.on_trial_result(trial, make_metric(t, i))
