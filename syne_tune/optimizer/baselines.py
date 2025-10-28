@@ -465,10 +465,48 @@ class CQR(SingleObjectiveScheduler):
         )
 
 
+class EHVI(SingleFidelityScheduler):
+    """
+    Implementation of expected hypervolume improvement based on the BOTorch implementation.
+
+        S. Daulton, M. Balandat, and E. Bakshy.
+        Differentiable Expected Hypervolume Improvement for Parallel Multi-Objective Bayesian Optimization.
+        Advances in Neural Information Processing Systems 33, 2020.
+
+    :param config_space: Configuration space for the evaluation function.
+    :param metrics: Names of all metrics to optimize.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    """
+
+    def __init__(
+        self,
+        config_space: dict[str, Any],
+        metrics: list[str],
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
+    ):
+        from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import ExpectedHyperVolumeImprovement
+
+        super(EHVI, self).__init__(
+            config_space=config_space,
+            metrics=metrics,
+            do_minimize=do_minimize,
+            searcher=ExpectedHyperVolumeImprovement(
+                config_space=config_space,
+                points_to_evaluate=points_to_evaluate,
+                random_seed=random_seed,
+            ),
+            random_seed=random_seed,
+        )
+
 baselines_dict = {
     "Random Search": RandomSearch,
     "BORE": BORE,
     "TPE": TPE,
     "REA": REA,
     "BOTorch": BOTorch,
+    "EHVI": EHVI,
 }
