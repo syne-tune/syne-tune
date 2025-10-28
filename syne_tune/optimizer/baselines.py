@@ -488,7 +488,9 @@ class EHVI(SingleFidelityScheduler):
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
     ):
-        from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import ExpectedHyperVolumeImprovement
+        from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
+            ExpectedHyperVolumeImprovement,
+        )
 
         super(EHVI, self).__init__(
             config_space=config_space,
@@ -501,6 +503,7 @@ class EHVI(SingleFidelityScheduler):
             ),
             random_seed=random_seed,
         )
+
 
 baselines_dict = {
     "Random Search": RandomSearch,
