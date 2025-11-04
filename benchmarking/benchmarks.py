@@ -1,9 +1,5 @@
 from dataclasses import dataclass
 
-from syne_tune.blackbox_repository.conversion_scripts.scripts.tabrepo_import import (
-    TABREPO_DATASETS,
-)
-
 
 @dataclass
 class BenchmarkDefinition:
@@ -105,17 +101,6 @@ benchmark_definitions = {
     "nas201-cifar10": nas201_benchmark("cifar10"),
     "nas201-cifar100": nas201_benchmark("cifar100"),
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
-    # TODO currently fails
-    # "nas301-yahpo": BenchmarkDefinition(
-    #     max_wallclock_time=3600 * 100,
-    #     elapsed_time_attr="runtime",
-    #     metric="val_accuracy",
-    #     blackbox_name="yahpo-nb301",
-    #     dataset_name="CIFAR10",
-    #     mode="max",
-    #     n_workers=4,
-    #     max_num_evaluations=97 * n_full_evals,
-    # ),
 }
 
 
@@ -141,8 +126,11 @@ tabrepo_search_spaces = [
     "NeuralNetTorch",
     "ExtraTrees",
 ]
-# TODO find list of 10 representative datasets among the 200+ available
-tabrepo_datasets = TABREPO_DATASETS[:10]
+tabrepo_datasets = [
+    "Higgs",
+    'yeast'
+]
+
 for task in tabrepo_datasets:
     for search_space in tabrepo_search_spaces:
         benchmark_definitions[
@@ -178,7 +166,7 @@ for ss in hpob_search_spaces:
     from syne_tune.blackbox_repository import load_blackbox
 
     blackboxes = load_blackbox(ss)
-    for ds in list(blackboxes.keys()):
+    for ds in list(blackboxes.keys())[:1]: # limit to first dataset for faster testing
         benchmark_definitions[ss + "_" + ds] = hpob_benchmark(ss, ds)
 
 if __name__ == "__main__":
