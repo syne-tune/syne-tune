@@ -126,10 +126,7 @@ tabrepo_search_spaces = [
     "NeuralNetTorch",
     "ExtraTrees",
 ]
-tabrepo_datasets = [
-    "Higgs",
-    'yeast'
-]
+tabrepo_datasets = ["Higgs", "yeast"]
 
 for task in tabrepo_datasets:
     for search_space in tabrepo_search_spaces:
@@ -166,7 +163,7 @@ for ss in hpob_search_spaces:
     from syne_tune.blackbox_repository import load_blackbox
 
     blackboxes = load_blackbox(ss)
-    for ds in list(blackboxes.keys())[:1]: # limit to first dataset for faster testing
+    for ds in list(blackboxes.keys())[:1]:  # limit to first dataset for faster testing
         benchmark_definitions[ss + "_" + ds] = hpob_benchmark(ss, ds)
 
 if __name__ == "__main__":
