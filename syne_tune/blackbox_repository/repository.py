@@ -119,6 +119,8 @@ def load_blackbox(
         return deserialize_pd1(blackbox_path)
     elif name.startswith("hpob"):
         return deserialize_hpob(blackbox_path)
+    elif name.startswith("icml-deepar"):
+        return deserialize_hpob(blackbox_path)
     elif (blackbox_path / "hyperparameters.parquet").exists():
         return deserialize_tabular(blackbox_path)
     else:
