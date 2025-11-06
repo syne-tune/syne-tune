@@ -20,7 +20,8 @@ from syne_tune.blackbox_repository.serialize import (
     serialize_metadata,
 )
 from syne_tune.config_space import (
-    config_space_to_json_dict, randint,
+    config_space_to_json_dict,
+    randint,
 )
 
 
@@ -31,6 +32,7 @@ def download(blackbox: str):
     urllib.request.urlretrieve(
         root + f"{blackbox}.csv.zip?raw=true", repository_path / f"{blackbox}.csv.zip"
     )
+
 
 def serialize(
     bb_dict: dict[str, BlackboxTabular], path: str, metadata: dict | None = None
@@ -111,20 +113,20 @@ def serialize_deepar():
     for task in df.task.unique():
         df_task = df.loc[df.task == task]
         hypers = df_task[[col for col in df_task.columns if col.startswith("hp_")]]
-        evals = df_task[[col for col in df_task.columns if col.startswith("metric_")]].values[:, None, None, :]
+        evals = df_task[
+            [col for col in df_task.columns if col.startswith("metric_")]
+        ].values[:, None, None, :]
         bb_dict[task] = BlackboxTabular(
             hyperparameters=hypers,
             objectives_evaluations=evals,
             configuration_space=configuration_space,
-            fidelity_space={'resource': randint(1, 1)},
-            objectives_names=[
-                col for col in df.columns if col.startswith("metric_")
-            ],
+            fidelity_space={"resource": randint(1, 1)},
+            objectives_names=[col for col in df.columns if col.startswith("metric_")],
         )
     serialize(
-            bb_dict=bb_dict,
-            path=repository_path / "icml-deepar",
-        )
+        bb_dict=bb_dict,
+        path=repository_path / "icml-deepar",
+    )
 
 
 def serialize_xgboost():
@@ -170,20 +172,20 @@ def serialize_xgboost():
     for task in df.task.unique():
         df_task = df.loc[df.task == task]
         hypers = df_task[[col for col in df_task.columns if col.startswith("hp_")]]
-        evals = df_task[[col for col in df_task.columns if col.startswith("metric_")]].values[:, None, None, :]
+        evals = df_task[
+            [col for col in df_task.columns if col.startswith("metric_")]
+        ].values[:, None, None, :]
         bb_dict[task] = BlackboxTabular(
             hyperparameters=hypers,
             objectives_evaluations=evals,
             configuration_space=configuration_space,
-            fidelity_space={'resource': randint(1, 1)},
-            objectives_names=[
-                col for col in df.columns if col.startswith("metric_")
-            ],
+            fidelity_space={"resource": randint(1, 1)},
+            objectives_names=[col for col in df.columns if col.startswith("metric_")],
         )
     serialize(
-            bb_dict=bb_dict,
-            path=repository_path / "icml-xgboost",
-        )
+        bb_dict=bb_dict,
+        path=repository_path / "icml-xgboost",
+    )
 
 
 class XGBoostRecipe(BlackboxRecipe):
