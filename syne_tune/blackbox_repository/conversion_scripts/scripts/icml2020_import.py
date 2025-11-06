@@ -213,5 +213,5 @@ class DeepARRecipe(BlackboxRecipe):
 
 
 if __name__ == "__main__":
-    DeepARRecipe().generate(upload_on_hub=False)
-    XGBoostRecipe().generate(upload_on_hub=False)
+    DeepARRecipe().generate()
+    XGBoostRecipe().generate()
