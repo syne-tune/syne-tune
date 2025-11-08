@@ -50,6 +50,9 @@ See our [change log](CHANGELOG.md) to see what changed in the latest version.
 
 ## Getting started
 
+### Running Syne Tune on your python script
+
+This examples shows you how to run Syne Tune on your own training script, if you are interested in running it in an ask/tell setting, see the Section below.
 Syne Tune assumes some python script that given hyperparameter as input arguments trains and validates a machine learning model that
 somewhat follows this pattern:
 
@@ -69,7 +72,7 @@ if __name__ == '__main__':
         # validate your model on some hold-out validation data
 ```
 
-### Step 1: Adapt your training script
+#### Step 1: Adapt your training script
 
 First, to enable tuning of your training script, you need to report metrics so they can be communicated to Syne Tune.
 For example, in the script above, we assume you're tuning two hyperparameters — `height` and `width` — to minimize a loss function.
@@ -99,7 +102,7 @@ if __name__ == '__main__':
         report(epoch=step + 1, mean_loss=dummy_score)
 ```
 
-### Step 2: Define a launching script
+#### Step 2: Define a launching script
 
 Once the training script is prepared, we first define the search space and then start the tuning process.
 In this example, we launch [ASHA](https://arxiv.org/abs/1810.05934) for a total of 30 seconds using four workers.
@@ -132,7 +135,7 @@ tuner = Tuner(
 tuner.run()
 ```
 
-### Step 3: Plot the results
+#### Step 3: Plot the results
 
 Next, we can plot the results as follows. Replace `TUNER_NAME` with the name of the tuning job 
 used earlier — this is shown at the beginning of the logs.
@@ -146,6 +149,39 @@ e.plot_trials_over_time(metric_to_plot='mean_loss')
 plt.show()
 ```
 
+
+### Ask/Tell Interface
+
+Instead of using the LocalBackend of Syne Tune to launch training jobs, you can also use the ask/tell interface to
+directly communicate with the scheduler. This is useful if you want to integrate Syne Tune into your own training loop or
+if you want to use Syne Tune in an environment where launching new processes is not possible (e.g., Jupyter notebooks).
+
+```python
+from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
+from syne_tune.optimizer.baselines import CQR
+from syne_tune.config_space import uniform
+
+
+def objective_function(x):
+    y = (x + 0.5) ** 2
+    return y
+
+config_space = {
+    "x": uniform(0, 1),
+}
+metric = "objective"
+max_iterations = 10
+
+scheduler = AskTellScheduler(
+    base_scheduler=CQR(config_space, metric=metric)
+)
+
+for iter in range(max_iterations):
+    trial_suggestion = scheduler.ask()
+    test_result = objective_function(**trial_suggestion.config)
+    scheduler.tell(trial_suggestion, {metric: test_result})
+    print(f'iteration: {iter}, evaluated x={trial_suggestion.config}, objective={test_result}')
+```
 
 ## Benchmarking
 
