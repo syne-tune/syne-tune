@@ -223,10 +223,14 @@ class BOTorch(SingleObjectiveScheduler):
         do_minimize: bool | None = True,
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
+        searcher_kwargs: dict[str, Any] | None = None,
     ):
         from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
             BoTorchSearcher,
         )
+
+        if searcher_kwargs is None:
+            searcher_kwargs = {}
 
         super(BOTorch, self).__init__(
             config_space=config_space,
@@ -236,6 +240,7 @@ class BOTorch(SingleObjectiveScheduler):
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
+                **searcher_kwargs
             ),
             random_seed=random_seed,
         )

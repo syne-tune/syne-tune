@@ -11,13 +11,13 @@ from syne_tune.optimizer.schedulers.searchers.utils import (
 )
 
 
-from torch import Tensor, randn_like, random
+from torch import Tensor, random, randn_like
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.transforms import Warp
 from botorch.utils import standardize
 from botorch.utils.transforms import normalize
-from botorch.acquisition import qExpectedImprovement
+from botorch.acquisition import qLogExpectedImprovement
 from botorch.optim import optimize_acqf
 from botorch.exceptions.errors import ModelFittingError
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -25,9 +25,6 @@ from linear_operator.utils.errors import NotPSDError
 
 
 logger = logging.getLogger(__name__)
-
-
-NOISE_LEVEL = 1e-3
 
 
 class BoTorchSearcher(SingleObjectiveBaseSearcher):
@@ -53,7 +50,9 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         fit the GP. Defaults to 200
     :param input_warping: Whether to apply input warping when fitting the GP.
         Defaults to ``True``
-     :param random_seed: Seed for initializing random number generators.
+    :param double_precision: Whether to use double precision when fitting the GP.
+    :param noise_level: Standard deviation of Gaussian noise added to observations for numerical stability.
+    :param random_seed: Seed for initializing random number generators.
     """
 
     def __init__(
@@ -63,8 +62,12 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         num_init_random: int = 3,
         no_fantasizing: bool = False,
         max_num_observations: int | None = 200,
-        input_warping: bool = True,
-        random_seed: int = None,
+        input_warping: bool = False,
+        double_precision: bool = True,
+        noise_level: float = 0,
+        num_restarts: int = 3,
+        num_raw_samples: int = 20,
+        random_seed: int = None
     ):
         super(BoTorchSearcher, self).__init__(
             config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
@@ -73,11 +76,14 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         self.num_minimum_observations = num_init_random
         self.fantasising = not no_fantasizing
         self.max_num_observations = max_num_observations
+        self.double_precision = double_precision
         self.input_warping = input_warping
+        self.noise_level = noise_level
         self.trial_configs = dict()
         self.pending_trials = set()
         self.trial_observations = dict()
-
+        self.num_raw_samples = num_raw_samples
+        self.num_restarts = num_restarts
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 
         # Set the random seed for botorch as well
@@ -178,7 +184,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             else:
                 X_pending = None
 
-            acq = qExpectedImprovement(
+            acq = qLogExpectedImprovement(
                 model=gp,
                 best_f=Y_tensor.max().item(),
                 X_pending=X_pending,
@@ -190,8 +196,8 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
                 acq,
                 bounds=self._get_gp_bounds(),
                 q=1,
-                num_restarts=3,
-                raw_samples=100,
+                num_restarts=self.num_restarts,
+                raw_samples=self.num_raw_samples,
             )
             candidate = candidate.detach().numpy()[0]
             return self._config_from_ndarray(candidate)
@@ -208,13 +214,12 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
-        double_precision = False
-        if double_precision:
+
+        if self.double_precision:
             X_tensor = X_tensor.double()
             Y_tensor = Y_tensor.double()
 
-        noise_std = NOISE_LEVEL
-        Y_tensor += noise_std * randn_like(Y_tensor)
+        Y_tensor += self.noise_level * randn_like(Y_tensor)
 
         if self.input_warping:
             warp_tf = Warp(indices=list(range(X_tensor.shape[-1])))
