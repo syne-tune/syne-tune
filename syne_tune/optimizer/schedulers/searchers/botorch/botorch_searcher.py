@@ -67,7 +67,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         noise_level: float = 0,
         num_restarts: int = 3,
         num_raw_samples: int = 20,
-        random_seed: int = None
+        random_seed: int = None,
     ):
         super(BoTorchSearcher, self).__init__(
             config_space, points_to_evaluate=points_to_evaluate, random_seed=random_seed
