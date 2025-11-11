@@ -14,6 +14,7 @@ searchers = [
     "regularized_evolution",
     "cqr",
     "botorch",
+    "hebo",
 ]
 
 
@@ -48,6 +49,12 @@ def searcher_cls(searcher_name: str):
         )
 
         return BoTorchSearcher
+    elif searcher_name == "hebo":
+        from syne_tune.optimizer.schedulers.searchers.hebo.hebo_searcher import (
+            HEBOSearcher,
+        )
+
+        return HEBOSearcher
     else:
         raise ValueError(f"Unknown searcher: {searcher_name}")
 
