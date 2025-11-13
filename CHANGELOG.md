@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.14.2"></a>
+## [v0.14.2] - 2025-07-04
+
+### Bug Fixes
+
+* fix: udpate example in Blackbox Repository README by @aaronkl in https://github.com/syne-tune/syne-tune/pull/964
+* fix: constrain scipy version by @aaronkl in https://github.com/syne-tune/syne-tune/pull/969
+* fix: inc version number by @aaronkl in https://github.com/syne-tune/syne-tune/pull/970
+
+[v0.14.2]: https://github.com/syne-tune/syne-tune/compare/v0.14.1...v0.14.2
+
+
+<a name="v0.14.1"></a>
+## [v0.14.1] - 2025-06-16
+
+### Bug Fixes
+
+* fix: readme to install full functionality
+* fix: add missing init to conformal package
+* fix: update version number 
+
+[v0.14.1]: https://github.com/syne-tune/syne-tune/compare/v0.14.0...v0.14.1
+
+
+<a name="v0.14.0"></a>
+## [v0.14.0] - 2025-06-13
+
+### New Features
+* Implementation of expected hypervolume improvement ([#825](https://github.com/syne-tune/syne-tune/pull/825))
+* Added ask/tell interface ([#839](https://github.com/syne-tune/syne-tune/pull/839))
+* Added new benchmarks, HPO-B and TabRepo ([#886](https://github.com/syne-tune/syne-tune/pull/886),[#894](https://github.com/syne-tune/syne-tune/pull/894),[#928](https://github.com/syne-tune/syne-tune/pull/928),[#939](https://github.com/syne-tune/syne-tune/pull/939))
+* Automated benchmarking on SLURM clusters with SlurmPilot ([#915](https://github.com/syne-tune/syne-tune/pull/915))
+
+
+### Bug Fixes
+* Fix typos ([#831](https://github.com/syne-tune/syne-tune/pull/831),[#840](https://github.com/syne-tune/syne-tune/pull/840),[ #954](https://github.com/syne-tune/syne-tune/pull/954))
+* Fix for Mac M CPUs in yahpo requirements ([#858](https://github.com/syne-tune/syne-tune/pull/858))
+* Removed redundant code ([#872](https://github.com/syne-tune/syne-tune/pull/872))
+* Fixed metric error handling ([#876](https://github.com/syne-tune/syne-tune/pull/876))
+* Corrected tuner naming and usage ([#896](https://github.com/syne-tune/syne-tune/pull/896))
+* Updated GitHub Actions to v4 ([#902](https://github.com/syne-tune/syne-tune/pull/902))
+* Skipped slow and deprecated tests ([#907](https://github.com/syne-tune/syne-tune/pull/907))
+* Fixed TabRepo import ([#919](https://github.com/syne-tune/syne-tune/pull/919))
+* Corrected constant value handling in configuration space ([#937](https://github.com/syne-tune/syne-tune/pull/937))
+* Corrected load_blackbox documentation ([#940](https://github.com/syne-tune/syne-tune/pull/940),[#957](https://github.com/syne-tune/syne-tune/pull/957))
+* Fixed metadata propagation in schedulers ([#942](https://github.com/syne-tune/syne-tune/pull/942))
+* Various minor bug fixes in baselines and examples ([#943](https://github.com/syne-tune/syne-tune/pull/943),[#947](https://github.com/syne-tune/syne-tune/pull/947))
+* Fixed seed usage and bounds ([#935](https://github.com/syne-tune/syne-tune/pull/935),[#953](https://github.com/syne-tune/syne-tune/pull/953))
+* Fix hpob import ([#950](https://github.com/syne-tune/syne-tune/pull/950))
+
+### Documentation Updates
+* Update main README ([#828](https://github.com/syne-tune/syne-tune/pull/828),[#934](https://github.com/syne-tune/syne-tune/pull/934))
+* Add link to Discord ([#856](https://github.com/syne-tune/syne-tune/pull/856))
+* Update various docstrings and blackbox documentation ([#867](https://github.com/syne-tune/syne-tune/pull/867),[#938](https://github.com/syne-tune/syne-tune/pull/938),[#925](https://github.com/syne-tune/syne-tune/pull/925))
+
+
+### Maintenance
+* Removed GPy dependency ([#859](https://github.com/syne-tune/syne-tune/pull/859))
+* Removed unnecessary logging in imports ([#860](https://github.com/syne-tune/syne-tune/pull/860))
+* Removed NeuralBand ([#868](https://github.com/syne-tune/syne-tune/pull/868))
+* Bump sagemaker from 2.128.0 to 2.218.0 ([#848](https://github.com/syne-tune/syne-tune/pull/848)])
+* Bump tensorflow from 2.11.1 to 2.12.1 ([#864](https://github.com/syne-tune/syne-tune/pull/864))
+* Migrated S3 storage to HuggingFace Hub ([#863](https://github.com/syne-tune/syne-tune/pull/863))
+* Removed dependabot, cleaned end-to-end tests ([#861](https://github.com/syne-tune/syne-tune/pull/861))
+* Moved SageMaker functionality to a separate package ([#865](https://github.com/syne-tune/syne-tune/pull/865))
+* Refactor of scheduler/searcher interfaces and numerous components (e.g., REA, BORE, SMAC, ASHA, PBT, EHVI, MOASHA, etc.) ([#873](https://github.com/syne-tune/syne-tune/pull/873),[#921](https://github.com/syne-tune/syne-tune/pull/921),[#931](https://github.com/syne-tune/syne-tune/pull/931),[#924](https://github.com/syne-tune/syne-tune/pull/924),[#945](https://github.com/syne-tune/syne-tune/pull/945))
+* Deprecated unsupported schedulers and searchers ([#921](https://github.com/syne-tune/syne-tune/pull/921))
+* Constrained scikit-learn < 1.6 ([#891](https://github.com/syne-tune/syne-tune/pull/891))
+
+
+### New Contributors
+[@Kavlahkaff](https://github.com/Kavlahkaff) made their first contribution in [#874](https://github.com/syne-tune/syne-tune/pull/874) 🎉🎉🎉
+
+[v0.14.0]: https://github.com/syne-tune/syne-tune/compare/v0.13.0...v0.14.0
+
 
 <a name="v0.13.0"></a>
 ## [v0.13.0] - 2024-02-09
