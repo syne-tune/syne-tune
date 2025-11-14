@@ -51,7 +51,7 @@ if __name__ == "__main__":
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 
     stop_criterion = StoppingCriterion(
-        max_wallclock_time=100#, min_metric_value={metric: -6.0}
+        max_wallclock_time=10, min_metric_value={metric: -6.0}
     )
     tuner = Tuner(
         trial_backend=trial_backend,
