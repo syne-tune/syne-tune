@@ -29,11 +29,6 @@ def train_height(steps: int, width: float, height: float):
 
 
 if __name__ == "__main__":
-    import logging
-
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-
     max_steps = 100
     n_workers = 4
     metric = "mean_loss"
@@ -56,7 +51,7 @@ if __name__ == "__main__":
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 
     stop_criterion = StoppingCriterion(
-        max_wallclock_time=10, min_metric_value={metric: -6.0}
+        max_wallclock_time=100#, min_metric_value={metric: -6.0}
     )
     tuner = Tuner(
         trial_backend=trial_backend,
