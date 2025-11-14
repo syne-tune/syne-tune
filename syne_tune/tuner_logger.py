@@ -1,6 +1,5 @@
 from pathlib import Path
 import time
-import logging
 from syne_tune.tuning_status import TuningStatus
 
 
