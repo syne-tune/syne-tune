@@ -162,7 +162,7 @@ from syne_tune.config_space import uniform
 
 
 def objective_function(x):
-    y = (x + 0.5) ** 2
+    y = (x - 0.5) ** 2
     return y
 
 config_space = {
