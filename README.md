@@ -149,7 +149,6 @@ e.plot_trials_over_time(metric_to_plot='mean_loss')
 plt.show()
 ```
 
-
 ### Ask/Tell Interface
 
 Instead of using the LocalBackend of Syne Tune to launch training jobs, you can also use the ask/tell interface to
@@ -171,16 +170,20 @@ config_space = {
 }
 metric = "objective"
 max_iterations = 10
+random_seed = 42
 
 scheduler = AskTellScheduler(
-    base_scheduler=CQR(config_space, metric=metric)
+    base_scheduler=CQR(config_space, 
+                       metric=metric, 
+                       do_minimize=True, 
+                       random_seed=random_seed)
 )
 
-for iter in range(max_iterations):
+for iteration in range(max_iterations):
     trial_suggestion = scheduler.ask()
     test_result = objective_function(**trial_suggestion.config)
     scheduler.tell(trial_suggestion, {metric: test_result})
-    print(f'iteration: {iter}, evaluated x={trial_suggestion.config}, objective={test_result}')
+    print(f'iteration: {iteration}, evaluated x={trial_suggestion.config}, objective={test_result}')
 ```
 
 ## Benchmarking
