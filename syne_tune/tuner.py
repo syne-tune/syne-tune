@@ -159,7 +159,9 @@ class Tuner:
         self.print_update_interval = print_update_interval
 
         # Initialize output logger
-        self.output_logger = output_logger if output_logger is not None else TunerLogger()
+        self.output_logger = (
+            output_logger if output_logger is not None else TunerLogger()
+        )
 
         if tuner_name is None:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
@@ -229,7 +231,7 @@ class Tuner:
                 n_workers=self.n_workers,
                 scheduler_name=type(self.scheduler).__name__,
                 results_path=self.tuner_path,
-                log_path=self.trial_backend_path
+                log_path=self.trial_backend_path,
             )
 
             if self.tuning_status is None:
@@ -238,7 +240,9 @@ class Tuner:
                 )
             # prints the status every ``print_update_interval`` seconds
             self.status_printer = RegularCallback(
-                callback=lambda tuning_status: self.output_logger.print_tuning_status(tuning_status),
+                callback=lambda tuning_status: self.output_logger.print_tuning_status(
+                    tuning_status
+                ),
                 call_seconds_frequency=self.print_update_interval,
             )
             # saves the tuner every ``results_update_interval`` seconds
@@ -529,8 +533,7 @@ class Tuner:
         else:
             # suggestion is a trial_id to resume, with possibly a new configuration
             self.output_logger.print_trial_resumed(
-                suggestion.checkpoint_trial_id,
-                suggestion.config
+                suggestion.checkpoint_trial_id, suggestion.config
             )
             trial = self.trial_backend.resume_trial(
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
@@ -642,7 +645,9 @@ class Tuner:
                 if trial_id not in self.last_seen_result_per_trial:
                     stdout = "".join(self.trial_backend.stdout(trial_id))
                     stderr = "".join(self.trial_backend.stderr(trial_id))
-                    self.output_logger.print_no_metrics_observed(trial_id, stdout, stderr)
+                    self.output_logger.print_no_metrics_observed(
+                        trial_id, stdout, stderr
+                    )
                     raise ValueError(
                         f"trial {trial_id} completed and no metrics got observed"
                     )

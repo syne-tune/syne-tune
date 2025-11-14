@@ -1,5 +1,3 @@
-
-
 import io
 from pathlib import Path
 from unittest.mock import patch
@@ -8,9 +6,9 @@ from syne_tune.tuner_logger import TunerLogger, Colors
 from syne_tune.tuning_status import TuningStatus
 
 
-@patch('time.strftime', return_value="[12:00:00]")
+@patch("time.strftime", return_value="[12:00:00]")
 def test_tuner_logger_experiment_header(mock_strftime):
-    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         logger = TunerLogger(use_colors=False, use_emojis=False)
         logger.print_experiment_header(
             name="test-experiment",
@@ -22,7 +20,7 @@ def test_tuner_logger_experiment_header(mock_strftime):
             metric_names=["accuracy"],
             metric_mode="max",
             stop_criterion_info="stop at 100",
-            config_space={"lr": "uniform(0.1, 1.0)"}
+            config_space={"lr": "uniform(0.1, 1.0)"},
         )
         output = mock_stdout.getvalue()
         expected_output = (
@@ -43,40 +41,50 @@ def test_tuner_logger_experiment_header(mock_strftime):
             "└─ lr: uniform(0.1, 1.0)\n"
             "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         )
-        assert output == expected_output.replace("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "━" * 80)
+        assert output == expected_output.replace(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "━" * 80
+        )
 
 
-@patch('time.strftime', return_value="[12:00:00]")
+@patch("time.strftime", return_value="[12:00:00]")
 def test_tuner_logger_colors_and_emojis(mock_strftime):
-    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         logger = TunerLogger(use_colors=True, use_emojis=True)
         logger.print_tuning_start()
         output = mock_stdout.getvalue()
-        assert output == f"🏁 {Colors.GREEN}Starting hyperparameter optimization...{Colors.RESET}\n"
+        assert (
+            output
+            == f"🏁 {Colors.GREEN}Starting hyperparameter optimization...{Colors.RESET}\n"
+        )
 
 
-@patch('time.strftime', return_value="[12:00:00]")
+@patch("time.strftime", return_value="[12:00:00]")
 def test_tuner_logger_no_colors_no_emojis(mock_strftime):
-    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         logger = TunerLogger(use_colors=False, use_emojis=False)
         logger.print_tuning_start()
         output = mock_stdout.getvalue()
         assert output == "Starting hyperparameter optimization...\n"
 
 
-@patch('time.strftime', return_value="[12:00:00]")
+@patch("time.strftime", return_value="[12:00:00]")
 def test_tuner_logger_print_trial_result(mock_strftime):
-    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         logger = TunerLogger(use_colors=False, use_emojis=False)
-        logger.print_trial_result(trial_id=1, result={"accuracy": 0.9, "loss": 0.1}, epoch=1, total_epochs=10)
+        logger.print_trial_result(
+            trial_id=1, result={"accuracy": 0.9, "loss": 0.1}, epoch=1, total_epochs=10
+        )
         output = mock_stdout.getvalue()
-        assert output == "[12:00:00] Trial 1 | Epoch 1/10 | accuracy: 0.9000 | loss: 0.1000\n"
+        assert (
+            output
+            == "[12:00:00] Trial 1 | Epoch 1/10 | accuracy: 0.9000 | loss: 0.1000\n"
+        )
 
 
-@patch('time.strftime', return_value="[12:00:00]")
-@patch('time.perf_counter', return_value=0.0)
+@patch("time.strftime", return_value="[12:00:00]")
+@patch("time.perf_counter", return_value=0.0)
 def test_tuner_logger_print_tuning_status(mock_perf_counter, mock_strftime):
-    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
         logger = TunerLogger(use_colors=False, use_emojis=False)
         status = TuningStatus(metric_names=["accuracy"])
         logger.print_tuning_status(status)
@@ -125,7 +133,7 @@ def test_smoke_and_show_all():
         metric_names=["accuracy"],
         metric_mode="max",
         stop_criterion_info="stop at 100",
-        config_space={"lr": "uniform(0.1, 1.0)"}
+        config_space={"lr": "uniform(0.1, 1.0)"},
     )
     logger.print_failure_logs(trial_id=0, stderr=stderr, stdout=stdout)
     logger.print_max_failures_reached(max_failures=3)

@@ -77,7 +77,9 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         if config is None:
             if self.should_update():
                 logger.debug(f"fit model")
-                with catchtime(f"fit model with {self.num_results()} observations", show=False):
+                with catchtime(
+                    f"fit model with {self.num_results()} observations", show=False
+                ):
                     self.fit_model()
                 self.index_last_result_fit = self.num_results()
             if self.surrogate_model is not None:
