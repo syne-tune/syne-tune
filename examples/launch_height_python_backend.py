@@ -29,11 +29,6 @@ def train_height(steps: int, width: float, height: float):
 
 
 if __name__ == "__main__":
-    import logging
-
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-
     max_steps = 100
     n_workers = 4
     metric = "mean_loss"

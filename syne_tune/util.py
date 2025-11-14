@@ -134,13 +134,15 @@ def script_height_example_path() -> Path:
 
 
 @contextmanager
-def catchtime(name: str) -> float:
+def catchtime(name: str, show: bool = True) -> float:
     start = perf_counter()
     try:
-        print(f"start: {name}")
+        if show:
+            print(f"start: {name}")
         yield lambda: perf_counter() - start
     finally:
-        print(f"Time for {name}: {perf_counter() - start:.4f} secs")
+        if show:
+            print(f"Time for {name}: {perf_counter() - start:.4f} secs")
 
 
 def is_increasing(lst: list[float | int]) -> bool:

@@ -27,6 +27,7 @@ from syne_tune.optimizer.schedulers.remove_checkpoints import (
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
+from syne_tune.tuner_logger import TunerLogger
 from syne_tune.util import (
     RegularCallback,
     experiment_path,
@@ -117,6 +118,8 @@ class Tuner:
         experiment is run remotely, we recommend to set this, since otherwise
         checkpoints and logs are synced to S3, along with tuning results, which
         is costly and error-prone.
+    :param output_logger: Custom OutputLogger instance for controlling output formatting.
+        If None, a default OutputLogger with colors and emojis is used.
     """
 
     def __init__(
@@ -138,6 +141,7 @@ class Tuner:
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
         trial_backend_path: str | None = None,
+        output_logger: TunerLogger | None = None,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -153,6 +157,11 @@ class Tuner:
 
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
+
+        # Initialize output logger
+        self.output_logger = (
+            output_logger if output_logger is not None else TunerLogger()
+        )
 
         if tuner_name is None:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
@@ -172,10 +181,11 @@ class Tuner:
 
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
+        self.trial_backend_path = (
+            str(self.tuner_path) if trial_backend_path is None else trial_backend_path
+        )
         self.trial_backend.set_path(
-            results_root=str(self.tuner_path)
-            if trial_backend_path is None
-            else trial_backend_path,
+            results_root=self.trial_backend_path,
             tuner_name=self.name,
         )
         self._init_callbacks(callbacks)
@@ -191,7 +201,7 @@ class Tuner:
             if not any(
                 isinstance(callback, StoreResultsCallback) for callback in callbacks
             ):
-                logger.warning(
+                self.output_logger.print_warning(
                     "None of the callbacks provided are of type StoreResultsCallback. "
                     "This means no tuning results will be written."
                 )
@@ -215,7 +225,14 @@ class Tuner:
         """Launches the tuning."""
         done_trials_statuses = OrderedDict()
         try:
-            logger.info(f"results of trials will be saved on {self.tuner_path}")
+            self.output_logger.print_experiment_header(
+                name=self.name,
+                backend_name=type(self.trial_backend).__name__,
+                n_workers=self.n_workers,
+                scheduler_name=type(self.scheduler).__name__,
+                results_path=self.tuner_path,
+                log_path=self.trial_backend_path,
+            )
 
             if self.tuning_status is None:
                 self.tuning_status = TuningStatus(
@@ -223,8 +240,8 @@ class Tuner:
                 )
             # prints the status every ``print_update_interval`` seconds
             self.status_printer = RegularCallback(
-                callback=lambda tuning_status: logger.info(
-                    "tuning status (last metric is reported)\n" + str(tuning_status)
+                callback=lambda tuning_status: self.output_logger.print_tuning_status(
+                    tuning_status
                 ),
                 call_seconds_frequency=self.print_update_interval,
             )
@@ -251,6 +268,8 @@ class Tuner:
 
             config_space_exhausted = False
             stop_condition_reached = self._stop_condition()
+
+            self.output_logger.print_tuning_start()
 
             while (
                 # we stop when either the stop condition is reached
@@ -308,13 +327,8 @@ class Tuner:
                     try:
                         self._schedule_new_tasks(running_trials_ids=running_trials_ids)
                     except StopIteration:
-                        logger.info(
-                            "Tuning is finishing as the whole configuration space got exhausted."
-                        )
+                        self.output_logger.print_config_space_exhausted()
                         config_space_exhausted = True
-                        print(
-                            "Tuning is finishing as the whole configuration space got exhausted."
-                        )
 
                 self.status_printer(self.tuning_status)
 
@@ -323,15 +337,16 @@ class Tuner:
 
                 stop_condition_reached = self._stop_condition()
         except Exception as e:
-            logger.error(
-                "An error happened during the tuning, cleaning up resources and logging final resources "
-                "before throwing the exception."
+            self.output_logger.print_error(
+                "An error happened during the tuning, cleaning up resources before throwing the exception."
             )
             raise e
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).
             # the block displays the best configuration found and stops trials that may still be running.
+            self.output_logger.print_tuning_complete()
+
             print_best_metric_found(
                 tuning_status=self.tuning_status,
                 metric_names=self.scheduler.metric_names(),
@@ -346,7 +361,7 @@ class Tuner:
             if self.save_tuner:
                 self.save()
 
-            logger.info("Stopping trials that may still be running.")
+            self.output_logger.print_stopping_trials()
             self.trial_backend.stop_all()
 
             # notify tuning status that jobs were stopped without having to query their status in the backend since
@@ -357,9 +372,7 @@ class Tuner:
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
 
-            logger.info(
-                f"Tuning finished, results of trials can be found on {self.tuner_path}"
-            )
+            self.output_logger.print_tuning_finished(self.tuner_path)
 
     def _sleep(self):
         time.sleep(self.sleep_time)
@@ -500,12 +513,10 @@ class Tuner:
         if isinstance(self.scheduler, TrialScheduler):
             suggestion = self.scheduler.suggest()
         else:
-            logger.warning(
-                f"Scheduler {type(self.scheduler).__name__} is deprecated and will be removed in the next release!"
-            )
+            self.output_logger.print_scheduler_deprecated(type(self.scheduler).__name__)
             suggestion = self.scheduler.suggest(self.trial_backend.new_trial_id())
         if suggestion is None:
-            logger.info("Searcher ran out of candidates, tuning job is stopping.")
+            self.output_logger.print_searcher_out_of_candidates()
             raise StopIteration
         elif suggestion.spawn_new_trial_id:
             # we schedule a new trial, possibly using the checkpoint of ``checkpoint_trial_id``
@@ -517,14 +528,13 @@ class Tuner:
             self.scheduler.on_trial_add(trial=trial)
             for callback in self.callbacks:
                 callback.on_start_trial(trial)
-            logger.info(f"(trial {trial.trial_id}) - scheduled {suggestion}")
+            self.output_logger.print_trial_started(trial.trial_id, suggestion.config)
             return trial
         else:
             # suggestion is a trial_id to resume, with possibly a new configuration
-            log_msg = f"Resuming trial {suggestion.checkpoint_trial_id}"
-            if suggestion.config is not None:
-                log_msg += f" with new_config = {suggestion.config}"
-            logger.info(log_msg)
+            self.output_logger.print_trial_resumed(
+                suggestion.checkpoint_trial_id, suggestion.config
+            )
             trial = self.trial_backend.resume_trial(
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
             )
@@ -533,14 +543,12 @@ class Tuner:
             return trial
 
     def _handle_failure(self, done_trials_statuses: dict[int, tuple[Trial, str]]):
-        logger.error(f"Stopped as {self.max_failures} failures were reached")
+        self.output_logger.print_max_failures_reached(self.max_failures)
         for trial_id, (_, status) in done_trials_statuses.items():
             if status == Status.failed:
-                logger.error(f"showing log of first failure")
                 stdout = "".join(self.trial_backend.stdout(trial_id))
                 stderr = "".join(self.trial_backend.stderr(trial_id))
-                logger.error(stdout)
-                logger.error(stderr)
+                self.output_logger.print_failure_logs(trial_id, stdout, stderr)
                 raise ValueError(f"Trial - {trial_id} failed")
 
     def save(self, folder: str | None = None):
@@ -627,7 +635,7 @@ class Tuner:
                     trial_id not in done_trials
                     or done_trials[trial_id][1] != Status.paused
                 ):
-                    logger.info(f"Trial trial_id {trial_id} completed.")
+                    self.output_logger.print_trial_completed(trial_id)
                 # If scheduler marks trial as ``Status.paused``, this overrides
                 # ``Status.completed`` (which was assigned because the job
                 # completed)
@@ -635,13 +643,11 @@ class Tuner:
                 if done_trial is not None and done_trial[1] == Status.paused:
                     status = Status.paused
                 if trial_id not in self.last_seen_result_per_trial:
-                    logger.error(
-                        f"trial {trial_id} completed and no metrics got observed, corresponding log:"
-                    )
                     stdout = "".join(self.trial_backend.stdout(trial_id))
                     stderr = "".join(self.trial_backend.stderr(trial_id))
-                    logger.error(stdout)
-                    logger.error(stderr)
+                    self.output_logger.print_no_metrics_observed(
+                        trial_id, stdout, stderr
+                    )
                     raise ValueError(
                         f"trial {trial_id} completed and no metrics got observed"
                     )
@@ -655,8 +661,9 @@ class Tuner:
                 done_trials[trial_id] = (trial, status)
 
             if status == Status.failed:
-                logger.info(f"Trial trial_id {trial_id} failed.")
+                self.output_logger.print_trial_failed(trial_id)
                 self.scheduler.on_trial_error(trial)
+
                 done_trials[trial_id] = (trial, status)
 
             # For the case when the trial is stopped independently of the scheduler, we choose to use
@@ -665,10 +672,9 @@ class Tuner:
                 status == Status.stopped
                 and trial_id not in self.trials_scheduler_stopped
             ):
-                logger.info(
-                    f"Trial trial_id {trial_id} was stopped independently of the scheduler."
-                )
+                self.output_logger.print_trial_stopped_independently(trial_id)
                 self.scheduler.on_trial_error(trial)
+
                 done_trials[trial_id] = (trial, status)
 
         return done_trials
@@ -696,11 +702,5 @@ class Tuner:
         )
         config = self.trial_backend._trial_dict[trial_id].config
 
-        logger.info(
-            f"If you want to retrain the best configuration found, you can run: \n"
-            f"```tuner.trial_backend.start_trial(config={config})``` to start training from scratch\n"
-            f"or\n"
-            f"```tuner.trial_backend.start_trial(config={config}, checkpoint_trial_id={trial_id})``` to start from "
-            f"last checkpoint (your script should have stored a checkpoint)"
-        )
+        self.output_logger.print_best_config_instructions(trial_id, config)
         return trial_id, config
