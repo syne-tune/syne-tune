@@ -151,7 +151,7 @@ plt.show()
 
 Checkout this tutorial to run large-scale [benchmarking](benchmarking/nursery/) with Syne Tune.
 
-## Optuna Backend 
+## Optuna
 
 If you are using [Optuna](https://optuna.org/) you can easily use Syne Tune as a sampler via [OptunaHub](https://hub.optuna.org/)
 
