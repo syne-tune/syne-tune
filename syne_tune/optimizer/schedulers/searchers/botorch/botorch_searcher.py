@@ -194,12 +194,14 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
 
             # Continuous optimization of acquisition function only if
             # ``restrict_configurations`` not used
-            if self.optimization_strategy == 'random':
-                X = rand(self.num_raw_samples, len(self._hp_ranges.get_ndarray_bounds()))
+            if self.optimization_strategy == "random":
+                X = rand(
+                    self.num_raw_samples, len(self._hp_ranges.get_ndarray_bounds())
+                )
                 acq_values = acq(X[:, None, :])  # warm up
                 best_idx = acq_values.argmax()
                 candidate = X[best_idx].reshape(1, -1)
-            elif self.optimization_strategy == 'gradient':
+            elif self.optimization_strategy == "gradient":
                 candidate, acq_value = optimize_acqf(
                     acq,
                     bounds=self._get_gp_bounds(),
