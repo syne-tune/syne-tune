@@ -11,7 +11,7 @@ from syne_tune.optimizer.schedulers.searchers.utils import (
 )
 
 
-from torch import Tensor, random, randn_like
+from torch import Tensor, random, randn_like, rand
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.transforms import Warp
@@ -65,8 +65,9 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         input_warping: bool = False,
         double_precision: bool = True,
         noise_level: float = 0,
-        num_restarts: int = 3,
-        num_raw_samples: int = 20,
+        num_restarts: int = 20,
+        optimization_strategy: str = "gradient",
+        num_raw_samples: int = 200,
         random_seed: int = None,
     ):
         super(BoTorchSearcher, self).__init__(
@@ -85,6 +86,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         self.num_raw_samples = num_raw_samples
         self.num_restarts = num_restarts
         self._hp_ranges = make_hyperparameter_ranges(config_space)
+        self.optimization_strategy = optimization_strategy
 
         # Set the random seed for botorch as well
         random.manual_seed(self.random_seed)
@@ -192,13 +194,19 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
 
             # Continuous optimization of acquisition function only if
             # ``restrict_configurations`` not used
-            candidate, acq_value = optimize_acqf(
-                acq,
-                bounds=self._get_gp_bounds(),
-                q=1,
-                num_restarts=self.num_restarts,
-                raw_samples=self.num_raw_samples,
-            )
+            if self.optimization_strategy == 'random':
+                X = rand(self.num_raw_samples, len(self._hp_ranges.get_ndarray_bounds()))
+                acq_values = acq(X[:, None, :])  # warm up
+                best_idx = acq_values.argmax()
+                candidate = X[best_idx].reshape(1, -1)
+            elif self.optimization_strategy == 'gradient':
+                candidate, acq_value = optimize_acqf(
+                    acq,
+                    bounds=self._get_gp_bounds(),
+                    q=1,
+                    num_restarts=self.num_restarts,
+                    raw_samples=self.num_raw_samples,
+                )
             candidate = candidate.detach().numpy()[0]
             return self._config_from_ndarray(candidate)
 
