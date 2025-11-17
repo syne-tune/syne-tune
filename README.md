@@ -190,6 +190,44 @@ for iteration in range(max_iterations):
 
 Checkout this tutorial to run large-scale [benchmarking](benchmarking/nursery/) with Syne Tune.
 
+## Optuna
+
+If you are using [Optuna](https://optuna.org/) you can easily use Syne Tune as a sampler via [OptunaHub](https://hub.optuna.org/)
+
+First, install the necessary dependencies:
+```bash
+pip install optunahub optuna syne-tune[extra]>=0.14.2
+```
+
+Then you can use the `SyneTuneSampler` as follows:
+
+```python
+import optuna
+import optunahub
+
+
+SyneTuneSampler = optunahub.load_module("samplers/synetune_sampler").SyneTuneSampler
+
+
+def objective(trial: optuna.trial.Trial) -> float:
+    x = trial.suggest_float("x", -10, 10)
+    y = trial.suggest_int("y", -10, 10)
+    return x**2 + y**2
+
+
+sampler = SyneTuneSampler(
+    search_space={
+        "x": optuna.distributions.FloatDistribution(-10, 10),
+        "y": optuna.distributions.IntDistribution(-10, 10),
+    },
+    searcher_method="CQR",
+    metric="mean_loss",
+)
+study = optuna.create_study(sampler=sampler)
+study.optimize(objective, n_trials=100)
+print(study.best_trial.params)
+```
+
 ## Blog Posts
 
 * [Run distributed hyperparameter and neural architecture tuning jobs with Syne Tune](https://aws.amazon.com/blogs/machine-learning/run-distributed-hyperparameter-and-neural-architecture-tuning-jobs-with-syne-tune/)
