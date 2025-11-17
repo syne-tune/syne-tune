@@ -188,6 +188,7 @@ class AutoEncodixVarixBlackboxRecipe(AutoencodixRecipe):
 if __name__ == "__main__":
     import requests
     import zipfile
+
     ae_data_file = repository_path / "ae_results_30000_runs.zip"
     github_src = (
         "https://github.com/ralf-koenig/ae-st-hpo/raw/main/"
