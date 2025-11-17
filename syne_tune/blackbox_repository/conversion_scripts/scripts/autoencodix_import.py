@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
@@ -8,10 +9,13 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     default_metric,
-    resource_attr,
+    time_attr,
 )
 from syne_tune.config_space import randint, uniform, loguniform, choice
 from syne_tune.util import catchtime
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+)
 
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
@@ -20,7 +24,7 @@ BLACKBOX_NAME_VARIX = "autoencodix_varix"
 
 METRIC_DOWNSTREAM_PERFORMANCE = "WEIGHTED_AVG_AUC_DOWNSTREAM_PERFORMANCE"
 METRIC_ELAPSED_TIME = "training_runtime"
-RESOURCE_ATTRIBUTE = "epoch"
+TIME_ATTR = "epoch"
 
 MAX_RESOURCE_LEVEL = 1
 
@@ -55,19 +59,19 @@ def generate_autoencodix(config_space, blackbox_name):
         # load data frames with results from parquet files
         df_dict = {
             ("tcga", "rna"): pd.read_parquet(
-                f"/Users/lucathale-bombien/Downloads/USB_Stick_Master_Arbeit/autoencodix-hpo/real_ae_results_{blackbox_name.split('_')[1]}_tcga_RNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_RNA.parquet"
             ),
             ("tcga", "meth"): pd.read_parquet(
-                f"/Users/lucathale-bombien/Downloads/USB_Stick_Master_Arbeit/autoencodix-hpo/real_ae_results_{blackbox_name.split('_')[1]}_tcga_METH.parquet"
+                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_METH.parquet"
             ),
             ("tcga", "dna"): pd.read_parquet(
-                f"/Users/lucathale-bombien/Downloads/USB_Stick_Master_Arbeit/autoencodix-hpo/real_ae_results_{blackbox_name.split('_')[1]}_tcga_DNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_DNA.parquet"
             ),
             ("schc", "rna"): pd.read_parquet(
-                f"/Users/lucathale-bombien/Downloads/USB_Stick_Master_Arbeit/autoencodix-hpo/real_ae_results_{blackbox_name.split('_')[1]}_schc_RNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_schc_RNA.parquet"
             ),
             ("schc", "meth"): pd.read_parquet(
-                f"/Users/lucathale-bombien/Downloads/USB_Stick_Master_Arbeit/autoencodix-hpo/real_ae_results_{blackbox_name.split('_')[1]}_schc_METH.parquet"
+                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_schc_METH.parquet"
             ),
         }
 
@@ -117,7 +121,7 @@ def generate_autoencodix(config_space, blackbox_name):
         ]
 
         # use a constant value here as no multi-fidelity data is available
-        fidelity_space = {RESOURCE_ATTRIBUTE: randint(lower=300, upper=300)}
+        fidelity_space = {time_attr: randint(lower=300, upper=300)}
 
         bb_dict = {}
 
@@ -150,7 +154,7 @@ def generate_autoencodix(config_space, blackbox_name):
             metadata={
                 metric_elapsed_time: METRIC_ELAPSED_TIME,
                 default_metric: METRIC_DOWNSTREAM_PERFORMANCE,
-                resource_attr: RESOURCE_ATTRIBUTE,
+                time_attr: TIME_ATTR,
             },
         )
 
@@ -182,6 +186,29 @@ class AutoEncodixVarixBlackboxRecipe(AutoencodixRecipe):
 
 
 if __name__ == "__main__":
+    import requests
+    import zipfile
+    ae_data_file = repository_path / "ae_results_30000_runs.zip"
+    github_src = (
+        "https://github.com/ralf-koenig/ae-st-hpo/raw/main/"
+        "ae_results_30000_runs/ae_results_30000_runs.zip"
+    )
+
+    if not ae_data_file.exists():
+        print(f"did not find {ae_data_file}, downloading {github_src}")
+
+        response = requests.get(github_src)
+        response.raise_for_status()
+
+        # Save under repository_path
+        with open(ae_data_file, "wb") as f:
+            f.write(response.content)
+
+        # Extract ZIP into repository_path
+        with zipfile.ZipFile(ae_data_file, "r") as zip_ref:
+            zip_ref.extractall(path=repository_path)
+
+    extracted_folder = repository_path / "ae_results_30000_runs"
     recipes = [AutoEncodixVanillixBlackboxRecipe, AutoEncodixVarixBlackboxRecipe]
 
     for recipe in recipes:
