@@ -57,21 +57,22 @@ CONFIGURATION_SPACE_VARIX = {
 def generate_autoencodix(config_space, blackbox_name):
     with catchtime(f"loading data for {blackbox_name}"):
         # load data frames with results from parquet files
+        architecture = blackbox_name.split("_")[1]
         df_dict = {
             ("tcga", "rna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_RNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_RNA.parquet"
             ),
             ("tcga", "meth"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_METH.parquet"
+                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_METH.parquet"
             ),
             ("tcga", "dna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_tcga_DNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_DNA.parquet"
             ),
             ("schc", "rna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_schc_RNA.parquet"
+                f"ae_results_30000_runs/real_ae_results_{architecture}_schc_RNA.parquet"
             ),
             ("schc", "meth"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{blackbox_name.split('_')[1]}_schc_METH.parquet"
+                f"ae_results_30000_runs/real_ae_results_{architecture}_schc_METH.parquet"
             ),
         }
 
@@ -158,6 +159,29 @@ def generate_autoencodix(config_space, blackbox_name):
             },
         )
 
+def download_autoencodix_data_if_necessary():
+    import requests
+    import zipfile
+
+    ae_data_file = repository_path / "ae_results_30000_runs.zip"
+    github_src = (
+        "https://github.com/ralf-koenig/ae-st-hpo/raw/main/"
+        "ae_results_30000_runs/ae_results_30000_runs.zip"
+    )
+
+    if not ae_data_file.exists():
+        print(f"did not find {ae_data_file}, downloading {github_src}")
+
+        response = requests.get(github_src)
+        response.raise_for_status()
+
+        # Save under repository_path
+        with open(ae_data_file, "wb") as f:
+            f.write(response.content)
+
+        # Extract ZIP into repository_path
+        with zipfile.ZipFile(ae_data_file, "r") as zip_ref:
+            zip_ref.extractall(path=repository_path)
 
 class AutoencodixRecipe(BlackboxRecipe):
     def __init__(self, config_space, name):
@@ -186,32 +210,11 @@ class AutoEncodixVarixBlackboxRecipe(AutoencodixRecipe):
 
 
 if __name__ == "__main__":
-    import requests
-    import zipfile
 
-    ae_data_file = repository_path / "ae_results_30000_runs.zip"
-    github_src = (
-        "https://github.com/ralf-koenig/ae-st-hpo/raw/main/"
-        "ae_results_30000_runs/ae_results_30000_runs.zip"
-    )
+    download_autoencodix_data_if_necessary()
 
-    if not ae_data_file.exists():
-        print(f"did not find {ae_data_file}, downloading {github_src}")
-
-        response = requests.get(github_src)
-        response.raise_for_status()
-
-        # Save under repository_path
-        with open(ae_data_file, "wb") as f:
-            f.write(response.content)
-
-        # Extract ZIP into repository_path
-        with zipfile.ZipFile(ae_data_file, "r") as zip_ref:
-            zip_ref.extractall(path=repository_path)
-
-    extracted_folder = repository_path / "ae_results_30000_runs"
     recipes = [AutoEncodixVanillixBlackboxRecipe, AutoEncodixVarixBlackboxRecipe]
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=False)
+        instance.generate(upload_on_hub=True)
