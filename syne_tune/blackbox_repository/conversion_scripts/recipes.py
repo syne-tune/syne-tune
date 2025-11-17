@@ -45,6 +45,11 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import 
     PD1Recipe,
 )
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.autoencodix_import import (
+    AutoEncodixVanillixBlackboxRecipe,
+    AutoEncodixVarixBlackboxRecipe,
+)
+
 # add a blackbox recipe here to expose it in Syne Tune
 recipes = [
     DeepARRecipe(),
@@ -77,6 +82,8 @@ recipes = [
     TabrepoNeuralNetTorch(),
     TabrepoLightGBM(),
     TabrepoRecipeKNeighbors(),
+    AutoEncodixVanillixBlackboxRecipe(),
+    AutoEncodixVarixBlackboxRecipe(),
 ]
 
 try:
