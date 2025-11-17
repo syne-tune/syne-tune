@@ -159,6 +159,7 @@ def generate_autoencodix(config_space, blackbox_name):
             },
         )
 
+
 def download_autoencodix_data_if_necessary():
     import requests
     import zipfile
@@ -182,6 +183,7 @@ def download_autoencodix_data_if_necessary():
         # Extract ZIP into repository_path
         with zipfile.ZipFile(ae_data_file, "r") as zip_ref:
             zip_ref.extractall(path=repository_path)
+
 
 class AutoencodixRecipe(BlackboxRecipe):
     def __init__(self, config_space, name):
