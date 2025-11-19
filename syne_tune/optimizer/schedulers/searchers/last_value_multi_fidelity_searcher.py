@@ -84,7 +84,6 @@ class LastValueMultiFidelitySearcher(SingleObjectiveBaseSearcher):
 
         if config is None:
             if self.should_update():
-                logger.debug(f"fit model")
                 with catchtime(
                     f"fit model with {self.num_results()} observations", show=False
                 ):
