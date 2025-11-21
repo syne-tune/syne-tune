@@ -216,7 +216,7 @@ class Bore(SingleObjectiveBaseSearcher):
         y = np.array(train_targets)
 
         tau = np.quantile(y, q=self.gamma)
-        z = np.less(y, tau)
+        z = np.less_equal(y, tau)
 
         if self.calibrate:
             self.model = CalibratedClassifierCV(
