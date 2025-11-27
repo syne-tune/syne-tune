@@ -442,13 +442,13 @@ def convert_dataset(search_space, dataset):
 
     objective_names = ["metric_accuracy", "metric_elapsed_time"]
 
-    objective_evaluations = np.array(dataset["y"])  # np.array.shape = (N,)
+    objective_evaluations = np.array(dataset["y"], dtype=np.float32)  # np.array.shape = (N,)
     objective_evaluations = objective_evaluations.reshape(
         objective_evaluations.shape[0], 1, 1, 1
     )
 
     # Create a metric_elapsed_time array filled with ones as runtime was not provided in the dataset
-    elapsed_time_array = np.ones_like(objective_evaluations)
+    elapsed_time_array = np.ones_like(objective_evaluations, dtype=np.float32)
 
     objective_evaluations = np.concatenate(
         [objective_evaluations, elapsed_time_array], axis=-1
@@ -481,11 +481,11 @@ def load_data():
     meta_train_file = repository_path / "hpob-data/meta-train-dataset.json"
     meta_validation_file = repository_path / "hpob-data/meta-validation-dataset.json"
 
-    with (
-        open(meta_test_file, mode="r", encoding="utf-8") as test_file,
-        open(meta_train_file, mode="r", encoding="utf-8") as train_file,
-        open(meta_validation_file, mode="r", encoding="utf-8") as validation_file,
-    ):
+    with open(meta_test_file, mode="r", encoding="utf-8") as test_file, open(
+        meta_train_file, mode="r", encoding="utf-8"
+    ) as train_file, open(
+        meta_validation_file, mode="r", encoding="utf-8"
+    ) as validation_file:
         test_data = json.load(test_file)
         train_data = json.load(train_file)
         validation_data = json.load(validation_file)

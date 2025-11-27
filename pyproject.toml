@@ -19,7 +19,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy>=1.22.0, <1.27.0",
+    "numpy>=2.0.0, <3.0.0",
     "dill>=0.3.6",
     "pandas",
     "typing_extensions",
@@ -54,7 +54,7 @@ dev = [
 extra = [
     "syne-tune[dev]",
     # blackbox repository
-    "numpy>=1.16.0, <1.27.0",
+    "numpy>=2.0.0, <3.0.0",
     "pandas",
     "scikit-learn",
     "xgboost",
