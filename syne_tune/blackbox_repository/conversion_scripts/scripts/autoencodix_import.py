@@ -1,3 +1,8 @@
+"""
+Convert experiment data from AutoEncodix hyperparameter optimization runs into Syne Tune blackboxes.
+Experiments were done by Ralf König and all the code and data are publicly available at:
+https://github.com/ralf-koenig/ae-st-hpo/tree/main
+"""
 import pandas as pd
 import numpy as np
 
@@ -13,16 +18,12 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
 )
 from syne_tune.config_space import randint, uniform, loguniform, choice
 from syne_tune.util import catchtime
-from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    repository_path,
-)
-
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 BLACKBOX_NAME_VANILLIX = "autoencodix_vanillix"
 BLACKBOX_NAME_VARIX = "autoencodix_varix"
 
-METRIC_DOWNSTREAM_PERFORMANCE = "WEIGHTED_AVG_AUC_DOWNSTREAM_PERFORMANCE"
+METRIC_DOWNSTREAM_PERFORMANCE = "weighted_avg_auc_downstream_performance"
 METRIC_ELAPSED_TIME = "training_runtime"
 TIME_ATTR = "epoch"
 
@@ -30,27 +31,27 @@ MAX_RESOURCE_LEVEL = 1
 
 CONFIGURATION_SPACE_VANILLIX = {
     # Model Parameters
-    "K_FILTER": choice([128, 256, 512, 1024, 2048, 4096]),
-    "N_LAYERS": choice([2, 3, 4]),  # 3 values
-    "ENC_FACTOR": uniform(1, 4),
-    "LATENT_DIM_FIXED": choice([2, 4, 8, 16, 32, 64]),
+    "k_filter": choice([128, 256, 512, 1024, 2048, 4096]),
+    "n_layers": choice([2, 3, 4]),  # 3 values
+    "enc_factor": uniform(1, 4),
+    "latent_dim_fixed": choice([2, 4, 8, 16, 32, 64]),
     # Training Parameters
-    "BATCH_SIZE": choice([32, 64, 128, 256]),
-    "LR_FIXED": loguniform(1e-5, 1e-1),
-    "DROP_P": uniform(0, 0.9),
+    "batch_size": choice([32, 64, 128, 256]),
+    "lr_fixed": loguniform(1e-5, 1e-1),
+    "drop_p": uniform(0, 0.9),
 }
 
 CONFIGURATION_SPACE_VARIX = {
     # Model Parameters
-    "K_FILTER": choice([128, 256, 512, 1024, 2048, 4096]),  # 6 values
-    "N_LAYERS": choice([2, 3, 4]),  # 3 values
-    "ENC_FACTOR": uniform(1, 4),
-    "LATENT_DIM_FIXED": choice([2, 4, 8, 16, 32, 64]),  # 6 values
+    "k_filter": choice([128, 256, 512, 1024, 2048, 4096]),  # 6 values
+    "n_layers": choice([2, 3, 4]),  # 3 values
+    "enc_factor": uniform(1, 4),
+    "latent_dim_fixed": choice([2, 4, 8, 16, 32, 64]),  # 6 values
     # Training Parameters
-    "BATCH_SIZE": choice([32, 64, 128, 256]),  # 4 values
-    "LR_FIXED": loguniform(1e-5, 1e-1),
-    "DROP_P": uniform(0, 0.9),
-    "BETA": loguniform(0.001, 10),
+    "batch_size": choice([32, 64, 128, 256]),  # 4 values
+    "lr_fixed": loguniform(1e-5, 1e-1),
+    "drop_p": uniform(0, 0.9),
+    "beta": loguniform(0.001, 10),
 }
 
 
@@ -60,56 +61,58 @@ def generate_autoencodix(config_space, blackbox_name):
         architecture = blackbox_name.split("_")[1]
         df_dict = {
             ("tcga", "rna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_RNA.parquet"
+                f"{repository_path}/real_ae_results_{architecture}_tcga_RNA.parquet"
             ),
             ("tcga", "meth"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_METH.parquet"
+                f"{repository_path}/real_ae_results_{architecture}_tcga_METH.parquet"
             ),
             ("tcga", "dna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{architecture}_tcga_DNA.parquet"
+                f"{repository_path}/real_ae_results_{architecture}_tcga_DNA.parquet"
             ),
             ("schc", "rna"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{architecture}_schc_RNA.parquet"
+                f"{repository_path}/real_ae_results_{architecture}_schc_RNA.parquet"
             ),
             ("schc", "meth"): pd.read_parquet(
-                f"ae_results_30000_runs/real_ae_results_{architecture}_schc_METH.parquet"
+                f"{repository_path}/real_ae_results_{architecture}_schc_METH.parquet"
             ),
         }
 
     with catchtime(f"converting {blackbox_name}"):
         hyperparameters_dict = {}
         for (data_scenario, task), df in df_dict.items():
+            df.columns = df.columns.str.lower()
             cols = [
-                "K_FILTER",
-                "N_LAYERS",
-                "ENC_FACTOR",
-                "LATENT_DIM_FIXED",
-                "LR_FIXED",
-                "BATCH_SIZE",
-                "DROP_P",
+                "k_filter",
+                "n_layers",
+                "enc_factor",
+                "latent_dim_fixed",
+                "lr_fixed",
+                "batch_size",
+                "drop_p",
             ]
+
             hp_df = df[cols].copy()
 
             if blackbox_name == BLACKBOX_NAME_VARIX:
-                hp_df["BETA"] = df["BETA"].values
+                hp_df["beta"] = df["beta"].values
 
             hyperparameters_dict[(data_scenario, task)] = hp_df
 
             # add weighted average, taking into account high correlation between AUC on CANCER_TYPE, SUB_TYPE, ONCOTREE_CODE
             if data_scenario == "tcga":
-                df["WEIGHTED_AVG_AUC_DOWNSTREAM_PERFORMANCE"] = (
-                    df["CANCER_TYPE"] * 1 / 21
-                    + df["SUBTYPE"] * 1 / 21
-                    + df["ONCOTREE_CODE"] * 1 / 21
-                    + df["SEX"] * 1 / 7
-                    + df["AJCC_PATHOLOGIC_TUMOR_STAGE"] * 1 / 7
-                    + df["GRADE"] * 1 / 7
-                    + df["PATH_N_STAGE"] * 1 / 7
-                    + df["DSS_STATUS"] * 1 / 7
-                    + df["OS_STATUS"] * 1 / 7
+                df["weighted_avg_auc_downstream_performance"] = (
+                    df["cancer_type"] * 1 / 21
+                    + df["subtype"] * 1 / 21
+                    + df["oncotree_code"] * 1 / 21
+                    + df["sex"] * 1 / 7
+                    + df["ajcc_pathologic_tumor_stage"] * 1 / 7
+                    + df["grade"] * 1 / 7
+                    + df["path_n_stage"] * 1 / 7
+                    + df["dss_status"] * 1 / 7
+                    + df["os_status"] * 1 / 7
                 )
             elif data_scenario == "schc":
-                df["WEIGHTED_AVG_AUC_DOWNSTREAM_PERFORMANCE"] = (
+                df["weighted_avg_auc_downstream_performance"] = (
                     df["author_cell_type"] * 1 / 3
                     + df["age_group"] * 1 / 3
                     + df["sex"] * 1 / 3
@@ -118,7 +121,7 @@ def generate_autoencodix(config_space, blackbox_name):
         objectives = [
             "training_runtime",
             "valid_r2",
-            "WEIGHTED_AVG_AUC_DOWNSTREAM_PERFORMANCE",
+            "weighted_avg_auc_downstream_performance",
         ]
 
         # use a constant value here as no multi-fidelity data is available
@@ -219,4 +222,4 @@ if __name__ == "__main__":
 
     for recipe in recipes:
         instance = recipe()
-        instance.generate(upload_on_hub=True)
+        instance.generate(upload_on_hub=False)
