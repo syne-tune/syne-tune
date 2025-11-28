@@ -217,6 +217,11 @@ class Bore(SingleObjectiveBaseSearcher):
 
         tau = np.quantile(y, q=self.gamma)
         z = np.less_equal(y, tau)
+        if np.sum(z) == y.shape[0]:
+            logging.error('Assigned all samples to the same class. This can happen if all currently '
+                          'observed configurations obtain the same value.'
+                          'Return a random configuration instead.')
+            return False
 
         if self.calibrate:
             self.model = CalibratedClassifierCV(
