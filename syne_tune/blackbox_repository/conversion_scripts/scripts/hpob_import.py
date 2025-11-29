@@ -73,7 +73,7 @@ SEARCH_SPACE_5859 = {
     "positions_categorical": {},
     "config_space": {
         "minsplit": uniform(0.0, 1.0),
-        "minbucket": uniform(1.0, 1.0),
+        "minbucket": uniform(1.0, 60.0),
         "cp": uniform(0.0, 1.0),
         "maxdepth": uniform(0.0, 1.0),
     },
