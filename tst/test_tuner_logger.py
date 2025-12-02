@@ -1,0 +1,156 @@
+import io
+from pathlib import Path
+from unittest.mock import patch
+
+from syne_tune.tuner_logger import TunerLogger, Colors
+from syne_tune.tuning_status import TuningStatus
+
+
+@patch("time.strftime", return_value="[12:00:00]")
+def test_tuner_logger_experiment_header(mock_strftime):
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        logger = TunerLogger(use_colors=False, use_emojis=False)
+        logger.print_experiment_header(
+            name="test-experiment",
+            backend_name="local",
+            n_workers=4,
+            scheduler_name="fifo",
+            results_path=Path("/tmp/results"),
+            log_path="/tmp/logs",
+            metric_names=["accuracy"],
+            metric_mode="max",
+            stop_criterion_info="stop at 100",
+            config_space={"lr": "uniform(0.1, 1.0)"},
+        )
+        output = mock_stdout.getvalue()
+        expected_output = (
+            "\nSyne Tune - Hyperparameter Optimization\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "\nExperiment Configuration\n"
+            "├─ Name: test-experiment\n"
+            "├─ Backend: local\n"
+            "├─ Workers: 4\n"
+            "├─ Scheduler: fifo\n"
+            "├─ Results Path: /tmp/results\n"
+            "└─ Log Path: /tmp/logs\n"
+            "\nOptimization Target\n"
+            "├─ Metric: accuracy\n"
+            "├─ Mode: max\n"
+            "└─ Stop Criterion: stop at 100\n"
+            "\nSearch Space\n"
+            "└─ lr: uniform(0.1, 1.0)\n"
+            "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        )
+        assert output == expected_output.replace(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "━" * 80
+        )
+
+
+@patch("time.strftime", return_value="[12:00:00]")
+def test_tuner_logger_colors_and_emojis(mock_strftime):
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        logger = TunerLogger(use_colors=True, use_emojis=True)
+        logger.print_tuning_start()
+        output = mock_stdout.getvalue()
+        assert (
+            output
+            == f"🏁 {Colors.GREEN}Starting hyperparameter optimization...{Colors.RESET}\n"
+        )
+
+
+@patch("time.strftime", return_value="[12:00:00]")
+def test_tuner_logger_no_colors_no_emojis(mock_strftime):
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        logger = TunerLogger(use_colors=False, use_emojis=False)
+        logger.print_tuning_start()
+        output = mock_stdout.getvalue()
+        assert output == "Starting hyperparameter optimization...\n"
+
+
+@patch("time.strftime", return_value="[12:00:00]")
+def test_tuner_logger_print_trial_result(mock_strftime):
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        logger = TunerLogger(use_colors=False, use_emojis=False)
+        logger.print_trial_result(
+            trial_id=1, result={"accuracy": 0.9, "loss": 0.1}, epoch=1, total_epochs=10
+        )
+        output = mock_stdout.getvalue()
+        assert (
+            output
+            == "[12:00:00] Trial 1 | Epoch 1/10 | accuracy: 0.9000 | loss: 0.1000\n"
+        )
+
+
+@patch("time.strftime", return_value="[12:00:00]")
+@patch("time.perf_counter", return_value=0.0)
+def test_tuner_logger_print_tuning_status(mock_perf_counter, mock_strftime):
+    with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+        logger = TunerLogger(use_colors=False, use_emojis=False)
+        status = TuningStatus(metric_names=["accuracy"])
+        logger.print_tuning_status(status)
+        output = mock_stdout.getvalue()
+
+    expected = """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tuning Status (last metric is reported)
+0 trials running, 0 finished (0 until the end), 0.00s wallclock-time
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"""
+    assert output == expected
+
+
+def test_smoke_and_show_all():
+    logger = TunerLogger(use_colors=True, use_emojis=True)
+
+    logger.print_tuning_start()
+
+    status = TuningStatus(metric_names=["accuracy"])
+    logger.print_tuning_status(status)
+
+    config = {"lr": 1e-3}
+    logger.print_config_space_exhausted()
+    logger.print_max_failures_reached(3)
+    logger.print_error("OOM")
+    logger.print_failure_logs(0, "Nop", "Nop")
+    logger.print_trial_completed(0)
+    logger.print_trial_failed(0)
+    logger.print_trial_paused(0)
+
+    stderr = "OOM"
+    stdout = "starting"
+    logger.print_best_config_instructions(0, config=config)
+    logger.print_config_space_exhausted()
+    logger.print_error(stderr)
+    logger.print_experiment_header(
+        name="test-experiment",
+        backend_name="local",
+        n_workers=4,
+        scheduler_name="fifo",
+        results_path=Path("/tmp/results"),
+        log_path="/tmp/logs",
+        metric_names=["accuracy"],
+        metric_mode="max",
+        stop_criterion_info="stop at 100",
+        config_space={"lr": "uniform(0.1, 1.0)"},
+    )
+    logger.print_failure_logs(trial_id=0, stderr=stderr, stdout=stdout)
+    logger.print_max_failures_reached(max_failures=3)
+    logger.print_no_metrics_observed(trial_id=0, stderr=stderr, stdout=stdout)
+    logger.print_scheduler_deprecated("ASHA")
+    logger.print_searcher_out_of_candidates()
+    logger.print_stopping_trials()
+    logger.print_trial_completed(trial_id=2)
+    logger.print_trial_failed(trial_id=2)
+    logger.print_trial_paused(trial_id=2)
+    logger.print_trial_result(trial_id=2, result=config)
+    logger.print_trial_resumed(trial_id=2)
+    logger.print_trial_started(trial_id=2, config=config)
+    logger.print_trial_stopped_by_scheduler(trial_id=2)
+    logger.print_trial_stopped_independently(trial_id=0)
+    logger.print_tuning_complete()
+    logger.print_tuning_finished(results_path=Path("/tmp"))
+    logger.print_tuning_start()
+    logger.print_tuning_status(tuning_status=status)
+    logger.print_warning(message="yop")
