@@ -245,7 +245,9 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             warp_tf = Warp(indices=list(range(X_tensor.shape[-1])))
         else:
             warp_tf = None
-        return SingleTaskGP(X_tensor, Y_tensor, train_Yvar=Y_noise, input_transform=warp_tf)
+        return SingleTaskGP(
+            X_tensor, Y_tensor, train_Yvar=Y_noise, input_transform=warp_tf
+        )
 
     def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T

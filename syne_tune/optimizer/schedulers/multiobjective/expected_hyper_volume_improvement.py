@@ -93,7 +93,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         num_raw_samples: int = 200,
         num_restarts: int = 20,
         optimization_strategy: str = "gradient",
-            random_seed: int = None,
+        random_seed: int = None,
     ):
         super(ExpectedHyperVolumeImprovement, self).__init__(
             config_space,
@@ -256,10 +256,11 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         except ModelFittingError as _:
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
-#        except:
-            # BoTorch can raise different errors, easier to not try to catch them individually
-#            logging.warning("Botorch was unable to fit the model, sampling randomly.")
-#            return self._get_random_config()
+
+    #        except:
+    # BoTorch can raise different errors, easier to not try to catch them individually
+    #            logging.warning("Botorch was unable to fit the model, sampling randomly.")
+    #            return self._get_random_config()
 
     def _make_gp(self, X_tensor, Y_tensor):
 
@@ -274,7 +275,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
 
         models = []
         for i in range(Y_tensor.shape[-1]):
-            train_y = Y_tensor[..., i: i + 1]
+            train_y = Y_tensor[..., i : i + 1]
             noise_y = self.noise_level * randn_like(train_y)
 
             models.append(
