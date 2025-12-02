@@ -14,9 +14,7 @@ try:
     from botorch.utils.multi_objective.box_decompositions import (
         NondominatedPartitioning,
     )
-    from botorch.acquisition.multi_objective.monte_carlo import (
-        qExpectedHypervolumeImprovement,
-    )
+    from botorch.acquisition.multi_objective import qLogExpectedHypervolumeImprovement
     from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
     from botorch.models.model_list_gp_regression import ModelListGP
     from botorch.optim import optimize_acqf
@@ -35,9 +33,6 @@ from syne_tune.optimizer.schedulers.searchers.utils import (
 
 logger = logging.getLogger(__name__)
 
-
-NOISE_LEVEL = 1e-3
-MC_SAMPLES = 128
 
 
 class ExpectedHyperVolumeImprovement(BaseSearcher):
@@ -71,6 +66,8 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         when optimizing the acquisition function. Defaults to 200
     :param num_restarts: Number of restarts to use when optimizing the
         acquisition function. Defaults to 20
+    :param mc_samples: Number of Monte Carlo samples to use for estimating the
+        expected hypervolume improvement. Defaults to 128
     :param optimization_strategy: Strategy to optimize the acquisition function.
         Choices are "random" and "gradient" (default). If "random" is chosen
         the acquisition function is evaluated on ``num_raw_samples`` and the
@@ -88,10 +85,11 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         no_fantasizing: bool = False,
         max_num_observations: int | None = 200,
         input_warping: bool = False,
-        double_precision: bool = False,
-        noise_level: float = 0,
+        double_precision: bool = True,
+        noise_level: float = 1e-8,
         num_raw_samples: int = 200,
         num_restarts: int = 20,
+        mc_samples: int = 128,
         optimization_strategy: str = "gradient",
         random_seed: int = None,
     ):
@@ -114,6 +112,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         self.noise_level = noise_level
         self.num_raw_samples = num_raw_samples
         self.num_restarts = num_restarts
+        self.mc_samples = mc_samples
         assert optimization_strategy in {"random", "gradient"}
         self.optimization_strategy = optimization_strategy
 
@@ -144,6 +143,9 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
 
         if config_suggested is not None:
             trial_id = len(self.trial_configs)
+
+            # register pending
+            self.pending_trials.add(trial_id)
 
             self.trial_configs[trial_id] = config_suggested
 
@@ -209,8 +211,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
             X_tensor = Tensor(X)
             bounds = torch.stack([Y.min(0).values, Y.max(0).values])
 
-            Y_tensor = normalize(Y, bounds=bounds)
-            gp = self._make_gp(X_tensor=X_tensor, Y_tensor=Y_tensor)
+            gp = self._make_gp(X_tensor=X_tensor, Y_tensor=Y)
             mll = SumMarginalLogLikelihood(gp.likelihood, gp)
             fit_gpytorch_mll(mll, max_attempts=1)
 
@@ -218,12 +219,12 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
                 X_pending = self._config_to_feature_matrix(self._configs_pending())
             else:
                 X_pending = None
-            sampler = SobolQMCNormalSampler(torch.Size([MC_SAMPLES]))
+            sampler = SobolQMCNormalSampler(torch.Size([self.mc_samples]))
 
             ref_point = torch.ones(Y.shape[1]) * 2
 
-            partitioning = NondominatedPartitioning(ref_point=ref_point, Y=Y_tensor)
-            acq_func = qExpectedHypervolumeImprovement(
+            partitioning = NondominatedPartitioning(ref_point=ref_point, Y=Y)
+            acq_func = qLogExpectedHypervolumeImprovement(
                 model=gp,
                 ref_point=ref_point,  # use known reference point
                 partitioning=partitioning,
@@ -276,7 +277,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         models = []
         for i in range(Y_tensor.shape[-1]):
             train_y = Y_tensor[..., i : i + 1]
-            noise_y = self.noise_level * randn_like(train_y)
+            noise_y = torch.full_like(train_y, self.noise_level)
 
             models.append(
                 SingleTaskGP(X_tensor, train_y, noise_y, input_transform=warp_tf)
