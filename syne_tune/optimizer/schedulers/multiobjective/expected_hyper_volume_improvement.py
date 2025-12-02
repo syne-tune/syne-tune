@@ -5,7 +5,7 @@ import numpy as np
 
 try:
     import torch
-    from torch import Tensor, randn_like, random, rand
+    from torch import Tensor, random, rand
     from botorch.models import SingleTaskGP
     from botorch.fit import fit_gpytorch_mll
     from botorch.models.transforms import Warp
@@ -19,7 +19,6 @@ try:
     from botorch.models.model_list_gp_regression import ModelListGP
     from botorch.optim import optimize_acqf
     from botorch.exceptions.errors import ModelFittingError
-    from gpytorch.mlls import ExactMarginalLogLikelihood
     from linear_operator.utils.errors import NotPSDError
 
 except ImportError as e:
