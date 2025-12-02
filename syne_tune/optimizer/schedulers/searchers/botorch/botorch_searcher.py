@@ -52,6 +52,16 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         Defaults to ``True``
     :param double_precision: Whether to use double precision when fitting the GP.
     :param noise_level: Standard deviation of Gaussian noise added to observations for numerical stability.
+    :param num_raw_samples: Number of raw samples to use for initialization
+        when optimizing the acquisition function. Defaults to 200
+    :param num_restarts: Number of restarts to use when optimizing the
+        acquisition function. Defaults to 20
+    :param optimization_strategy: Strategy to optimize the acquisition function.
+        Choices are "random" and "gradient" (default). If "random" is chosen
+        the acquisition function is evaluated on ``num_raw_samples`` and the
+        best point is returned. If "gradient" is chosen, then
+        ``num_restarts`` are used with ``num_raw_samples`` each to optimize
+        the acquisition function via gradient-based optimization. Defaults to "gradient"
     :param random_seed: Seed for initializing random number generators.
     """
 
@@ -229,13 +239,13 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             X_tensor = X_tensor.double()
             Y_tensor = Y_tensor.double()
 
-        Y_tensor += self.noise_level * randn_like(Y_tensor)
+        Y_noise = self.noise_level * randn_like(Y_tensor)
 
         if self.input_warping:
             warp_tf = Warp(indices=list(range(X_tensor.shape[-1])))
         else:
             warp_tf = None
-        return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
+        return SingleTaskGP(X_tensor, Y_tensor, train_Yvar=Y_noise, input_transform=warp_tf)
 
     def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
