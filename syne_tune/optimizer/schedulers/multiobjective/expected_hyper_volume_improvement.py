@@ -34,7 +34,6 @@ from syne_tune.optimizer.schedulers.searchers.utils import (
 logger = logging.getLogger(__name__)
 
 
-
 class ExpectedHyperVolumeImprovement(BaseSearcher):
     """
     Implementation of expected hypervolume improvement [1] based on the BOTorch implementation.
