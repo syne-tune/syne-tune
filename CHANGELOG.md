@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 * Reduce the number of benchmark imports for faster testing ([#1001](https://github.com/syne-tune/syne-tune/pull/1001))
 * Add missing versions to changelog ([#1000](https://github.com/syne-tune/syne-tune/pull/1000))
 
-
+Merry Christmas all and happy hyperparameter tuning! 🎄🎁⛄
 ### Contributors
 
 Thanks to all contributors:
