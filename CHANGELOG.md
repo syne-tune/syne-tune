@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.15.0"></a>
+## [v0.15.0] - 2025-12-18
+
+## New Features
+* Better UI ([#1007](https://github.com/syne-tune/syne-tune/pull/1007))
+* Add Autoencodix benchmark ([#1010](https://github.com/syne-tune/syne-tune/pull/1010))
+
+## Bug Fixes
+* Correct upper bound for minbucket parameter for 5859 HPO-B benchmark ([#1013](https://github.com/syne-tune/syne-tune/pull/1013))
+* Improve default for Botorch searcher ([#1008](https://github.com/syne-tune/syne-tune/pull/1008))
+* Correct Quantile estimation in BORE ([#1011](https://github.com/syne-tune/syne-tune/pull/1011))
+* Use points_to_evaluate in ASHA ([#979](https://github.com/syne-tune/syne-tune/pull/979))
+* Correctly pass arguments for multi-fidelity methods ([#993](https://github.com/syne-tune/syne-tune/pull/993))
+* Pass a single metric to SingleObjectiveBaseSearcher ([#900](https://github.com/syne-tune/syne-tune/pull/900))
+
+## Documentation Updates
+* Improve README 
+  * Add examples for ask tell interface ([#1003](https://github.com/syne-tune/syne-tune/pull/1003)) and Optuna ([#1006](https://github.com/syne-tune/syne-tune/pull/1006))
+  * Add missing link ([#967](https://github.com/syne-tune/syne-tune/pull/967))
+* Mention CQR in doc ([#986](https://github.com/syne-tune/syne-tune/pull/986))
+
+## Maintenance
+* Add EHVI to a baselines.py ([#999](https://github.com/syne-tune/syne-tune/pull/999))
+* Update doc tuner  ([#978](https://github.com/syne-tune/syne-tune/pull/978))
+* Remove old code
+  * Remove container files ([#976](https://github.com/syne-tune/syne-tune/pull/976))
+  * Remove nursery  ([#975](https://github.com/syne-tune/syne-tune/pull/975))
+  * Remove legacy code ([#971](https://github.com/syne-tune/syne-tune/pull/971))
+  * Remove typing imports ([#978](https://github.com/syne-tune/syne-tune/pull/987))
+  * Remove searcher legacy code ([#990](https://github.com/syne-tune/syne-tune/pull/990))
+* Update examples  ([#982](https://github.com/syne-tune/syne-tune/pull/982))
+* Replace setup.py py pyproject.toml ([#974](https://github.com/syne-tune/syne-tune/pull/974))
+* Reformat: github workflow to run examples ([#980](https://github.com/syne-tune/syne-tune/pull/980))
+* Fix dependencies and add option to use custom binary in LocalBackend ([#984](https://github.com/syne-tune/syne-tune/pull/984))
+* Change upper bound for random seeds ([#988](https://github.com/syne-tune/syne-tune/pull/988))
+* Unify naming in schedulers ([#997](https://github.com/syne-tune/syne-tune/pull/997))
+* Update the dependencies ([#989](https://github.com/syne-tune/syne-tune/pull/989))
+* Reduce the number of benchmark imports for faster testing ([#1001](https://github.com/syne-tune/syne-tune/pull/1001))
+* Add missing versions to changelog ([#1000](https://github.com/syne-tune/syne-tune/pull/1000))
+
+Merry Christmas all and happy hyperparameter tuning! 🎄🎁⛄
+### Contributors
+
+Thanks to all contributors:
+[@Kavlahkaff](https://github.com/Kavlahkaff), [@aaronkl](https://github.com/aaronkl), [@geoalgo](https://github.com/geoalgo)
+
+[v0.15.0]: https://github.com/syne-tune/syne-tune/compare/v0.14.2...v0.15.0
+
+
 <a name="v0.14.2"></a>
 ## [v0.14.2] - 2025-07-04
 
