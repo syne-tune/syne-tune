@@ -1,10 +1,18 @@
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+
+try:
+    from tabpfn import TabPFNRegressor
+
+    TABPFN_AVAILABLE = True
+except ImportError:
+    TABPFN_AVAILABLE = False
 
 
 @dataclass
@@ -96,4 +104,96 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
         return QuantileRegressorPredictions.from_quantile_results(
             quantiles=self.quantiles,
             results=quantile_res,
+        )
+
+
+class TabPFNQuantileRegressor(QuantileRegressor):
+    """
+    Quantile regressor using TabPFN 2.5.
+
+    TabPFN is a foundation model for tabular data that provides native support
+    for quantile predictions without requiring separate models per quantile.
+
+    Requirements:
+        pip install tabpfn
+
+    Note: TabPFN models are gated on HuggingFace. You need to:
+        1. Accept terms at https://huggingface.co/Prior-Labs/tabpfn_2_5
+        2. Authenticate via `hf auth login` or set HF_TOKEN environment variable
+    """
+
+    def __init__(
+        self,
+        quantiles: int | list[float] = 5,
+        verbose: bool = False,
+        valid_fraction: float = 0.0,
+        **kwargs: Any,
+    ):
+        """
+        Initialize TabPFN quantile regressor.
+
+        :param quantiles: Number of quantiles (int) or list of quantile values.
+            If int, quantiles are evenly spaced in (0, 1).
+        :param verbose: Whether to print progress information.
+        :param valid_fraction: Fraction of data to use for validation (unused,
+            kept for API compatibility with GradientBoostingQuantileRegressor).
+        :param kwargs: Additional arguments passed to TabPFNRegressor.
+        """
+        if not TABPFN_AVAILABLE:
+            raise ImportError(
+                "TabPFN is not installed. Please install it with: pip install tabpfn"
+            )
+
+        if isinstance(quantiles, int):
+            # Compute quantiles avoiding 0-th (same logic as GradientBoostingQuantileRegressor)
+            quantiles = np.linspace(0, 1.0, num=quantiles + 1, endpoint=False)[1:]
+            quantiles = np.around(quantiles, decimals=1 + int(np.log(len(quantiles))))
+
+        self.quantiles = list(quantiles)
+        self.verbose = verbose
+        self.valid_fraction = valid_fraction
+        self._tabpfn_kwargs = kwargs
+        self._regressor: TabPFNRegressor | None = None
+
+    def fit(self, df_features: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
+        """
+        Fit the TabPFN regressor.
+
+        :param df_features: Training features.
+        :param y: Training targets.
+        :param kwargs: Additional arguments (unused, for API compatibility).
+        """
+        self._regressor = TabPFNRegressor(**self._tabpfn_kwargs)
+        y_train = np.ravel(y)
+
+        if self.verbose:
+            print("Fitting TabPFN regressor...")
+
+        self._regressor.fit(df_features, y_train)
+
+        if self.verbose:
+            print("TabPFN fitting complete.")
+
+    def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
+        """
+        Predict quantiles for test data.
+
+        :param df_test: Test features.
+        :return: QuantileRegressorPredictions containing predictions for all quantiles.
+        """
+        if self._regressor is None:
+            raise RuntimeError("Model not fitted. Call fit() first.")
+
+        # TabPFN returns a list of arrays, one per quantile
+        quantile_preds_raw = self._regressor.predict(
+            df_test,
+            output_type="quantiles",
+            quantiles=self.quantiles,
+        )
+        # Stack to get shape (n_samples, n_quantiles)
+        quantile_preds = np.column_stack(quantile_preds_raw)
+
+        return QuantileRegressorPredictions(
+            quantiles=self.quantiles,
+            results_stacked=quantile_preds,
         )

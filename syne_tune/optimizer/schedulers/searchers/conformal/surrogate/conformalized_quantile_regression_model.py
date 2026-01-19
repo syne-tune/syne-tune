@@ -55,7 +55,7 @@ class ConformalizedGradientBoostingQuantileRegressor(GradientBoostingQuantileReg
             desc="Training Quantile Regression",
             disable=not self.verbose,
         ):
-            self.quantile_regressors[quantile].fit(x_training, np.ravel(y_training))
+            self.quantile_regressors[quantile].fit(x_training, np.ravel(y_training), ncandidates=100)
 
         for alpha, cq in self.conformal_correction.items():
             residuals = cq.sign * (

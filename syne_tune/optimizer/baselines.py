@@ -350,6 +350,9 @@ class ASHACQR(AsynchronousSuccessiveHalving):
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param model_type: Type of quantile regression model to use:
+        - "gradient_boosting" (default): Uses GradientBoostingQuantileRegressor.
+        - "tabpfn": Uses TabPFN 2.5. Requires `pip install tabpfn`.
     """
 
     def __init__(
@@ -361,7 +364,27 @@ class ASHACQR(AsynchronousSuccessiveHalving):
         do_minimize: bool | None = True,
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
+        model_type: str = "gradient_boosting",
     ):
+        # Configure settings based on model type
+        if model_type == "tabpfn":
+            searcher_kwargs = {
+                "points_to_evaluate": points_to_evaluate,
+                "min_samples_to_conformalize": None,
+                "model_type": "tabpfn",
+            }
+        elif model_type == "gradient_boosting":
+            searcher_kwargs = {
+                "points_to_evaluate": points_to_evaluate,
+                "min_samples_to_conformalize": 32,
+                "model_type": "gradient_boosting",
+            }
+        else:
+            raise ValueError(
+                f"Unknown model_type: {model_type}. "
+                f"Supported types: 'gradient_boosting', 'tabpfn'"
+            )
+
         super(ASHACQR, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -370,7 +393,7 @@ class ASHACQR(AsynchronousSuccessiveHalving):
             searcher="cqr",
             random_seed=random_seed,
             time_attr=time_attr,
-            searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+            searcher_kwargs=searcher_kwargs,
         )
 
 
@@ -435,14 +458,20 @@ class CQR(SingleObjectiveScheduler):
         | Optimizing Hyperparameters with Conformal Quantile Regression.
         | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
         | ICML 2023.
-    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
-    predictions.
+    The method predicts quantile performance and calibrates predictions with conformal predictions.
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param model_type: Type of quantile regression model to use:
+        - "gradient_boosting" (default): Uses GradientBoostingQuantileRegressor with
+          conformal calibration.
+        - "tabpfn": Uses TabPFN 2.5, a foundation model for tabular data with native
+          quantile support. Requires `pip install tabpfn` and HuggingFace authentication.
+          Note: Conformal calibration is disabled when using TabPFN since TabPFN
+          already produces well-calibrated quantile predictions.
     """
 
     def __init__(
@@ -452,10 +481,29 @@ class CQR(SingleObjectiveScheduler):
         do_minimize: bool | None = True,
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
+        model_type: str = "gradient_boosting",
     ):
         from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
             ConformalQuantileRegression,
         )
+
+        # Configure settings based on model type
+        if model_type == "tabpfn":
+            # TabPFN doesn't support conformalization, disable it
+            searcher_kwargs = {
+                "min_samples_to_conformalize": None,
+                "model_type": "tabpfn",
+            }
+        elif model_type == "gradient_boosting":
+            searcher_kwargs = {
+                "min_samples_to_conformalize": 32,
+                "model_type": "gradient_boosting",
+            }
+        else:
+            raise ValueError(
+                f"Unknown model_type: {model_type}. "
+                f"Supported types: 'gradient_boosting', 'tabpfn'"
+            )
 
         super(CQR, self).__init__(
             config_space=config_space,
@@ -465,6 +513,10 @@ class CQR(SingleObjectiveScheduler):
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
+                # ncandidates=2000 if model_type =="gradient_boosting" else 200,
+                # ideally 200 but removes cofounders
+                ncandidates=200,
+                **searcher_kwargs,
             ),
             random_seed=random_seed,
         )

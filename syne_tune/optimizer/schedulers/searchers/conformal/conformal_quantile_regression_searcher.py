@@ -32,6 +32,9 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         update_frequency: int = 1,
         max_fit_samples: int = None,
         surrogate_cls: SurrogateModel = QuantileRegressionSurrogateModel,
+        min_samples_to_conformalize: int | None = 32,
+        valid_fraction: float = 0.1,
+        ncandidates: int = 2000,
         **surrogate_kwargs,
     ):
         """
@@ -50,6 +53,10 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         :param max_fit_samples: if the number of observation exceed this parameter, then `max_fit_samples` random samples
         are used to fit the model.
         :param surrogate_cls: SurrogateModel class to model the objective function
+        :param min_samples_to_conformalize: minimum samples before applying conformal calibration.
+            Set to None to disable conformalization (e.g., when using TabPFN).
+        :param valid_fraction: fraction of data to use for validation.
+        :param ncandidates: number of candidates to sample when computing thompson sampling.
         :param surrogate_kwargs: additional kwargs for the surrogate model
         """
         super(ConformalQuantileRegression, self).__init__(
@@ -69,7 +76,10 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         self.sampler = None
         self.max_fit_samples = max_fit_samples
         self.surrogate_cls = surrogate_cls
+        self.min_samples_to_conformalize = min_samples_to_conformalize
+        self.valid_fraction = valid_fraction
         self.random_state = np.random.RandomState(self.random_seed)
+        self.ncandidates = ncandidates
 
     def suggest(self, **kwargs) -> dict[str, Any] | None:
         config = self._next_points_to_evaluate()
@@ -77,7 +87,7 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         if config is None:
             if self.should_update():
                 with catchtime(
-                    f"fit model with {self.num_results()} observations", show=False
+                    f"fit model with {self.num_results()} observations", show=True
                 ):
                     self.fit_model()
                 self.index_last_result_fit = self.num_results()
@@ -121,11 +131,11 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
             max_fit_samples=self.max_fit_samples,
             random_state=self.random_state,
             mode="min",
-            min_samples_to_conformalize=32,
-            valid_fraction=0.1,
+            min_samples_to_conformalize=self.min_samples_to_conformalize,
+            valid_fraction=self.valid_fraction,
             **self.surrogate_kwargs,
         )
-        self.surrogate_model.fit(df_features=X, y=z)
+        self.surrogate_model.fit(df_features=X, y=z, ncandidates=self.ncandidates)
 
     def on_trial_complete(
         self,
