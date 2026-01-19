@@ -33,6 +33,7 @@ class Methods:
     REA = "REA"
     BOTorch = "BOTorch"
     CQR = "CQR"
+    CQRTabPFN = "CQRTabPFN"
     BOHB = "BOHB"
 
     # multifidelity
@@ -73,6 +74,18 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
+    ),
+    Methods.CQRTabPFN: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="cqr",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher_kwargs={
+            "points_to_evaluate": method_arguments.points_to_evaluate,
+            "model_type": "tabpfn",
+            "min_samples_to_conformalize": None,
+        },
     ),
     Methods.BOTorch: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
@@ -141,7 +154,7 @@ if __name__ == "__main__":
         "fcnet-protein",
         "nas201-cifar10",
         "lcbench-Fashion-MNIST",
-        "tabrepo-RandomForest-2dplanes",
+        "tabrepo-RandomForest-Higgs",
         "hpob_5636_3492",
     ]
     for benchmark_name in benchmarks:
