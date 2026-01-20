@@ -39,16 +39,17 @@ if __name__ == "__main__":
 
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
-        Methods.RS,
-        Methods.REA,
-        Methods.TPE,
-        Methods.BORE,
-        Methods.CQR,
-        Methods.BOTorch,
-        Methods.BOHB,
-        Methods.ASHA,
-        Methods.ASHACQR,
-        Methods.ASHABORE,
+        # Methods.RS,
+        # Methods.REA,
+        # Methods.TPE,
+        # Methods.BORE,
+        # Methods.CQR,
+        Methods.CQRTabPFN,
+        # Methods.BOTorch,
+        # # Methods.BOHB,
+        # # Methods.ASHA,
+        # # Methods.ASHACQR,
+        # # Methods.ASHABORE,
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         entrypoint="benchmark_main.py",
         python_args=python_args,
         src_dir=str(Path(__file__).parent),
-        python_binary="python",
+        python_binary="/work/dlclarge2/salinasd-synetune/.venv/bin/python",
         python_libraries=[
             str(Path(__file__).parent.parent / "syne_tune"),
         ],
@@ -94,6 +95,7 @@ if __name__ == "__main__":
         env={
             # write tuner files in Slurmpilot folder corresponding to `jobname`
             "SYNETUNE_FOLDER": f"{slurmpilot_folder}/{jobname}",
+            "HF_HUB_OFFLINE": "1",
         },
         n_concurrent_jobs=128,  # max number of jobs to run at the same time
     )

@@ -1,267 +1,548 @@
-# Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
-
-[![release](https://img.shields.io/github/v/release/awslabs/syne-tune)](https://pypi.org/project/syne-tune/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
-[![Documentation](https://readthedocs.org/projects/syne-tune/badge/?version=latest)](https://syne-tune.readthedocs.io)
-[![Python Version](https://img.shields.io/static/v1?label=python&message=3.7%20%7C%203.8%20%7C%203.9&color=blue?style=flat-square&logo=python)](https://pypi.org/project/syne-tune/)
-[![codecov.io](https://codecov.io/github/awslabs/syne-tune/branch/main/graphs/badge.svg)](https://app.codecov.io/gh/awslabs/syne-tune)
-
-![Syne Tune](docs/source/synetune.gif)
-
-**[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Blackboxes](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md)** | **[Benchmarking](https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md)** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)** | **[Discord](https://discord.gg/vzYkjZjs)** 
-
-Syne Tune is a library for large-scale hyperparameter optimization (HPO) with the following key features:
-
-- State-of-the-art HPO methods for multi-fidelity optimization, multi-objective optimization, transfer learning, and population-based training.
-
-- Tooling that lets you run [large-scale experimentation](https://github.com/syne-tune/syne-tune/blob/main/benchmarking/README.md) either locally or on SLURM clusters.
-
-- Extensive [collection of blackboxes](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md) including surrogate and tabular benchmarks for efficient HPO simulation.
-
-## Installing
-
-To install Syne Tune from pip:
-
-```bash
-pip install 'syne-tune'
-```
-or to install the latest version from source: 
-
-```bash
-git clone https://github.com/syne-tune/syne-tune.git
-cd syne-tune
-pip install -e .
-```
-
-This will install the core library and its dependencies. 
-If you want to use additional features, you can install the following extra dependencies:
-
-- `dev`: Includes additional dependencies for development, such as testing and building the documentation.
-- `extra`: Includes all additional dependencies for advanced features such as [blackbox-repository](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md), [YAHPO Gym](https://github.com/slds-lmu/yahpo_gym), [SMAC](https://github.com/automl/SMAC3) or [BoTorch](https://github.com/pytorch/botorch).
-
-You can install these extras by appending the extra name in square brackets to the pip install command, like so:
-```bash
-pip install 'syne-tune[extra]'
-```
-
-
-See our [change log](CHANGELOG.md) to see what changed in the latest version. 
-
-## Getting started
-
-### Running Syne Tune on your python script
-
-This examples shows you how to run Syne Tune on your own training script, if you are interested in running it in an ask/tell setting, see the Section below.
-Syne Tune assumes some python script that given hyperparameter as input arguments trains and validates a machine learning model that
-somewhat follows this pattern:
-
-```python
-from argparse import ArgumentParser
-
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument('--epochs', type=int)
-    parser.add_argument('--hyperparameter1', type=float)
-    parser.add_argument('--hyperparameter3', type=float)
-    args, _ = parser.parse_known_args()
-    # instantiate your machine learning model
-    for epoch in range(args.epochs):  # training loop
-        # train for some steps or epoch
-        ...
-        # validate your model on some hold-out validation data
-```
-
-#### Step 1: Adapt your training script
-
-First, to enable tuning of your training script, you need to report metrics so they can be communicated to Syne Tune.
-For example, in the script above, we assume you're tuning two hyperparameters — `height` and `width` — to minimize a loss function.
-To report the loss back to Syne Tune after each epoch, simply add `report(epoch=epoch, loss=loss)` inside your training loop:
-
-```python
-# train_height_simple.py
-import logging
-import time
-
-from syne_tune import Reporter
-from argparse import ArgumentParser
-
-if __name__ == '__main__':
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    parser = ArgumentParser()
-    parser.add_argument('--epochs', type=int)
-    parser.add_argument('--width', type=float)
-    parser.add_argument('--height', type=float)
-    args, _ = parser.parse_known_args()
-    report = Reporter()
-    for step in range(args.epochs):
-        time.sleep(0.1)
-        dummy_score = 1.0 / (0.1 + args.width * step / 100) + args.height * 0.1
-        # Feed the score back to Syne Tune.
-        report(epoch=step + 1, mean_loss=dummy_score)
-```
-
-#### Step 2: Define a launching script
-
-Once the training script is prepared, we first define the search space and then start the tuning process.
-In this example, we launch [ASHA](https://arxiv.org/abs/1810.05934) for a total of 30 seconds using four workers.
-Each worker spawns a separate Python process to evaluate a hyperparameter configuration, meaning that four configurations are trained in parallel.
-
-```python
-# launch_height_simple.py
-from syne_tune import Tuner, StoppingCriterion
-from syne_tune.backend import LocalBackend
-from syne_tune.config_space import randint
-from syne_tune.optimizer.baselines import ASHA
-
-# hyperparameter search space to consider
-config_space = {
-  'width': randint(1, 20),
-  'height': randint(1, 20),
-  'epochs': 100,
-}
-
-tuner = Tuner(
-    trial_backend=LocalBackend(entry_point='train_height_simple.py'),
-    scheduler=ASHA(
-        config_space,
-        metric='mean_loss',
-        time_attr='epoch',
-    ),
-    stop_criterion=StoppingCriterion(max_wallclock_time=30), # total runtime in seconds
-    n_workers=4,  # how many trials are evaluated in parallel
-)
-tuner.run()
-```
-
-#### Step 3: Plot the results
-
-Next, we can plot the results as follows. Replace `TUNER_NAME` with the name of the tuning job 
-used earlier — this is shown at the beginning of the logs.
-
-```python
-import matplotlib.pyplot as plt
-from syne_tune.experiments import load_experiment
-
-e = load_experiment('TUNER_NAME')  # name of the tuning run which is printed at the beginning of the run
-e.plot_trials_over_time(metric_to_plot='mean_loss')
-plt.show()
-```
-
-### Ask/Tell Interface
-
-Instead of using the LocalBackend of Syne Tune to launch training jobs, you can also use the ask/tell interface to
-directly communicate with the scheduler. This is useful if you want to integrate Syne Tune into your own training loop or
-if you want to use Syne Tune in an environment where launching new processes is not possible (e.g., Jupyter notebooks).
-
-```python
-from syne_tune.optimizer.schedulers.ask_tell_scheduler import AskTellScheduler
-from syne_tune.optimizer.baselines import CQR
-from syne_tune.config_space import uniform
-
-
-def objective_function(x):
-    y = (x - 0.5) ** 2
-    return y
-
-config_space = {
-    "x": uniform(0, 1),
-}
-metric = "objective"
-max_iterations = 10
-random_seed = 42
-
-scheduler = AskTellScheduler(
-    base_scheduler=CQR(config_space, 
-                       metric=metric, 
-                       do_minimize=True, 
-                       random_seed=random_seed)
-)
-
-for iteration in range(max_iterations):
-    trial_suggestion = scheduler.ask()
-    test_result = objective_function(**trial_suggestion.config)
-    scheduler.tell(trial_suggestion, {metric: test_result})
-    print(f'iteration: {iteration}, evaluated x={trial_suggestion.config}, objective={test_result}')
-```
-
-## Benchmarking
-
-Checkout this tutorial to run large-scale [benchmarking](benchmarking/nursery/) with Syne Tune.
-
-## Optuna
-
-If you are using [Optuna](https://optuna.org/) you can easily use Syne Tune as a sampler via [OptunaHub](https://hub.optuna.org/)
-
-First, install the necessary dependencies:
-```bash
-pip install optunahub optuna syne-tune[extra]>=0.14.2
-```
-
-Then you can use the `SyneTuneSampler` as follows:
-
-```python
-import optuna
-import optunahub
-
-
-SyneTuneSampler = optunahub.load_module("samplers/synetune_sampler").SyneTuneSampler
-
-
-def objective(trial: optuna.trial.Trial) -> float:
-    x = trial.suggest_float("x", -10, 10)
-    y = trial.suggest_int("y", -10, 10)
-    return x**2 + y**2
-
-
-sampler = SyneTuneSampler(
-    search_space={
-        "x": optuna.distributions.FloatDistribution(-10, 10),
-        "y": optuna.distributions.IntDistribution(-10, 10),
-    },
-    searcher_method="CQR",
-    metric="mean_loss",
-)
-study = optuna.create_study(sampler=sampler)
-study.optimize(objective, n_trials=100)
-print(study.best_trial.params)
-```
-
-## Blog Posts
-
-* [Run distributed hyperparameter and neural architecture tuning jobs with Syne Tune](https://aws.amazon.com/blogs/machine-learning/run-distributed-hyperparameter-and-neural-architecture-tuning-jobs-with-syne-tune/)
-* [Hyperparameter optimization for fine-tuning pre-trained transformer models from Hugging Face](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/) [(notebook)](https://github.com/awslabs/syne-tune/blob/hf_blog_post/hf_blog_post/example_syne_tune_for_hf.ipynb)
-* [Learn Amazon Simple Storage Service transfer configuration with Syne Tune](https://aws.amazon.com/blogs/opensource/learn-amazon-simple-storage-service-transfer-configuration-with-syne-tune/) [(code)](https://github.com/aws-samples/syne-tune-s3-transfer)
-
-## Videos
-
-* [Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023)](https://www.youtube.com/watch?v=onX6fXzp9Yk)
-* [David Salinas: Syne Tune: A Library for Large-Scale Hyperparameter Tuning and Reproducible Research (AutoML Seminar)](https://youtu.be/DlM-__TTa3U?feature=shared)
+---
+title: README
+emoji: 🤖
+colorFrom: blue
+colorTo: red
+sdk: static
+pinned: false
+license: etalab-2.0
+language:
+- fr
+configs:
+  - config_name: default
+    data_files: votes.parquet
+---
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Marianne:wght@300;400;500;700&display=swap');
   
-## Contributing
+  :root {
+    --primary-color: #000091;
+    --secondary-color: #6a6af4;
+    --accent-color: #e1000f;
+    --text-color: #1e1e1e;
+    --light-bg: #f5f5fe;
+    --border-radius: 6px;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary-color: #6a6af4;
+      --secondary-color: #8989ff;
+      --accent-color: #ff5c5c;
+      --text-color: #e0e0e0;
+      --light-bg: #252535;
+    }
+  }
+  
+  .container {
+    font-family: 'Marianne', sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 15px;
+    color: var(--text-color);
+    line-height: 1.4;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .container {
+      color: var(--text-color);
+    }
+    
+    a {
+      color: var(--secondary-color);
+    }
+    
+    code {
+      background-color: #333;
+      color: #f0f0f0;
+    }
+  }
+  
+  .logo {
+    width: 200px;
+    display: block;
+    margin-left: 0;
+    transition: transform 0.3s ease;
+  }
+  
+  .logo:hover {
+    transform: scale(1.05);
+  }
+  
+  h1 {
+    color: var(--primary-color);
+    text-align: left;
+    font-size: 2em;
+    margin: 40px 0 30px;
+    position: relative;
+    padding-bottom: 15px;
+  }
+  
+  h1::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background-color: var(--accent-color);
+    border-radius: 2px;
+  }
+  
+  .dataset-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0px;
+    margin: 20px 0;
+  }
+  
+  .dataset-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin: 25px 0;
+  }
+  
+  .stat-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 145, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 145, 0.15);
+  }
+  
+  .stat-card .number {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 5px 0;
+  }
+  
+  .stat-card .label {
+    font-size: 0.9em;
+    color: #555;
+    font-weight: 500;
+  }
+  
+  .dataset-metrics {
+    background-color: var(--light-bg);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    text-align: center;
+    display: inline-block;
+    min-width: 150px;
+  }
+  
+  .dataset-metrics .number {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 4px 0;
+  }
+  
+  .dataset-metrics .label {
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  .metrics-container {
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  
+  .video-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 145, 0.15);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto 20px auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    padding-top: 0; 
+  }
+  
+  .video-container video {
+    width: 100%;
+    display: block;
+  }
+  
+  .video-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 145, 0.2);
+  }
+  
+  .highlight-box {
+    background-color: var(--light-bg);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin: 25px 0;
+  }
+  
+  .button {
+    display: inline-block;
+    background-color: var(--secondary-color);
+    color: white !important;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin: 5px;
+    border: 1px solid var(--secondary-color);
+  }
+  
+  .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .button.secondary {
+    background-color: #6A6AF4;
+    color: white !important;
+    border: 1px solid var(--primary-color);
+  }
+  
+  .datasets-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  .contact-section {
+    text-align: left;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--light-bg);
+    border-radius: var(--border-radius);
+  }
+  
+  
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .data-table th {
+    background-color: var(--light-bg);
+    padding: 10px;
+    text-align: left;
+    color: var(--primary-color);
+  }
+  
+  .data-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .datasets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 15px 0;
+  }
+  
+  .datasets-grid .highlight-box {
+    margin-top: 0;
+    margin-bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .datasets-grid .highlight-box h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .datasets-grid .video-container {
+    margin: 15px 0 0 0;
+    max-width: 100%;
+  }
+  
+  /* Style pour une vidéo plus élégante et compacte */
+  .video-container.compact {
+    max-width: 480px;
+    margin: 25px auto;
+    box-shadow: 0 3px 10px rgba(0, 0, 145, 0.1);
+    border: 1px solid var(--light-bg);
+  }
+  
+  .video-container.compact video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+<div class="container">
+  <a href="https://comparia.beta.gouv.fr/">
+    <img class="logo" src="https://github.com/user-attachments/assets/bd071ffd-1253-486d-ad18-9f5b371788b0" alt="compar:IA logo">
+  </a>
 
-## Citing Syne Tune
+# comparia-votes – the dataset of all preferences expressed by compar:IA users
 
-If you use Syne Tune in a scientific publication, please cite the following paper:
+## Origin of the data: what is compar:IA?
 
-["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning, 2022.
+[Compar:IA](https://comparia.beta.gouv.fr/) is a conversational AI comparison tool (a "chatbot arena") developed within the French Ministry of Culture with a dual mission:
+- Educate and raise awareness about model pluralism, cultural and linguistic biases, and the environmental issues of conversational AI.
+- Improve French conversational AI by publishing French alignment datasets and building a ranking of French conversational AI models (in progress). 
+
+The compar:IA comparator is developed as part of the State startup compar:IA (incubated by the [Atelier numérique](https://www.culture.gouv.fr/Thematiques/innovation-numerique/Aides-a-l-innovation-et-a-la-transformation-numerique/L-Atelier-numerique#:~:text=L'Atelier%20num%C3%A9rique%20est%20l,engager%20personnellement%20pour%20le%20r%C3%A9soudre.) and [AllIAnce](https://alliance.numerique.gouv.fr/)), integrated into the [beta.gouv.fr](beta.gouv.fr) program of the [Interministerial Digital Directorate (DINUM)](https://www.numerique.gouv.fr/dinum/), which helps public administrations build useful, simple, and easy-to-use digital services.
+<div style="margin: 20px 0;">
+  <a href="https://comparia.beta.gouv.fr/" class="button secondary">compar:IA platform website</a>
+  <a href="https://github.com/betagouv/ComparIA" class="button secondary">compar:IA source code</a>
+</div>
+
+## Definition of a preference on compar:IA
+
+After a full conversation on compar:IA, if the user has not rated a specific message, before revealing the models they can vote for one of the two models. Alternatively, the user can decide that both models gave answers of equal quality. 
+
+After that, the user can also select qualifiers to rate model performance over the whole conversation. 
+
+<video controls autoplay loop muted playsinline src="https://cdn-uploads.huggingface.co/production/uploads/649d986a474bf415c03b772c/Fv-aTZYUKDsPwS5HwNbX3.mp4"></video>
 
 
-```bibtex
-@inproceedings{
-  salinas2022syne,
-  title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
-  author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
-  booktitle={International Conference on Automated Machine Learning, AutoML 2022},
-  year={2022},
-  url={https://proceedings.mlr.press/v188/salinas22a.html}
-}
-```
+## Dataset content 
 
-## License
+In total on compar:IA, more than 100k conversations have taken place. You can find them all in this dataset – [comparia-conversations.](https://huggingface.co/datasets/ministere-culture/comparia-conversations)
 
-This project is licensed under the Apache-2.0 License.
+Among these conversations, users voted more than 30k times on conversations. These conversations and the corresponding votes are available in this dataset. The conversations are mostly **in French** and reflect **real, unconstrained uses**.
 
+
+## Columns of the comparia-votes dataset
+
+<table class="data-table">
+  <tr>
+    <th>Column</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>Unique identifier for each entry in the dataset</td>
+  </tr>
+  <tr>
+    <td><code>timestamp</code></td>
+    <td>Conversation timestamp</td>
+  </tr>
+  <tr>
+    <td><code>model_a_name</code></td>
+    <td>Name of the first model</td>
+  </tr>
+  <tr>
+    <td><code>model_b_name</code></td>
+    <td>Name of the second model</td>
+  </tr>
+  <tr>
+    <td><code>model_pair_name</code></td>
+    <td>Set representation of the two compared models</td>
+  </tr>
+  <tr>
+    <td><code>chosen_model_name</code></td>
+    <td>Name of the model the user voted for</td>
+  </tr>
+  <tr>
+    <td><code>opening_msg</code></td>
+    <td>First message sent by the user</td>
+  </tr>
+  <tr>
+    <td><code>both_equal</code></td>
+    <td>Indicates whether the user judged the two models to be equal</td>
+  </tr>
+  <tr>
+    <td><code>conversation_a</code></td>
+    <td>Full structure of the conversation with the first model</td>
+  </tr>
+  <tr>
+    <td><code>conversation_b</code></td>
+    <td>Full structure of the conversation with the second model</td>
+  </tr>
+  <tr>
+    <td><code>conv_turns</code></td>
+    <td>Number of dialogue turns in the conversation</td>
+  </tr>
+  <tr>
+    <td><code>selected_category</code></td>
+    <td>Prompt suggestion category chosen by the user (if they chose a suggested prompt)</td>
+  </tr>
+  <tr>
+    <td><code>is_unedited_prompt</code></td>
+    <td>Indicates whether the suggested prompt was used as-is</td>
+  </tr>
+  <tr>
+    <td><code>conversation_pair_id</code></td>
+    <td>Unique identifier for the pair of conversations</td>
+  </tr>
+  <tr>
+    <td><code>session_hash</code></td>
+    <td>User session identifier</td>
+  </tr>
+  <tr>
+    <td><code>visitor_id</code></td>
+    <td>Unique anonymized identifier for the user</td>
+  </tr>
+  <tr>
+    <td><code>conv_comments_a</code></td>
+    <td>Comments on the conversation with the first model</td>
+  </tr>
+  <tr>
+    <td><code>conv_comments_b</code></td>
+    <td>Comments on the conversation with the second model</td>
+  </tr>
+  <tr>
+    <td><code>conv_useful_a</code></td>
+    <td>Indicates whether the conversation with the first model was judged useful</td>
+  </tr>
+  <tr>
+    <td><code>conv_useful_b</code></td>
+    <td>Indicates whether the conversation with the second model was judged useful</td>
+  </tr>
+  <tr>
+    <td><code>conv_creative_a</code></td>
+    <td>Indicates whether the first model’s answer was judged creative</td>
+  </tr>
+  <tr>
+    <td><code>conv_creative_b</code></td>
+    <td>Indicates whether the second model’s answer was judged creative</td>
+  </tr>
+  <tr>
+    <td><code>conv_clear_formatting_a</code></td>
+    <td>Indicates whether the first model’s formatting was clear</td>
+  </tr>
+  <tr>
+    <td><code>conv_clear_formatting_b</code></td>
+    <td>Indicates whether the second model’s formatting was clear</td>
+  </tr>
+  <tr>
+    <td><code>conv_incorrect_a</code></td>
+    <td>Indicates whether the first model’s answer contained incorrect information</td>
+  </tr>
+  <tr>
+    <td><code>conv_incorrect_b</code></td>
+    <td>Indicates whether the second model’s answer contained incorrect information</td>
+  </tr>
+  <tr>
+    <td><code>conv_superficial_a</code></td>
+    <td>Indicates whether the first model’s answer was judged superficial</td>
+  </tr>
+  <tr>
+    <td><code>conv_superficial_b</code></td>
+    <td>Indicates whether the second model’s answer was judged superficial</td>
+  </tr>
+  <tr>
+    <td><code>conv_instructions_not_followed_a</code></td>
+    <td>Indicates whether the first model did not follow instructions</td>
+  </tr>
+  <tr>
+    <td><code>conv_instructions_not_followed_b</code></td>
+    <td>Indicates whether the second model did not follow instructions</td>
+  </tr>
+  <tr>
+    <td><code>system_prompt_b</code></td>
+    <td>System instruction provided to the second model</td>
+  </tr>
+  <tr>
+    <td><code>system_prompt_a</code></td>
+    <td>System instruction provided to the first model</td>
+  </tr>
+  <tr>
+    <td><code>conv_complete_a</code></td>
+    <td> - </td>
+  </tr>
+  <tr>
+    <td><code>conv_complete_b</code></td>
+    <td> - </td>
+  </tr>
+</table>
+
+## Purpose of this dataset
+
+We make this dataset available to model developers and to the AI and social science research community to support progress in the following areas:
+- Training and alignment of conversational language models, especially in French
+- Human–machine interactions and the specific behaviors involved in conversational AI systems
+- Improving LLM evaluation methods
+- AI safety and content moderation
+
+If you use the compar:IA dataset, we would love to hear about your use cases and feedback. Your feedback will help us improve the reuse experience. You can contact us at <a href="mailto:contact@comparia.beta.gouv.fr">contact@comparia.beta.gouv.fr</a>.
+
+## Data post-processing
+
+User consent is collected through the “Terms of use” section on the site. A detection of personally identifiable information (PII) was carried out (results are shown in the 'contains_pii' column of the dataset), and conversations containing such information were anonymized. However, we do not apply any filtering or processing of potentially toxic or hateful content, to allow researchers to study safety issues related to LLM use in real-world contexts.
+
+## Licenses
+
+Subject to third-party claims regarding model-generated results, we make the dataset available under the Etalab 2.0 open license. It is the responsibility of users to ensure that their use of the dataset complies with applicable regulations, in particular regarding personal data protection and the terms of use of the different model providers.
+
+## Other compar:IA datasets
+
+<div class="datasets-grid">
+
+  <div class="highlight-box">
+    <h3>comparIA-conversations</h3>
+    <p>Dataset containing all questions asked and answers received on the compar:IA platform.</p>
+      <image src="https://cdn-uploads.huggingface.co/production/uploads/649d986a474bf415c03b772c/LUYr4vyM1eeHGQ5JSHJQR.png"></image>
+    <div class="datasets-buttons">
+      <a href="https://huggingface.co/datasets/ministere-culture/comparia-conversations" class="button secondary">Explore comparIA-conversations</a>
+    </div>
+  </div>
+  
+  <div class="highlight-box">
+    <h3>comparIA-reactions</h3>
+    <p>Dataset collecting user reactions to compar:IA at the message level. It reflects preferences expressed throughout conversations, message by message.</p>
+    <div class="video-container">
+      <video controls autoplay loop muted playsinline src="https://cdn-uploads.huggingface.co/production/uploads/649d986a474bf415c03b772c/ncldPIO_bTesSd8bqcjqn.mp4"></video>
+    </div>
+    <div class="datasets-buttons">
+      <a href="https://huggingface.co/datasets/ministere-culture/comparia-reactions" class="button secondary">Explore comparIA-reactions</a>
+    </div>
+  </div>
+
+
+</div>
+
+
+
+<div class="contact-section">
+  <h3>Reporting sensitive data</h3>
+  <p>If you find a line in the dataset that you think contains PII or sensitive data, please let us know via  <a href="https://adtk8x51mbw.eu.typeform.com/to/B49aloXZ">this short form</a>.</p>
+  
+  <h3>Contact</h3>
+  <p>For any question or request for information, contact <a href="mailto:contact@comparia.beta.gouv.fr">contact@comparia.beta.gouv.fr</a></p>
+  
+  <div style="margin-top: 30px;">
+    <a href="https://beta.gouv.fr">
+      <img src="https://cdn-uploads.huggingface.co/production/uploads/649d986a474bf415c03b772c/Zk4YiqgKu9sm5ydQ7fhSq.png" alt="Logo of the Ministry, beta.gouv and Atelier numérique" style="max-width: 400px;">
+    </a>
+  </div>
+</div>
+
+</div>
+
+<div align="center">
+
+<br />
+<a href="https://digitalpublicgoods.net/r/comparia" target="_blank" rel="noopener noreferrer"><img src="https://github.com/DPGAlliance/dpg-resources/blob/main/docs/assets/dpg-badge.png?raw=true" width="100" alt="Digital Public Goods Badge"></a>
+
+</div>

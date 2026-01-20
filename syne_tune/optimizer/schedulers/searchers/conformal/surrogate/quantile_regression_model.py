@@ -1,4 +1,6 @@
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -163,7 +165,12 @@ class TabPFNQuantileRegressor(QuantileRegressor):
         :param y: Training targets.
         :param kwargs: Additional arguments (unused, for API compatibility).
         """
-        self._regressor = TabPFNRegressor(**self._tabpfn_kwargs)
+        if "HF_HOME" in os.environ:
+            model_path = Path(os.getenv("HF_HOME")) / "tabpfn-2.5"
+        else:
+            model_path = Path("~/.cache").expanduser() / "tabpfn-2.5"
+        model_path.mkdir(exist_ok=True, parents=True)
+        self._regressor = TabPFNRegressor(**self._tabpfn_kwargs, model_path=str(model_path / "tabpfn-v2.5-regressor-v2.5_default.ckpt"))
         y_train = np.ravel(y)
 
         if self.verbose:
