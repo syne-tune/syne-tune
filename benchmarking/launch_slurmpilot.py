@@ -96,6 +96,7 @@ if __name__ == "__main__":
             # write tuner files in Slurmpilot folder corresponding to `jobname`
             "SYNETUNE_FOLDER": f"{slurmpilot_folder}/{jobname}",
             "HF_HUB_OFFLINE": "1",
+            #"TABPFN_MODEL_CACHE_DIR": "/work/dlclarge2/salinasd-synetune/tabpfn-2.5"
         },
         n_concurrent_jobs=128,  # max number of jobs to run at the same time
     )
