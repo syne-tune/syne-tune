@@ -158,13 +158,15 @@ hpob_search_spaces = [
 ]
 
 
-# add all datasets for all search spaces to benchmark definitions
-for ss in hpob_search_spaces:
-    from syne_tune.blackbox_repository import load_blackbox
-
-    blackboxes = load_blackbox(ss)
-    for ds in list(blackboxes.keys())[:1]:  # limit to first dataset for faster testing
-        benchmark_definitions[ss + "_" + ds] = hpob_benchmark(ss, ds)
+# # add all datasets for all search spaces to benchmark definitions
+# for ss in hpob_search_spaces:
+#     from syne_tune.blackbox_repository import load_blackbox
+#
+#     blackboxes = load_blackbox(ss)
+#     for ds in list(blackboxes.keys())[:1]:  # limit to first dataset for faster testing
+#         benchmark_definitions[ss + "_" + ds] = hpob_benchmark(ss, ds)
+#
+# 1
 
 if __name__ == "__main__":
     from syne_tune.blackbox_repository import load_blackbox
