@@ -39,13 +39,13 @@ if __name__ == "__main__":
 
     print(f"Methods defined: {list(methods.keys())}")
     methods_selected = [
-        # Methods.RS,
-        # Methods.REA,
-        # Methods.TPE,
-        # Methods.BORE,
-        # Methods.CQR,
+        Methods.RS,
+        Methods.REA,
+        Methods.TPE,
+        Methods.BORE,
+        Methods.CQR,
         Methods.CQRTabPFN,
-        # Methods.BOTorch,
+        Methods.BOTorch,
         # # Methods.BOHB,
         # # Methods.ASHA,
         # # Methods.ASHACQR,
@@ -88,8 +88,8 @@ if __name__ == "__main__":
         python_libraries=[
             str(Path(__file__).parent.parent / "syne_tune"),
         ],
-        n_cpus=8,
-        mem=1024 * 8,
+        n_cpus=16,
+        mem=1024 * 32,
         max_runtime_minutes=max_runtime_minutes,
         bash_setup_command="source ~/.bashrc; conda activate synetune",
         env={

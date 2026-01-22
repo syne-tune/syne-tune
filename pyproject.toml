@@ -28,6 +28,7 @@ dependencies = [
     "scikit-learn",
     "xgboost",
     "tqdm",
+    "matplotlib>=3.7.5",
 ]
 
 [project.optional-dependencies]
