@@ -484,7 +484,7 @@ def load_data():
     with (
         open(meta_test_file, mode="r", encoding="utf-8") as test_file,
         open(meta_train_file, mode="r", encoding="utf-8") as train_file,
-        open(meta_validation_file, mode="r", encoding="utf-8") as validation_file
+        open(meta_validation_file, mode="r", encoding="utf-8") as validation_file,
     ):
         test_data = json.load(test_file)
         train_data = json.load(train_file)
