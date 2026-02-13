@@ -38,7 +38,7 @@ This will install the core library and its dependencies.
 If you want to use additional features, you can install the following extra dependencies:
 
 - `dev`: Includes additional dependencies for development, such as testing and building the documentation.
-- `extra`: Includes all additional dependencies for advanced features such as [blackbox-repository](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md), [YAHPO Gym](https://github.com/slds-lmu/yahpo_gym), [SMAC](https://github.com/automl/SMAC3) or [BoTorch](https://github.com/pytorch/botorch).
+- `extra`: Includes all additional dependencies for advanced features such as [blackbox-repository](https://github.com/syne-tune/syne-tune/blob/main/syne_tune/blackbox_repository/README.md), [SMAC](https://github.com/automl/SMAC3) or [BoTorch](https://github.com/pytorch/botorch).
 
 You can install these extras by appending the extra name in square brackets to the pip install command, like so:
 ```bash
