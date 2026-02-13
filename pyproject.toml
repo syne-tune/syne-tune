@@ -19,7 +19,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy>=2.0.0, <3.0.0",
+    "numpy>=1.26.0, <3.0.0",
     "dill>=0.3.6",
     "pandas",
     "typing_extensions",
@@ -54,10 +54,6 @@ dev = [
 extra = [
     "syne-tune[dev]",
     # blackbox repository
-    "numpy>=2.0.0, <3.0.0",
-    "pandas",
-    "scikit-learn",
-    "xgboost",
     "fastparquet",
     "h5py",
     "huggingface_hub",
@@ -65,13 +61,9 @@ extra = [
     "onnxruntime>=1.10.0",
     "pyyaml",
     "configspace",
-    "pandas",
     "yahpo-gym",
     # botorch
     "botorch>=0.7.2",
-    # smac
-    "swig",
-    "smac>=2.0",
     # moo
     "pymoo>=0.6.0",
 ]
