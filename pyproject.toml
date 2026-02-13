@@ -64,6 +64,9 @@ extra = [
     "yahpo-gym",
     # botorch
     "botorch>=0.7.2",
+    # smac
+    "swig",
+    "smac>=2.0",
     # moo
     "pymoo>=0.6.0",
 ]
