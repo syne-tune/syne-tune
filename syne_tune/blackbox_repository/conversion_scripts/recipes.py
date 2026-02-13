@@ -1,5 +1,3 @@
-import logging
-
 from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import (
     HPOBRecipe4796,
     HPOBRecipe5527,
