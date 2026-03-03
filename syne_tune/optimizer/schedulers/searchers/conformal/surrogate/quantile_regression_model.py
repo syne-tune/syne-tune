@@ -16,6 +16,13 @@ try:
 except ImportError:
     TABPFN_AVAILABLE = False
 
+try:
+    from tabicl import TabICLRegressor
+
+    TABICL_AVAILABLE = True
+except ImportError:
+    TABICL_AVAILABLE = False
+
 
 @dataclass
 class QuantileRegressorPredictions:
@@ -199,6 +206,65 @@ class TabPFNQuantileRegressor(QuantileRegressor):
         )
         # Stack to get shape (n_samples, n_quantiles)
         quantile_preds = np.column_stack(quantile_preds_raw)
+
+        return QuantileRegressorPredictions(
+            quantiles=self.quantiles,
+            results_stacked=quantile_preds,
+        )
+
+
+class TabICLQuantileRegressor(QuantileRegressor):
+    """
+    Quantile regressor using TabICL v2.
+
+    TabICL is a foundation model for tabular data with native support
+    for quantile predictions via output_type="quantiles".
+
+    Requirements:
+        pip install tabicl
+    """
+
+    def __init__(
+        self,
+        quantiles: int | list[float] = 5,
+        verbose: bool = False,
+        valid_fraction: float = 0.0,
+        **kwargs: Any,
+    ):
+        if not TABICL_AVAILABLE:
+            raise ImportError(
+                "TabICL is not installed. Please install it with: pip install tabicl"
+            )
+
+        if isinstance(quantiles, int):
+            quantiles = np.linspace(0, 1.0, num=quantiles + 1, endpoint=False)[1:]
+            quantiles = np.around(quantiles, decimals=1 + int(np.log(len(quantiles))))
+
+        self.quantiles = list(quantiles)
+        self.verbose = verbose
+        self.valid_fraction = valid_fraction
+        self._tabicl_kwargs = kwargs
+        self._regressor: TabICLRegressor | None = None
+
+    def fit(self, df_features: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
+        self._regressor = TabICLRegressor(**self._tabicl_kwargs)
+        y_train = np.ravel(y)
+        if self.verbose:
+            print("Fitting TabICL regressor...")
+        self._regressor.fit(df_features, y_train)
+        if self.verbose:
+            print("TabICL fitting complete.")
+
+    def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
+        if self._regressor is None:
+            raise RuntimeError("Model not fitted. Call fit() first.")
+
+        # TabICL returns shape (n_samples, n_quantiles) for output_type="quantiles"
+        quantile_preds = self._regressor.predict(
+            df_test,
+            output_type="quantiles",
+            alphas=self.quantiles,
+        )
 
         return QuantileRegressorPredictions(
             quantiles=self.quantiles,

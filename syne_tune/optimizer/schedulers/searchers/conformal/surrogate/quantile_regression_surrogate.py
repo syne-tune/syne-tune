@@ -11,7 +11,9 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regre
     QuantileRegressorPredictions,
     GradientBoostingQuantileRegressor,
     TabPFNQuantileRegressor,
+    TabICLQuantileRegressor,
     TABPFN_AVAILABLE,
+    TABICL_AVAILABLE,
 )
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
     SymmetricConformalizedGradientBoostingQuantileRegressor,
@@ -32,7 +34,7 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         quantiles: int = 5,
         valid_fraction: float = 0.0,
         min_samples_to_conformalize: int = None,
-        model_type: Literal["gradient_boosting", "tabpfn"] = "gradient_boosting",
+        model_type: Literal["gradient_boosting", "tabpfn", "tabicl"] = "gradient_boosting",
         **kwargs,
     ):
         """
@@ -51,6 +53,9 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
             - "tabpfn": Uses TabPFNQuantileRegressor with TabPFN 2.5.
               A foundation model for tabular data with native quantile support.
               Requires `pip install tabpfn` and HuggingFace authentication.
+            - "tabicl": Uses TabICLQuantileRegressor with TabICL v2.
+              A foundation model for tabular data with native quantile support.
+              Requires `pip install tabicl`.
         :param kwargs: Additional arguments passed to the quantile regressor.
         """
         super(QuantileRegressionSurrogateModel, self).__init__(
@@ -73,6 +78,19 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
             quantile_regressor = TabPFNQuantileRegressor(
                 quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
             )
+        elif model_type == "tabicl":
+            if not TABICL_AVAILABLE:
+                raise ImportError(
+                    "TabICL is not installed. Please install it with: pip install tabicl"
+                )
+            if min_samples_to_conformalize is not None:
+                raise ValueError(
+                    "min_samples_to_conformalize is not supported with TabICL model_type. "
+                    "Use model_type='gradient_boosting' for conformalized quantile regression."
+                )
+            quantile_regressor = TabICLQuantileRegressor(
+                quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
+            )
         elif model_type == "gradient_boosting":
             if min_samples_to_conformalize is not None:
                 quantile_regressor_cls = partial(
@@ -87,7 +105,7 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         else:
             raise ValueError(
                 f"Unknown model_type: {model_type}. "
-                f"Supported types: 'gradient_boosting', 'tabpfn'"
+                f"Supported types: 'gradient_boosting', 'tabpfn', 'tabicl'"
             )
 
         self.quantile_regressor = quantile_regressor

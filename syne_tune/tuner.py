@@ -6,6 +6,7 @@ from typing import Any
 from collections.abc import Callable
 
 import dill as dill
+import pandas as pd
 
 from syne_tune.backend.trial_backend import (
     TrialBackend,
@@ -18,6 +19,7 @@ from syne_tune.constants import (
     ST_TUNER_START_TIMESTAMP,
     ST_METADATA_FILENAME,
     ST_TUNER_DILL_FILENAME,
+    ST_OPTIMIZER_RUNTIMES_FILENAME,
     TUNER_DEFAULT_SLEEP_TIME,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
@@ -511,7 +513,18 @@ class Tuner:
         """
 
         if isinstance(self.scheduler, TrialScheduler):
+            suggest_start = time.perf_counter()
             suggestion = self.scheduler.suggest()
+            suggest_runtime = time.perf_counter() - suggest_start
+            runtimes_file = self.tuner_path / ST_OPTIMIZER_RUNTIMES_FILENAME
+            pd.DataFrame(
+                [{"timestamp": time.time(), "runtime": suggest_runtime}]
+            ).to_csv(
+                runtimes_file,
+                mode="a",
+                header=not runtimes_file.exists(),
+                index=False,
+            )
         else:
             self.output_logger.print_scheduler_deprecated(type(self.scheduler).__name__)
             suggestion = self.scheduler.suggest(self.trial_backend.new_trial_id())

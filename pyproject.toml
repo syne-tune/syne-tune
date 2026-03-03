@@ -29,6 +29,7 @@ dependencies = [
     "xgboost",
     "tqdm",
     "matplotlib>=3.7.5",
+    "tabicl",
 ]
 
 [project.optional-dependencies]
