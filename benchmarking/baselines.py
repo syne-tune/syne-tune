@@ -34,6 +34,7 @@ class Methods:
     BOTorch = "BOTorch"
     CQR = "CQR"
     CQRTabPFN = "CQRTabPFN"
+    CQRTabICL = "CQRTabICL"
     BOHB = "BOHB"
 
     # multifidelity
@@ -84,6 +85,18 @@ methods = {
         searcher_kwargs={
             "points_to_evaluate": method_arguments.points_to_evaluate,
             "model_type": "tabpfn",
+            "min_samples_to_conformalize": None,
+        },
+    ),
+    Methods.CQRTabICL: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="cqr",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher_kwargs={
+            "points_to_evaluate": method_arguments.points_to_evaluate,
+            "model_type": "tabicl",
             "min_samples_to_conformalize": None,
         },
     ),

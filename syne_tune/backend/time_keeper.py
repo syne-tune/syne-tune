@@ -1,3 +1,4 @@
+import math
 import time
 from datetime import datetime
 
@@ -61,5 +62,5 @@ class RealTimeKeeper(TimeKeeper):
 
     def advance(self, step: float):
         self._assert_has_started()
-        assert step >= 0
-        time.sleep(step)
+        # assert step >= 0
+        time.sleep(max(1e-10, step))

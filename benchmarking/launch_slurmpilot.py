@@ -45,6 +45,7 @@ if __name__ == "__main__":
         Methods.BORE,
         Methods.CQR,
         Methods.CQRTabPFN,
+        Methods.CQRTabICL,
         Methods.BOTorch,
         # # Methods.BOHB,
         # # Methods.ASHA,
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         sbatch_arguments=sbatch_arguments,
         jobname=jobname,
         entrypoint="benchmark_main.py",
-        python_args=python_args[:2],
+        python_args=python_args,
         src_dir=str(Path(__file__).parent),
         python_binary="/work/dlclarge2/salinasd-synetune/.venv/bin/python",
         python_libraries=[
