@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.utils.validation import check_is_fitted
 from tqdm import tqdm
 
 
@@ -88,7 +89,11 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
         ):
             self.quantile_regressors[quantile].fit(x_training, y_training)
 
+        self._is_fitted = True
+        return self
+
     def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
+        check_is_fitted(self)
         quantile_res = {
             quantile: regressor.predict(df_test)
             for quantile, regressor in self.quantile_regressors.items()
@@ -97,3 +102,9 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
             quantiles=self.quantiles,
             results=quantile_res,
         )
+
+    def __sklearn_is_fitted__(self):
+        """
+        Check fitted status and return a Boolean value.
+        """
+        return hasattr(self, "_is_fitted") and self._is_fitted
