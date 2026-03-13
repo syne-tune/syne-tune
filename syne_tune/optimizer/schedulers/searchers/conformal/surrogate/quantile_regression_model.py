@@ -62,6 +62,7 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
             # Compute quantiles avoiding 0-th
             quantiles = np.linspace(0, 1.0, num=quantiles + 1, endpoint=False)[1:]
             quantiles = np.around(quantiles, decimals=1 + int(np.log(len(quantiles))))
+        self._is_fitted = False
         self.quantiles = quantiles
         self.verbose = verbose
         self.valid_fraction = valid_fraction
