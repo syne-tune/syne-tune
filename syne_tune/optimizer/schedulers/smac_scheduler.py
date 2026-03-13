@@ -1,9 +1,12 @@
 import logging
 from typing import Any
 
-from ConfigSpace import Configuration
-from smac import Scenario, HyperparameterOptimizationFacade
-from smac.runhistory import TrialValue, TrialInfo
+try:
+    import ConfigSpace as CS
+    from smac import Scenario, HyperparameterOptimizationFacade
+    from smac.runhistory import TrialValue, TrialInfo
+except ImportError as e:
+    logging.warning('Cannot import SMAC. Make sure to follow the SMAC installation instructions.')
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.constants import ST_WORKER_TIME
@@ -11,12 +14,9 @@ from syne_tune.optimizer.scheduler import (
     TrialScheduler,
     TrialSuggestion,
 )
+from syne_tune.config_space import Domain, Integer, is_log_space, Float
 
 logging.getLogger().setLevel(logging.INFO)
-
-import ConfigSpace as CS
-
-from syne_tune.config_space import Domain, Integer, is_log_space, Float
 
 
 def to_smac_configspace(
@@ -68,6 +68,9 @@ class SMACScheduler(TrialScheduler):
     ):
         """
         Wrapper to SMAC3. Requires SMAC3 to be installed, see https://github.com/automl/SMAC3 for instructions.
+        If you want to use this scheduler you'd need to install SMAC3
+        yourself. We wish you the best of luck for this adventure ;-)
+
         :param config_space:
         :param metric: metric to be optimized, should be present in reported results dictionary
         :param do_minimize: True if we minimize the objective function
