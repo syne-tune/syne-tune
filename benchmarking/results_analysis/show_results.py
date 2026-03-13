@@ -44,29 +44,12 @@ benchmark_families = [
     "tabrepo-RandomForest",
     "tabrepo-LightGBM",
     "tabrepo-CatBoost",
-    # "yahpo"
-    "hpob_4796",
-    "hpob_5527",
-    "hpob_5636",
-    "hpob_5859",
-    "hpob_5860",
-    "hpob_5891",
-    "hpob_5906",
-    "hpob_5965",
-    "hpob_5970",
-    "hpob_5971",
-    "hpob_6766",
-    "hpob_6767",
-    "hpob_6794",
-    "hpob_7607",
-    "hpob_7609",
-    "hpob_5889",
 ]
 benchmark_names = {
     "fcnet": "\\FCNet{}",
     "nas201": "\\NASBench{}",
     "lcbench": "\\LCBench{}",
-    # "yahpo": "\\NASSurr{}",
+    "tabrepo": "\\TabRepo{}",
 }
 
 
