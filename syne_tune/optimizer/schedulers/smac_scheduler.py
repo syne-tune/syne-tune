@@ -6,7 +6,9 @@ try:
     from smac import Scenario, HyperparameterOptimizationFacade
     from smac.runhistory import TrialValue, TrialInfo
 except ImportError as e:
-    logging.warning('Cannot import SMAC. Make sure to follow the SMAC installation instructions.')
+    logging.warning(
+        "Cannot import SMAC. Make sure to follow the SMAC installation instructions."
+    )
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.constants import ST_WORKER_TIME
