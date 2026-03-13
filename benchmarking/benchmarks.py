@@ -14,6 +14,7 @@ class BenchmarkDefinition:
     surrogate: str | None = None
     surrogate_kwargs: dict | None = None
 
+
 n_full_evals = 200
 
 
@@ -72,7 +73,6 @@ def tabrepo_benchmark(blackbox_name: str, dataset_name: str):
         surrogate="KNeighborsRegressor",
         surrogate_kwargs={"n_neighbors": 1},
     )
-
 
 
 benchmark_definitions = {
