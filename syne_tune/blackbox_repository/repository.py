@@ -105,17 +105,9 @@ def load_blackbox(
         **snapshot_download_kwargs,
     )
 
-    # TODO avoid switch case of PD1
+    # TODO avoid switch case of PD1 / HPO-B
     blackbox_path = repository_path / name
-    if name.startswith("yahpo"):
-        from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-            instantiate_yahpo,
-        )
-
-        if yahpo_kwargs is None:
-            yahpo_kwargs = dict()
-        return instantiate_yahpo(name, **yahpo_kwargs)
-    elif name.startswith("pd1"):
+    if name.startswith("pd1"):
         return deserialize_pd1(blackbox_path)
     elif name.startswith("hpob"):
         return deserialize_hpob(blackbox_path)
