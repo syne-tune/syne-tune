@@ -132,7 +132,7 @@ class SMACScheduler(TrialScheduler):
         if self.points_to_evaluate:
             config = self.points_to_evaluate.pop()
             info = TrialInfo(
-                config=Configuration(
+                config=CS.Configuration(
                     configuration_space=self.smac_configspace, values=config
                 ),
                 seed=0,
