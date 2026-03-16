@@ -57,6 +57,7 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
             points_to_evaluate=points_to_evaluate,
             random_seed=random_seed,
         )
+        self._is_fitted = False
         self.surrogate_kwargs = surrogate_kwargs
         self.num_init_random_draws = num_init_random_draws
         self.update_frequency = update_frequency

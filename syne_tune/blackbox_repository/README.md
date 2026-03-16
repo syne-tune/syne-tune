@@ -124,6 +124,5 @@ Currently we support the following blackbox from the literature:
 - ICML2020 by [Salinas et al.](https://proceedings.mlr.press/v119/salinas20a)
 - LCBench by [Zimmer et al.](https://arxiv.org/abs/2006.13799)
 - PD1 by [Wang et al.](https://www.jmlr.org/papers/v25/23-0269.html)
-- YAHPO by [Pfisterer et al.](https://proceedings.mlr.press/v188/pfisterer22a.html)
 - HPO-B by [Arango et al.](https://arxiv.org/abs/2106.06257)
 - TabRepo by [Salinas et al.](https://arxiv.org/abs/2311.02971)

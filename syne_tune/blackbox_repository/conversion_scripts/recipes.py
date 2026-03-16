@@ -1,5 +1,3 @@
-import logging
-
 from syne_tune.blackbox_repository.conversion_scripts.scripts.hpob_import import (
     HPOBRecipe4796,
     HPOBRecipe5527,
@@ -85,16 +83,5 @@ recipes = [
     AutoEncodixVanillixBlackboxRecipe(),
     AutoEncodixVarixBlackboxRecipe(),
 ]
-
-try:
-    from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-        YAHPORecipe,
-        yahpo_scenarios,
-    )
-
-    for scenario in yahpo_scenarios:
-        recipes.append(YAHPORecipe("yahpo-" + scenario))
-except ImportError as e:
-    logging.debug(e)
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

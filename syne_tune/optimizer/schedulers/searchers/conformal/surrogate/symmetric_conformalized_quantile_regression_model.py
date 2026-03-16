@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.utils.validation import check_is_fitted
 from tqdm import tqdm
 
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_model import (
@@ -67,6 +68,9 @@ class SymmetricConformalizedGradientBoostingQuantileRegressor(
         else:
             self._fit_nonconformal(df_features, y, **kwargs)
 
+        self._is_fitted = True
+        return self
+
     def _fit_nonconformal(self, df_features: np.ndarray, y: np.array, **kwargs):
         for quantile in tqdm(
             self.quantile_regressors,
@@ -108,6 +112,7 @@ class SymmetricConformalizedGradientBoostingQuantileRegressor(
             )
 
     def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
+        check_is_fitted(self)
         quantile_res = {}
         for alpha, cq in self.conformal_correction.items():
             lower_preds = (
@@ -128,3 +133,9 @@ class SymmetricConformalizedGradientBoostingQuantileRegressor(
             quantiles=self.quantiles,
             results=quantile_res,
         )
+
+    def __sklearn_is_fitted__(self):
+        """
+        Check fitted status and return a Boolean value.
+        """
+        return hasattr(self, "_is_fitted") and self._is_fitted
