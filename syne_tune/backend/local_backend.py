@@ -296,12 +296,33 @@ class LocalBackend(TrialBackend):
         self._release_from_worker(trial_id)
 
     def _kill_process(self, trial_id: int):
-        # send a kill process to the process
+        # send a kill signal to the process and all its children
         process = self.trial_subprocess[trial_id]
         try:
-            process.kill()
-        except ProcessLookupError as e:
-            pass
+            import psutil
+
+            parent = psutil.Process(process.pid)
+            children = parent.children(recursive=True)
+
+            # Kill all child processes first
+            for child in children:
+                try:
+                    child.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+
+            # Then kill the parent process
+            try:
+                parent.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+        except (ImportError, psutil.NoSuchProcess):
+            # Fallback if psutil is not available or process doesn't exist
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
 
     def _file_path(self, trial_id: int, filename: str):
         return Path(self.trial_path(trial_id=trial_id) / filename)

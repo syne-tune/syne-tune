@@ -28,6 +28,7 @@ dependencies = [
     "scikit-learn",
     "xgboost",
     "tqdm",
+    "psutil",
 ]
 
 [project.optional-dependencies]
