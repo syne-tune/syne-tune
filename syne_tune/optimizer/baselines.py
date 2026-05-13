@@ -293,7 +293,7 @@ class ASHA(AsynchronousSuccessiveHalving):
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
             random_seed=random_seed,
             time_attr=time_attr,
-            grace_period=grace_period
+            grace_period=grace_period,
         )
 
 
