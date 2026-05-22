@@ -74,7 +74,7 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
         max_num_observations: int | None = 200,
         input_warping: bool = False,
         double_precision: bool = True,
-        noise_level: float = 0,
+        noise_level: float | None = None,
         num_restarts: int = 20,
         optimization_strategy: str = "gradient",
         num_raw_samples: int = 200,
@@ -239,15 +239,20 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             X_tensor = X_tensor.double()
             Y_tensor = Y_tensor.double()
 
-        Y_noise = self.noise_level * randn_like(Y_tensor)
-
         if self.input_warping:
             warp_tf = Warp(indices=list(range(X_tensor.shape[-1])))
         else:
             warp_tf = None
-        return SingleTaskGP(
-            X_tensor, Y_tensor, train_Yvar=Y_noise, input_transform=warp_tf
-        )
+
+        if self.noise_level is None:
+            return SingleTaskGP(
+                X_tensor, Y_tensor, input_transform=warp_tf
+            )
+        else:
+            Y_noise = self.noise_level * randn_like(Y_tensor)
+            return SingleTaskGP(
+                X_tensor, Y_tensor, train_Yvar=Y_noise, input_transform=warp_tf
+            )
 
     def _config_to_feature_matrix(self, configs: list[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
