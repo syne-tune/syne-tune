@@ -43,9 +43,15 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import 
     PD1Recipe,
 )
 
-from syne_tune.blackbox_repository.conversion_scripts.scripts.autoencodix_import import (
-    AutoEncodixVanillixBlackboxRecipe,
-    AutoEncodixVarixBlackboxRecipe,
+from syne_tune.blackbox_repository.conversion_scripts.scripts.bbomix_import import (
+    BBOmixVanillixTcgaJsonRecipe,
+    BBOmixVanillixSchcJsonRecipe,
+    BBOmixVarixTcgaJsonRecipe,
+    BBOmixVarixSchcJsonRecipe,
+    BBOmixOntixTcgaJsonRecipe,
+    BBOmixOntixSchcJsonRecipe,
+    BBOmixDisentanglixTcgaJsonRecipe,
+    BBOmixDisentanglixSchcJsonRecipe,
 )
 
 # add a blackbox recipe here to expose it in Syne Tune
@@ -80,8 +86,14 @@ recipes = [
     TabrepoNeuralNetTorch(),
     TabrepoLightGBM(),
     TabrepoRecipeKNeighbors(),
-    AutoEncodixVanillixBlackboxRecipe(),
-    AutoEncodixVarixBlackboxRecipe(),
+    BBOmixVanillixTcgaJsonRecipe(),
+    BBOmixVanillixSchcJsonRecipe(),
+    BBOmixVarixTcgaJsonRecipe(),
+    BBOmixVarixSchcJsonRecipe(),
+    BBOmixOntixTcgaJsonRecipe(),
+    BBOmixOntixSchcJsonRecipe(),
+    BBOmixDisentanglixTcgaJsonRecipe(),
+    BBOmixDisentanglixSchcJsonRecipe(),
 ]
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}
