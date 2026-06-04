@@ -62,7 +62,12 @@ class SingleFidelityScheduler(TrialScheduler):
             if searcher_kwargs is None:
                 searcher_kwargs = {}
 
-            self.searcher = searcher_factory(searcher, config_space, **searcher_kwargs)
+            self.searcher = searcher_factory(
+                searcher,
+                config_space,
+                is_multi_objective=len(self.metrics) > 1,
+                **searcher_kwargs
+            )
         else:
             self.searcher = searcher
 
