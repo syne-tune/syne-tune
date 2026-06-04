@@ -434,7 +434,8 @@ class BBOmixJsonRecipe(BlackboxRecipe):
         self.dataset = dataset
 
     def _generate_on_disk(self) -> None:
-        generate_bbomix_from_json()
+        if not (repository_path / self.name).exists():
+            generate_bbomix_from_json()
 
 
 def _make_recipe(class_name: str, architecture: str, dataset: str):
@@ -468,4 +469,17 @@ BBOmixDisentanglixSchcJsonRecipe = _make_recipe(
 
 
 if __name__ == "__main__":
-    generate_bbomix_from_json()
+    recipes = [
+        BBOmixVanillixSchcJsonRecipe,
+        BBOmixVanillixTcgaJsonRecipe,
+        BBOmixVarixTcgaJsonRecipe,
+        BBOmixVarixSchcJsonRecipe,
+        BBOmixOntixTcgaJsonRecipe,
+        BBOmixOntixSchcJsonRecipe,
+        BBOmixDisentanglixTcgaJsonRecipe,
+        BBOmixDisentanglixSchcJsonRecipe,
+    ]
+
+    for recipe in recipes:
+        instance = recipe()
+        instance.generate(upload_on_hub=True)
