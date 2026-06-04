@@ -33,13 +33,17 @@ def searcher_cls(searcher_name: str, is_multi_objective: bool = False):
         return RandomSearcher
     elif searcher_name == "bore":
         if is_multi_objective:
-            raise ValueError(f"Searcher '{searcher_name}' does not support multi-objective optimization.")
+            raise ValueError(
+                f"Searcher '{searcher_name}' does not support multi-objective optimization."
+            )
         from syne_tune.optimizer.schedulers.searchers.bore import Bore
 
         return Bore
     elif searcher_name == "kde":
         if is_multi_objective:
-            raise ValueError(f"Searcher '{searcher_name}' does not support multi-objective optimization.")
+            raise ValueError(
+                f"Searcher '{searcher_name}' does not support multi-objective optimization."
+            )
         from syne_tune.optimizer.schedulers.searchers.kde import (
             KernelDensityEstimator,
         )
@@ -55,7 +59,9 @@ def searcher_cls(searcher_name: str, is_multi_objective: bool = False):
         return RegularizedEvolution
     elif searcher_name == "cqr":
         if is_multi_objective:
-            raise ValueError(f"Searcher '{searcher_name}' does not support multi-objective optimization.")
+            raise ValueError(
+                f"Searcher '{searcher_name}' does not support multi-objective optimization."
+            )
         from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
             ConformalQuantileRegression,
         )
@@ -63,7 +69,9 @@ def searcher_cls(searcher_name: str, is_multi_objective: bool = False):
         return ConformalQuantileRegression
     elif searcher_name == "botorch":
         if is_multi_objective:
-            raise ValueError(f"Searcher '{searcher_name}' does not support multi-objective optimization.")
+            raise ValueError(
+                f"Searcher '{searcher_name}' does not support multi-objective optimization."
+            )
         from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (
             BoTorchSearcher,
         )
@@ -74,6 +82,11 @@ def searcher_cls(searcher_name: str, is_multi_objective: bool = False):
 
 
 def searcher_factory(
-    searcher_name: str, config_space: dict[str, Any], is_multi_objective: bool = False, **searcher_kwargs
+    searcher_name: str,
+    config_space: dict[str, Any],
+    is_multi_objective: bool = False,
+    **searcher_kwargs,
 ) -> BaseSearcher:
-    return searcher_cls(searcher_name, is_multi_objective=is_multi_objective)(config_space=config_space, **searcher_kwargs)
+    return searcher_cls(searcher_name, is_multi_objective=is_multi_objective)(
+        config_space=config_space, **searcher_kwargs
+    )

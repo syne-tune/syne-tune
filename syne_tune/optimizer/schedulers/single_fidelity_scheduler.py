@@ -66,7 +66,7 @@ class SingleFidelityScheduler(TrialScheduler):
                 searcher,
                 config_space,
                 is_multi_objective=len(self.metrics) > 1,
-                **searcher_kwargs
+                **searcher_kwargs,
             )
         else:
             self.searcher = searcher
