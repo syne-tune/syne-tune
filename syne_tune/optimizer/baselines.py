@@ -265,9 +265,16 @@ class ASHA(AsynchronousSuccessiveHalving):
     :param max_t: max time units per trial. Trials will be stopped after
         ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
+    :param grace_period: Only stop trials at least this old in time.
+        The units are the same as the attribute named by ``time_attr``.
+        Defaults to 1
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param reduction_factor: Used to set halving rate and amount. This
+        is simply a unit-less scalar. Defaults to 3
+    :param brackets: Number of brackets. Each bracket has a different
+        ``grace_period`` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -278,6 +285,9 @@ class ASHA(AsynchronousSuccessiveHalving):
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
+        grace_period: int = 1,
+        reduction_factor: float = 3,
+        brackets: int = 1,
         points_to_evaluate: list[dict] | None = None,
     ):
         super(ASHA, self).__init__(
@@ -289,6 +299,9 @@ class ASHA(AsynchronousSuccessiveHalving):
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
             random_seed=random_seed,
             time_attr=time_attr,
+            grace_period=grace_period,
+            reduction_factor=reduction_factor,
+            brackets=brackets,
         )
 
 
@@ -306,9 +319,16 @@ class ASHABORE(AsynchronousSuccessiveHalving):
     :param max_t: max time units per trial. Trials will be stopped after
         ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
+    :param grace_period: Only stop trials at least this old in time.
+        The units are the same as the attribute named by ``time_attr``.
+        Defaults to 1
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param reduction_factor: Used to set halving rate and amount. This
+        is simply a unit-less scalar. Defaults to 3
+    :param brackets: Number of brackets. Each bracket has a different
+        ``grace_period`` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -319,7 +339,10 @@ class ASHABORE(AsynchronousSuccessiveHalving):
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
+        grace_period: int = 1,
         points_to_evaluate: list[dict] | None = None,
+        reduction_factor: float = 3,
+        brackets: int = 1,
     ):
         super(ASHABORE, self).__init__(
             config_space=config_space,
@@ -329,7 +352,10 @@ class ASHABORE(AsynchronousSuccessiveHalving):
             searcher="bore",
             random_seed=random_seed,
             time_attr=time_attr,
+            grace_period=grace_period,
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+            reduction_factor=reduction_factor,
+            brackets=brackets,
         )
 
 
@@ -347,9 +373,16 @@ class ASHACQR(AsynchronousSuccessiveHalving):
     :param max_t: max time units per trial. Trials will be stopped after
         ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
+    :param grace_period: Only stop trials at least this old in time.
+        The units are the same as the attribute named by ``time_attr``.
+        Defaults to 1
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param reduction_factor: Used to set halving rate and amount. This
+        is simply a unit-less scalar. Defaults to 3
+    :param brackets: Number of brackets. Each bracket has a different
+        ``grace_period`` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -360,7 +393,10 @@ class ASHACQR(AsynchronousSuccessiveHalving):
         max_t: int,
         do_minimize: bool | None = True,
         random_seed: int | None = None,
+        grace_period: int = 1,
         points_to_evaluate: list[dict] | None = None,
+        reduction_factor: float = 3,
+        brackets: int = 1,
     ):
         super(ASHACQR, self).__init__(
             config_space=config_space,
@@ -370,7 +406,10 @@ class ASHACQR(AsynchronousSuccessiveHalving):
             searcher="cqr",
             random_seed=random_seed,
             time_attr=time_attr,
+            grace_period=grace_period,
             searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+            reduction_factor=reduction_factor,
+            brackets=brackets,
         )
 
 
@@ -388,9 +427,16 @@ class BOHB(AsynchronousSuccessiveHalving):
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
+    :param grace_period: Only stop trials at least this old in time.
+        The units are the same as the attribute named by ``time_attr``.
+        Defaults to 1
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param reduction_factor: Used to set halving rate and amount. This
+        is simply a unit-less scalar. Defaults to 3
+    :param brackets: Number of brackets. Each bracket has a different
+        ``grace_period`` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -407,7 +453,10 @@ class BOHB(AsynchronousSuccessiveHalving):
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
+        grace_period: int = 1,
         points_to_evaluate: list[dict] | None = None,
+        reduction_factor: float = 3,
+        brackets: int = 1,
     ):
         super(BOHB, self).__init__(
             config_space=config_space,
@@ -425,7 +474,10 @@ class BOHB(AsynchronousSuccessiveHalving):
                 "random_fraction": random_fraction,
             },
             random_seed=random_seed,
+            grace_period=grace_period,
             time_attr=time_attr,
+            reduction_factor=reduction_factor,
+            brackets=brackets,
         )
 
 
