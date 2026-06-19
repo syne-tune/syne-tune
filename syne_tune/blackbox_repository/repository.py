@@ -2,6 +2,7 @@ import logging
 
 from huggingface_hub import snapshot_download
 
+from syne_tune.blackbox_repository.global_optimization_problems import global_optimization_problem_collection
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
     deserialize as deserialize_offline,
@@ -76,6 +77,7 @@ def load_blackbox(
         * "tabrepo-*": TabRepo contains the predictions and metrics of 1530 models evaluated on 211 classification and regression datasets.
           TabRepo: A Large Scale Repository of Tabular Model Evaluations and its AutoML Applications.
           D. Salinas, N. Erickson, 2024.
+        * Various artificial test functions for global optimization.
     :param custom_repo_id: custom hugging face repoid to use, default to Syne Tune hub
     :param yahpo_kwargs: For a YAHPO blackbox (``name == "yahpo-*"``), these are
         additional arguments to ``instantiate_yahpo``
@@ -84,6 +86,10 @@ def load_blackbox(
     :param snapshot_download_kwargs: keyword arguments for `snapshot_download` (other than local_files_only and force_download)
     :return: blackbox with the given name, download it if not present.
     """
+
+    if name in global_optimization_problem_collection:
+        return global_optimization_problem_collection[name]
+
     assert (
         name in blackbox_list()
     ), f"Got {name} but only the following blackboxes are supported {blackbox_list()}."

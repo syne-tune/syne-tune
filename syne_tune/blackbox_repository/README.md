@@ -117,7 +117,7 @@ To add your own blackbox, follow these steps:
 
 ## Supported blackboxes
 
-Currently we support the following blackbox from the literature:
+Currently, we support the following blackbox from the literature:
 
 - FCNET by [Klein et al.](https://arxiv.org/abs/1905.04970)
 - NASBench201 by [Dong et al.](https://arxiv.org/abs/2001.00326)
@@ -126,3 +126,4 @@ Currently we support the following blackbox from the literature:
 - PD1 by [Wang et al.](https://www.jmlr.org/papers/v25/23-0269.html)
 - HPO-B by [Arango et al.](https://arxiv.org/abs/2106.06257)
 - TabRepo by [Salinas et al.](https://arxiv.org/abs/2311.02971)
+- Standard global optimization problems (e.g Branin, Hartmann, etc)
