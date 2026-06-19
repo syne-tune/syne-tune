@@ -2,7 +2,9 @@ import logging
 
 from huggingface_hub import snapshot_download
 
-from syne_tune.blackbox_repository.global_optimization_problems import global_optimization_problem_collection
+from syne_tune.blackbox_repository.global_optimization_problems import (
+    global_optimization_problem_collection,
+)
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
     deserialize as deserialize_offline,

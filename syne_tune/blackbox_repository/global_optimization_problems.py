@@ -333,9 +333,7 @@ class Rastrigin(BlackboxArtificial):
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
-        val = 10 * self.dimension + np.sum(
-            x**2 - 10 * np.cos(2 * np.pi * x)
-        )
+        val = 10 * self.dimension + np.sum(x**2 - 10 * np.cos(2 * np.pi * x))
         return {self.objectives_names[0]: float(val)}
 
 
@@ -378,9 +376,7 @@ class SumPowers(BlackboxArtificial):
     """
 
     def __init__(self, dimension: int):
-        self.configuration_space = {
-            f"x{i}": uniform(-1, 1) for i in range(dimension)
-        }
+        self.configuration_space = {f"x{i}": uniform(-1, 1) for i in range(dimension)}
         super().__init__(
             dimension=dimension,
             configuration_space=self.configuration_space,
@@ -406,9 +402,7 @@ class StyblinskiTang(BlackboxArtificial):
     """
 
     def __init__(self, dimension: int):
-        self.configuration_space = {
-            f"x{i}": uniform(-5, 5) for i in range(dimension)
-        }
+        self.configuration_space = {f"x{i}": uniform(-5, 5) for i in range(dimension)}
         super().__init__(
             dimension=dimension,
             configuration_space=self.configuration_space,
@@ -452,6 +446,7 @@ class Sphere(BlackboxArtificial):
         val = np.sum(x**2)
         return {self.objectives_names[0]: float(val)}
 
+
 global_optimization_problem_collection = dict()
 
 global_optimization_problem_collection["branin"] = Branin()
@@ -464,9 +459,15 @@ global_optimization_problem_collection["rastrigin_5d"] = Rastrigin(dimension=5)
 global_optimization_problem_collection["rastrigin_10d"] = Rastrigin(dimension=10)
 global_optimization_problem_collection["hartman3"] = Hartman3()
 global_optimization_problem_collection["hartman6"] = Hartman6()
-global_optimization_problem_collection["rosenbrock_2d"] = Rosenbrock(dimension=2, lower_bound=-2, upper_bound=2)
-global_optimization_problem_collection["rosenbrock_5d"] = Rosenbrock(dimension=5, lower_bound=-2, upper_bound=2)
-global_optimization_problem_collection["rosenbrock_10d"] = Rosenbrock(dimension=10, lower_bound=-2, upper_bound=2)
+global_optimization_problem_collection["rosenbrock_2d"] = Rosenbrock(
+    dimension=2, lower_bound=-2, upper_bound=2
+)
+global_optimization_problem_collection["rosenbrock_5d"] = Rosenbrock(
+    dimension=5, lower_bound=-2, upper_bound=2
+)
+global_optimization_problem_collection["rosenbrock_10d"] = Rosenbrock(
+    dimension=10, lower_bound=-2, upper_bound=2
+)
 global_optimization_problem_collection["michalewicz_2d"] = Michalewicz(dimension=2)
 global_optimization_problem_collection["michalewicz_5d"] = Michalewicz(dimension=5)
 global_optimization_problem_collection["michalewicz_10d"] = Michalewicz(dimension=10)
@@ -476,9 +477,15 @@ global_optimization_problem_collection["ackley_10d"] = Ackley(dimension=10)
 global_optimization_problem_collection["sum_powers_2d"] = SumPowers(dimension=2)
 global_optimization_problem_collection["sum_powers_5d"] = SumPowers(dimension=5)
 global_optimization_problem_collection["sum_powers_10d"] = SumPowers(dimension=10)
-global_optimization_problem_collection["styblinski_tang_2d"] = StyblinskiTang(dimension=2)
-global_optimization_problem_collection["styblinski_tang_5d"] = StyblinskiTang(dimension=5)
-global_optimization_problem_collection["styblinski_tang_10d"] = StyblinskiTang(dimension=10)
+global_optimization_problem_collection["styblinski_tang_2d"] = StyblinskiTang(
+    dimension=2
+)
+global_optimization_problem_collection["styblinski_tang_5d"] = StyblinskiTang(
+    dimension=5
+)
+global_optimization_problem_collection["styblinski_tang_10d"] = StyblinskiTang(
+    dimension=10
+)
 global_optimization_problem_collection["sphere_2d"] = Sphere(dimension=2)
 global_optimization_problem_collection["sphere_5d"] = Sphere(dimension=5)
 global_optimization_problem_collection["sphere_10d"] = Sphere(dimension=10)
