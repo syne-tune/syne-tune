@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from syne_tune.blackbox_repository.blackbox import Blackbox, ObjectiveFunctionResult
 
@@ -13,8 +13,8 @@ class BlackboxArtificial(Blackbox):
     def __init__(
         self,
         dimension: int,
-        configuration_space: Dict[str, Any],
-        objectives_names: List[str] | None = None,
+        configuration_space: dict[str, Any],
+        objectives_names: list[str] | None = None,
     ):
         if objectives_names is None:
             objectives_names = ["y"]
@@ -26,8 +26,8 @@ class BlackboxArtificial(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         raise NotImplementedError

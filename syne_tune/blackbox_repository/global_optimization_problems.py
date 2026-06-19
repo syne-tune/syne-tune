@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 
@@ -28,8 +28,8 @@ class Rosenbrock(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -56,8 +56,8 @@ class Michalewicz(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -88,8 +88,8 @@ class Ackley(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -124,8 +124,8 @@ class Branin(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x0 = configuration["x0"]
@@ -155,8 +155,8 @@ class Hartman(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -233,8 +233,8 @@ class GoldsteinPrice(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x0 = configuration["x0"]
@@ -267,8 +267,8 @@ class Forrester(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = configuration["x0"]
@@ -296,8 +296,8 @@ class SixHumpCamel(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x0 = configuration["x0"]
@@ -328,8 +328,8 @@ class Rastrigin(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -357,8 +357,8 @@ class Eggholder(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x0 = configuration["x0"]
@@ -385,8 +385,8 @@ class SumPowers(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -411,8 +411,8 @@ class StyblinskiTang(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
@@ -438,8 +438,8 @@ class Sphere(BlackboxArtificial):
 
     def _objective_function(
         self,
-        configuration: Dict[str, Any],
-        fidelity: Dict | None = None,
+        configuration: dict[str, Any],
+        fidelity: dict | None = None,
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         x = np.array([configuration[f"x{i}"] for i in range(self.dimension)])
