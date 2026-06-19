@@ -1,8 +1,8 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 
-from syne_tune.blackbox_repository.blackbox import Blackbox, ObjectiveFunctionResult
+from syne_tune.blackbox_repository.blackbox import ObjectiveFunctionResult
 from syne_tune.config_space import uniform
 from syne_tune.blackbox_repository.blackbox_artificial import BlackboxArtificial
 

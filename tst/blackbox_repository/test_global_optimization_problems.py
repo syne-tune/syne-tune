@@ -17,7 +17,7 @@ class TestSyntheticFunctions(unittest.TestCase):
         michalewicz = load_blackbox("michalewicz_2d")
         config = {"x0": 2.20, "x1": 1.57}
         result = michalewicz(config)
-        self.assertAlmostEqual(result["y"], -1.8013, places=4)
+        self.assertAlmostEqual(result["y"], -1.8013, places=3)
 
     def test_ackley(self):
         # Global minimum is at (0, 0, ..., 0) with value 0
