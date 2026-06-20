@@ -10,6 +10,7 @@ from syne_tune.config_space import Integer, Float, FiniteRange, is_log_space
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.fmbo.history import History, dequantize
 
 logger = logging.getLogger(__name__)
 
@@ -165,8 +166,9 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
 
     def __init__(
         self,
-        checkpoint_dir: str | Path,
         config_space: dict[str, Any],
+        checkpoint_dir: str
+        | Path = "synetune/qwen3_80M_token_2B_lr_5e-3_bsz_16_seed_0",
         task_info: dict | None = None,
         points_to_evaluate: list[dict[str, Any]] | None = None,
         random_seed: int | None = None,
@@ -175,6 +177,7 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         remove_names: bool = True,
         n_sample_configurations: int = 1,
         use_vllm: bool = True,
+        tokenizer_dir: str | Path = "synetune/bbo-pile-tokenizer",
     ):
         """
         :param checkpoint_dir: Local path to a model checkpoint, or a HuggingFace repo
@@ -190,9 +193,13 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         :param n_sample_configurations: Number of configurations to sample; picks the
             one with best predicted performance
         :param use_vllm: Use vllm for inference (requires HF checkpoint)
+        :param tokenizer_dir: Local path to a tokenizer, or a HuggingFace repo ID.
+            Defaults to ``"synetune/bbo-pile-tokenizer"`` which is downloaded
+            automatically via ``huggingface_hub`` if not present locally.
         """
         super().__init__(config_space, points_to_evaluate, random_seed)
         checkpoint_dir = resolve_checkpoint(checkpoint_dir)
+        tokenizer_dir = resolve_checkpoint(tokenizer_dir)
         if random_seed is not None:
             torch.random.manual_seed(random_seed)
         self.use_hf_checkpoint = detect_hf_checkpoint(checkpoint_dir)
@@ -211,13 +218,13 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
                 enforce_eager=True,
                 structured_outputs_config=StructuredOutputsConfig(backend="xgrammar"),
             )
-            self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir)
             self.tokenizer.pad_token = self.tokenizer.eos_token
         elif self.use_hf_checkpoint:
             from transformers import AutoTokenizer, Qwen3ForCausalLM
 
             self.model = Qwen3ForCausalLM.from_pretrained(checkpoint_dir)
-            self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir)
             self.tokenizer.pad_token = self.tokenizer.eos_token
         else:
             from litgpt.tokenizer import Tokenizer
@@ -226,7 +233,7 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
 
             config = Config.from_file(str(checkpoint_dir / "model_config.yaml"))
             self.model = GPT(config).cuda()
-            self.tokenizer = Tokenizer(str(checkpoint_dir))
+            self.tokenizer = Tokenizer(str(tokenizer_dir))
             state_dict = torch.load(
                 str(checkpoint_dir / "lit_model.pth"),
                 weights_only=True,
@@ -252,8 +259,6 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             }
         else:
             self.task_info = task_info
-
-        from syne_tune.optimizer.schedulers.searchers.optformer.history import History
 
         self.study = History(
             config_space=config_space,
@@ -397,9 +402,6 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         return tokens_configs
 
     def _decode_config(self, tokens_config: list[int]) -> tuple[dict[str, Any], float]:
-        from syne_tune.optimizer.schedulers.searchers.optformer.history import (
-            dequantize,
-        )
 
         token_to_id = (
             self.tokenizer.convert_tokens_to_ids

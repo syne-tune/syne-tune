@@ -4,10 +4,10 @@ import pytest
 
 from syne_tune.experiments import load_experiment
 
-from syne_tune.config_space import randint, uniform, choice, finrange
+from syne_tune.config_space import randint, uniform, choice
 from syne_tune.constants import SYNE_TUNE_ENV_FOLDER
 
-from syne_tune.optimizer.schedulers.searchers.optformer.history import (
+from syne_tune.optimizer.schedulers.searchers.fmbo.history import (
     History,
     Trial,
     encode,

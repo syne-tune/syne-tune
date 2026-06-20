@@ -549,7 +549,7 @@ class FMBOScheduler(SingleObjectiveScheduler):
         n_sample_configurations: int = 1,
         use_vllm: bool = True,
     ):
-        from syne_tune.optimizer.schedulers.searchers.optformer.fmbo_searcher import (
+        from syne_tune.optimizer.schedulers.searchers.fmbo.fmbo_searcher import (
             FMBOSearcher,
         )
 

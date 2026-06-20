@@ -3,7 +3,7 @@ import pytest
 
 from syne_tune.config_space import randint, uniform
 
-from syne_tune.optimizer.schedulers.searchers.optformer.fmbo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.fmbo.fmbo_searcher import (
     FMBOSearcher,
 )
 
@@ -15,7 +15,7 @@ def test_fmbo_searcher():
 
     searcher = FMBOSearcher(
         config_space=config_space,
-        checkpoint_dir="qwen3_2M_token_200M_lr_2e-2_bsz_8_seed_0",
+        checkpoint_dir="synetune/qwen3_2M_token_1B_lr_1e-2_bsz_8_seed_0",
         use_vllm=False,
     )
 
