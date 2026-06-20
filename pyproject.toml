@@ -63,6 +63,11 @@ extra = [
     # moo
     "pymoo>=0.6.0",
 ]
+fmbo = [
+    "huggingface_hub",
+    "transformers",
+    "vllm",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/syne-tune/syne-tune"

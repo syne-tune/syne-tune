@@ -1,4 +1,5 @@
 from typing import Any
+from pathlib import Path
 import logging
 
 from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
@@ -510,6 +511,65 @@ class EHVI(SingleFidelityScheduler):
         )
 
 
+class FMBOScheduler(SingleObjectiveScheduler):
+    """
+    Foundation Model for Black-box Optimization (FMBO) as proposed by:
+
+        | An Open-Source Training Dataset for Foundation Models for Black-box Optimization
+        | Klein, Aaron and Rakotoarison, Herilalaina and Thale-Bombien, Luca and Salinas, David
+        | https://arxiv.org/abs/2605.23417
+
+    Uses a pretrained foundation model for blackbox optimization to suggest new configurations by
+    in-context learning from the optimization history.
+
+    :param config_space: Configuration space for the evaluation function.
+    :param metric: Name of the metric to optimize.
+    :param checkpoint_dir: Local path to a model checkpoint, or a HuggingFace repo ID
+        (e.g. ``"synetune/qwen3_30M_token_400M_lr_1e-2_bsz_8_seed_0"`` or just the
+        short name without the ``synetune/`` prefix). Downloaded automatically when a
+        repo ID is given.
+    :param task_info: Dict with keys ``'name'``, ``'algorithm'``, ``'metric_names'``.
+    :param do_minimize: Set to True if the objective function should be minimized.
+    :param random_seed: Seed for initializing random number generators.
+    :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param n_sample_configurations: Number of configurations sampled per step; the one
+        with the best predicted performance is returned.
+    :param use_vllm: Use vllm for inference (requires a HuggingFace checkpoint).
+    """
+
+    def __init__(
+        self,
+        config_space: dict[str, Any],
+        metric: str,
+        checkpoint_dir: str | Path,
+        task_info: dict | None = None,
+        do_minimize: bool | None = True,
+        random_seed: int | None = None,
+        points_to_evaluate: list[dict] | None = None,
+        n_sample_configurations: int = 1,
+        use_vllm: bool = True,
+    ):
+        from syne_tune.optimizer.schedulers.searchers.optformer.fmbo_searcher import (
+            FMBOSearcher,
+        )
+
+        super(FMBOScheduler, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            do_minimize=do_minimize,
+            searcher=FMBOSearcher(
+                config_space=config_space,
+                points_to_evaluate=points_to_evaluate,
+                random_seed=random_seed,
+                checkpoint_dir=checkpoint_dir,
+                task_info=task_info,
+                n_sample_configurations=n_sample_configurations,
+                use_vllm=use_vllm,
+            ),
+            random_seed=random_seed,
+        )
+
+
 baselines_dict = {
     "Random Search": RandomSearch,
     "BORE": BORE,
@@ -517,4 +577,5 @@ baselines_dict = {
     "REA": REA,
     "BOTorch": BOTorch,
     "EHVI": EHVI,
+    "FMBO": FMBOScheduler,
 }
