@@ -7,7 +7,9 @@ from typing import Any
 from pathlib import Path
 
 from syne_tune.config_space import Integer, Float, FiniteRange, is_log_space
-from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import SingleObjectiveBaseSearcher
+from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
+    SingleObjectiveBaseSearcher,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,32 +56,33 @@ class ConfigGrammar:
         return [str(i) for i in range(self.num_numeric_tokens)]
 
     def _get_categorical_tokens(self) -> list[str]:
-        return [f'<{i}>' for i in range(self.num_categorical_tokens)]
+        return [f"<{i}>" for i in range(self.num_categorical_tokens)]
 
     def _get_separator_tokens(self) -> dict[str, str]:
         token_to_id = self.tokenizer.convert_tokens_to_ids
         return {
-            'comma': self.tokenizer.convert_ids_to_tokens(token_to_id(',')),
-            'star': self.tokenizer.convert_ids_to_tokens(token_to_id('*')),
-            'pipe': self.tokenizer.convert_ids_to_tokens(token_to_id('|')),
+            "comma": self.tokenizer.convert_ids_to_tokens(token_to_id(",")),
+            "star": self.tokenizer.convert_ids_to_tokens(token_to_id("*")),
+            "pipe": self.tokenizer.convert_ids_to_tokens(token_to_id("|")),
         }
 
     def _escape_regex(self, s: str) -> str:
         import re
+
         return re.escape(s)
 
     def _build_continuous_pattern(self) -> str:
         tokens = self._get_continuous_tokens()
         escaped = [self._escape_regex(t) for t in tokens]
-        return '(' + '|'.join(escaped) + ')'
+        return "(" + "|".join(escaped) + ")"
 
     def _build_categorical_pattern(self, max_categories: int = None) -> str:
         if max_categories is None:
             tokens = self._get_categorical_tokens()
         else:
-            tokens = [f'<{i}>' for i in range(max_categories)]
+            tokens = [f"<{i}>" for i in range(max_categories)]
         escaped = [self._escape_regex(t) for t in tokens]
-        return '(' + '|'.join(escaped) + ')'
+        return "(" + "|".join(escaped) + ")"
 
     def build_regex(self) -> str:
         # TODO important note, right now we constrain the model to predict a token among the 1000 options
@@ -87,9 +90,9 @@ class ConfigGrammar:
         cont_pattern = self._build_continuous_pattern()
         separators = self._get_separator_tokens()
 
-        comma = self._escape_regex(separators['comma'])
-        star = self._escape_regex(separators['star'])
-        pipe = self._escape_regex(separators['pipe'])
+        comma = self._escape_regex(separators["comma"])
+        star = self._escape_regex(separators["star"])
+        pipe = self._escape_regex(separators["pipe"])
 
         patterns = []
 
@@ -125,6 +128,7 @@ def resolve_checkpoint(checkpoint_dir: str | Path) -> Path:
     if "/" not in repo_id:
         repo_id = f"synetune/{repo_id}"
     from huggingface_hub import snapshot_download
+
     return Path(snapshot_download(repo_id=repo_id))
 
 
@@ -194,11 +198,14 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         self.use_hf_checkpoint = detect_hf_checkpoint(checkpoint_dir)
         self.use_vllm = use_vllm
         if self.use_vllm:
-            assert self.use_hf_checkpoint, "Can only use vllm with a HF checkpoint, convert the litgpt checkpoint first."
+            assert (
+                self.use_hf_checkpoint
+            ), "Can only use vllm with a HF checkpoint, convert the litgpt checkpoint first."
         if self.use_vllm:
             from vllm import LLM
             from vllm.config.structured_outputs import StructuredOutputsConfig
             from transformers import AutoTokenizer
+
             self.model = LLM(
                 model=str(checkpoint_dir),
                 enforce_eager=True,
@@ -208,6 +215,7 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             self.tokenizer.pad_token = self.tokenizer.eos_token
         elif self.use_hf_checkpoint:
             from transformers import AutoTokenizer, Qwen3ForCausalLM
+
             self.model = Qwen3ForCausalLM.from_pretrained(checkpoint_dir)
             self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -215,16 +223,19 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             from litgpt.tokenizer import Tokenizer
             from litgpt.model import GPT
             from litgpt.config import Config
-            config = Config.from_file(str(checkpoint_dir / 'model_config.yaml'))
+
+            config = Config.from_file(str(checkpoint_dir / "model_config.yaml"))
             self.model = GPT(config).cuda()
             self.tokenizer = Tokenizer(str(checkpoint_dir))
             state_dict = torch.load(
-                str(checkpoint_dir / 'lit_model.pth'),
+                str(checkpoint_dir / "lit_model.pth"),
                 weights_only=True,
-                map_location=torch.device('cpu') if not torch.cuda.is_available() else torch.device('cuda'),
+                map_location=torch.device("cpu")
+                if not torch.cuda.is_available()
+                else torch.device("cuda"),
             )
-            if 'model' in state_dict:
-                state_dict = state_dict['model']
+            if "model" in state_dict:
+                state_dict = state_dict["model"]
             self.model.load_state_dict(state_dict)
 
         self.random_state = np.random.RandomState(random_seed)
@@ -235,7 +246,7 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
 
         if task_info is None:
             self.task_info = {
-                'name': "tst",
+                "name": "tst",
                 "algorithm": "BORE",
                 "metric_names": "error",
             }
@@ -243,11 +254,12 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             self.task_info = task_info
 
         from syne_tune.optimizer.schedulers.searchers.optformer.history import History
+
         self.study = History(
             config_space=config_space,
-            name=self.task_info['name'],
-            algorithm=self.task_info['algorithm'],
-            metric_names=[self.task_info['metric_names']],
+            name=self.task_info["name"],
+            algorithm=self.task_info["algorithm"],
+            metric_names=[self.task_info["metric_names"]],
             num_numeric_tokens=self.num_numeric_tokens,
             remove_names=remove_names,
         )
@@ -263,8 +275,7 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             if not isinstance(hp, (Float, Integer, FiniteRange))
         ]
         self.config_space = {
-            k: self.config_space[k]
-            for k in self.hp_cont_names + self.hp_cat_names
+            k: self.config_space[k] for k in self.hp_cont_names + self.hp_cat_names
         }
 
     def suggest(self, **kwargs) -> dict[str, Any] | None:
@@ -274,9 +285,9 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         else:
             configs, ys = self._sample_n_configs()
             if len(configs) == 0:
-                logging.warning('Sampling failed, return a random configuration!')
+                logging.warning("Sampling failed, return a random configuration!")
                 return {k: v.sample() for k, v in self.config_space.items()}
-            print(f'valid config: {len(configs)}/{self.n_sample_configurations}')
+            print(f"valid config: {len(configs)}/{self.n_sample_configurations}")
             return configs[np.argmin(ys)]
 
     def _sample_n_configs(self):
@@ -296,7 +307,9 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
                 ys.append(y)
 
             except ValueError as e:
-                logging.warning(f"Could not sample because of error: {str(e)}, skipping sampled configuration.")
+                logging.warning(
+                    f"Could not sample because of error: {str(e)}, skipping sampled configuration."
+                )
 
         return configs, ys
 
@@ -305,7 +318,9 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         if self.use_hf_checkpoint:
             if self.use_vllm:
                 # 500,400,<0>*123| => 2N+2 tokens (should count | as well in vllm)
-                max_new_tokens = (len(self.hp_cont_names) + len(self.hp_cat_names)) * 2 + 2
+                max_new_tokens = (
+                    len(self.hp_cont_names) + len(self.hp_cat_names)
+                ) * 2 + 2
 
                 grammar = ConfigGrammar(
                     tokenizer=self.tokenizer,
@@ -320,19 +335,26 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
 
                 from vllm import SamplingParams
                 from vllm.sampling_params import StructuredOutputsParams
+
                 sampling_params = SamplingParams(
                     max_tokens=max_new_tokens,
                     n=self.n_sample_configurations,
                     structured_outputs=StructuredOutputsParams(regex=regex_pattern),
                 )
                 outputs = self.model.generate([prompt], sampling_params)
-                tokens_configs = [list(output.token_ids) for output in outputs[0].outputs]
+                tokens_configs = [
+                    list(output.token_ids) for output in outputs[0].outputs
+                ]
             else:
                 with torch.no_grad():
-                    inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-                    prompt_length = inputs['input_ids'].shape[1]
+                    inputs = self.tokenizer(prompt, return_tensors="pt").to(
+                        self.model.device
+                    )
+                    prompt_length = inputs["input_ids"].shape[1]
 
-                    max_new_tokens = (len(self.hp_cont_names) + len(self.hp_cat_names)) * 2 + 1
+                    max_new_tokens = (
+                        len(self.hp_cont_names) + len(self.hp_cat_names)
+                    ) * 2 + 1
                     eos_token_id = self.tokenizer.convert_tokens_to_ids("|")
 
                     outputs = self.model.generate(
@@ -344,14 +366,23 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
                         pad_token_id=self.tokenizer.pad_token_id,
                     )
 
-                    tokens_configs = [output[prompt_length:].tolist() for output in outputs]
+                    tokens_configs = [
+                        output[prompt_length:].tolist() for output in outputs
+                    ]
         else:
             from litgpt.generate.base import generate
+
             with torch.no_grad():
-                prompt_tokens = self.tokenizer.encode(prompt)[-self.model.max_seq_length:]
+                prompt_tokens = self.tokenizer.encode(prompt)[
+                    -self.model.max_seq_length :
+                ]
                 self.model.set_kv_cache(batch_size=1)
 
-                max_returned_tokens = len(prompt_tokens) + (len(self.hp_cont_names) + len(self.hp_cat_names)) * 2 + 1
+                max_returned_tokens = (
+                    len(prompt_tokens)
+                    + (len(self.hp_cont_names) + len(self.hp_cat_names)) * 2
+                    + 1
+                )
 
                 tokens_configs = [
                     generate(
@@ -366,8 +397,15 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         return tokens_configs
 
     def _decode_config(self, tokens_config: list[int]) -> tuple[dict[str, Any], float]:
-        from syne_tune.optimizer.schedulers.searchers.optformer.history import dequantize
-        token_to_id = self.tokenizer.convert_tokens_to_ids if self.use_hf_checkpoint else self.tokenizer.token_to_id
+        from syne_tune.optimizer.schedulers.searchers.optformer.history import (
+            dequantize,
+        )
+
+        token_to_id = (
+            self.tokenizer.convert_tokens_to_ids
+            if self.use_hf_checkpoint
+            else self.tokenizer.token_to_id
+        )
 
         star_index = tokens_config.index(token_to_id("*"))
 
@@ -382,7 +420,9 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
         if len(hp_value_tokens) != len(self.hp_cont_names) + len(self.hp_cat_names):
             logging.warning("wrong length")
 
-        for i, (hp_name, hp_token) in enumerate(zip(self.hp_cont_names + self.hp_cat_names, hp_value_tokens)):
+        for i, (hp_name, hp_token) in enumerate(
+            zip(self.hp_cont_names + self.hp_cat_names, hp_value_tokens)
+        ):
             is_continuous_hp = i < len(self.hp_cont_names)
             if is_continuous_hp:
                 if self.use_hf_checkpoint:
@@ -403,15 +443,21 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
                 }
 
                 if hp_token not in tokens_per_category:
-                    logging.warning(f"Could not read category {hp_name}, got token {hp_token}.")
-                    config[hp_name] = self.config_space[hp_name].sample(random_state=self.random_state)
+                    logging.warning(
+                        f"Could not read category {hp_name}, got token {hp_token}."
+                    )
+                    config[hp_name] = self.config_space[hp_name].sample(
+                        random_state=self.random_state
+                    )
                 else:
                     config[hp_name] = tokens_per_category[hp_token]
 
         for hp_name in self.hp_cat_names:
             if hp_name not in config:
                 logging.warning(f"Did not sample category {hp_name}, sampling randomly")
-                config[hp_name] = self.config_space[hp_name].sample(random_state=self.random_state)
+                config[hp_name] = self.config_space[hp_name].sample(
+                    random_state=self.random_state
+                )
 
         # Return token_output as predicted metric (monotonic with actual value, sufficient for argmin)
         return config, token_output
