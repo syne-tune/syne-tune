@@ -161,9 +161,10 @@ class TestBBOBSmoke(unittest.TestCase):
                 loaded = load_blackbox(name)
                 # Evaluate at the lower bound of each dimension
                 config = {
-                    k: float(v.lower)
-                    for k, v in loaded.configuration_space.items()
+                    k: float(v.lower) for k, v in loaded.configuration_space.items()
                 }
                 result = loaded(config)
                 self.assertIn("y", result)
-                self.assertTrue(np.isfinite(result["y"]), f"{name} returned non-finite value")
+                self.assertTrue(
+                    np.isfinite(result["y"]), f"{name} returned non-finite value"
+                )

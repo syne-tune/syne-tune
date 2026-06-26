@@ -38,7 +38,11 @@ def _t_osz(x: np.ndarray) -> np.ndarray:
         xhat = np.where(x != 0.0, np.log(np.abs(x)), 0.0)
     c1 = np.where(x > 0.0, 10.0, 5.5)
     c2 = np.where(x > 0.0, 7.9, 3.1)
-    return np.where(x == 0.0, 0.0, np.sign(x) * np.exp(xhat + 0.049 * (np.sin(c1 * xhat) + np.sin(c2 * xhat))))
+    return np.where(
+        x == 0.0,
+        0.0,
+        np.sign(x) * np.exp(xhat + 0.049 * (np.sin(c1 * xhat) + np.sin(c2 * xhat))),
+    )
 
 
 def _t_asy(x: np.ndarray, beta: float) -> np.ndarray:
@@ -48,7 +52,9 @@ def _t_asy(x: np.ndarray, beta: float) -> np.ndarray:
     """
     n = len(x)
     if n == 1:
-        return x.copy() if x[0] <= 0.0 else x ** (1.0 + beta * np.sqrt(np.maximum(x, 0.0)))
+        return (
+            x.copy() if x[0] <= 0.0 else x ** (1.0 + beta * np.sqrt(np.maximum(x, 0.0)))
+        )
     idx = np.arange(n, dtype=float)
     exponents = 1.0 + beta * idx / (n - 1) * np.sqrt(np.maximum(x, 0.0))
     return np.where(x > 0.0, x**exponents, x)
@@ -178,9 +184,11 @@ class BBOBRastrigin(BBOBBase):
         n = self.dimension
         lam = _cond_vec(n, 10.0)
         z = lam * _t_asy(_t_osz(self._x(configuration) - self.xopt), 0.2)
-        return {"y": float(
-            10.0 * (n - np.sum(np.cos(2.0 * np.pi * z))) + np.dot(z, z) + self.fopt
-        )}
+        return {
+            "y": float(
+                10.0 * (n - np.sum(np.cos(2.0 * np.pi * z))) + np.dot(z, z) + self.fopt
+            )
+        }
 
 
 class BBOBBuecheRastrigin(BBOBBase):
@@ -201,18 +209,22 @@ class BBOBBuecheRastrigin(BBOBBase):
         x = self._x(configuration)
         z_raw = _t_osz(x - self.xopt)
         # Extra factor 10 for even-indexed dimensions where xopt_i > 0
-        s = np.array([
-            10.0 ** (i / max(2.0 * (n - 1), 1))
-            * (10.0 if (i % 2 == 0 and self.xopt[i] > 0.0) else 1.0)
-            for i in range(n)
-        ])
+        s = np.array(
+            [
+                10.0 ** (i / max(2.0 * (n - 1), 1))
+                * (10.0 if (i % 2 == 0 and self.xopt[i] > 0.0) else 1.0)
+                for i in range(n)
+            ]
+        )
         z = s * z_raw
-        return {"y": float(
-            10.0 * (n - np.sum(np.cos(2.0 * np.pi * z)))
-            + np.dot(z, z)
-            + 100.0 * _penalty(x)
-            + self.fopt
-        )}
+        return {
+            "y": float(
+                10.0 * (n - np.sum(np.cos(2.0 * np.pi * z)))
+                + np.dot(z, z)
+                + 100.0 * _penalty(x)
+                + self.fopt
+            )
+        }
 
 
 class BBOBLinearSlope(BBOBBase):
@@ -423,7 +435,9 @@ class BBOBSharpRidge(BBOBBase):
         seed: int | None = None,
     ) -> ObjectiveFunctionResult:
         z = self._M @ (self._x(configuration) - self.xopt)
-        ridge = 100.0 * np.sqrt(float(np.dot(z[1:], z[1:]))) if self.dimension > 1 else 0.0
+        ridge = (
+            100.0 * np.sqrt(float(np.dot(z[1:], z[1:]))) if self.dimension > 1 else 0.0
+        )
         return {"y": float(z[0] ** 2 + ridge + self.fopt)}
 
 
@@ -473,9 +487,11 @@ class BBOBRastriginRotated(BBOBBase):
         n = self.dimension
         y = self.R @ (self._x(configuration) - self.xopt)
         z = self.R @ (self._lam * _t_asy(self.Q @ _t_osz(y), 0.2))
-        return {"y": float(
-            10.0 * (n - np.sum(np.cos(2.0 * np.pi * z))) + np.dot(z, z) + self.fopt
-        )}
+        return {
+            "y": float(
+                10.0 * (n - np.sum(np.cos(2.0 * np.pi * z))) + np.dot(z, z) + self.fopt
+            )
+        }
 
 
 class BBOBWeierstrass(BBOBBase):
@@ -505,10 +521,12 @@ class BBOBWeierstrass(BBOBBase):
         x = self._x(configuration)
         y = self.R @ (x - self.xopt)
         z = self.R @ (self._lam * (self.Q @ _t_osz(y)))
-        per_dim = np.array([
-            float(np.sum(self._ak * np.cos(2.0 * np.pi * self._bk * (z[i] + 0.5))))
-            for i in range(n)
-        ])
+        per_dim = np.array(
+            [
+                float(np.sum(self._ak * np.cos(2.0 * np.pi * self._bk * (z[i] + 0.5))))
+                for i in range(n)
+            ]
+        )
         val = 10.0 * (np.mean(per_dim) - self._f0) ** 3
         val += (10.0 / n**2) * _penalty(x)
         return {"y": float(val + self.fopt)}
@@ -641,7 +659,9 @@ class BBOBSchwefel(BBOBBase):
         z = 100.0 * u
         # Raw Schwefel with penalty for |z_i| > 500
         z_pen = float(np.sum(np.maximum(0.0, np.abs(z) - 500.0) ** 2))
-        val = 0.01 * (z_pen + 418.9828872724339 - float(np.mean(z * np.sin(np.sqrt(np.abs(z))))))
+        val = 0.01 * (
+            z_pen + 418.9828872724339 - float(np.mean(z * np.sin(np.sqrt(np.abs(z)))))
+        )
         return {"y": float(val + _penalty(x) + self.fopt)}
 
 
@@ -660,10 +680,12 @@ class _GallagherBase(BBOBBase):
         n = dimension
         # Peak weights: highest peak has weight 10; others linearly spaced in [1.1, 9.1]
         if n_peaks > 2:
-            self._w = np.concatenate([
-                [10.0],
-                1.1 + 8.0 * np.arange(1, n_peaks) / (n_peaks - 2),
-            ])
+            self._w = np.concatenate(
+                [
+                    [10.0],
+                    1.1 + 8.0 * np.arange(1, n_peaks) / (n_peaks - 2),
+                ]
+            )
         else:
             self._w = np.array([10.0, 1.1] if n_peaks == 2 else [10.0])
         self._w = self._w[:n_peaks]
@@ -672,10 +694,9 @@ class _GallagherBase(BBOBBase):
         # Per-peak conditioning exponent and resulting sigma vectors
         cond_exp = np.linspace(-5.0, 5.0, n_peaks)
         rng.shuffle(cond_exp)
-        self._sigma: np.ndarray = np.array([
-            _cond_vec(n, 10.0) * (10.0 ** (cond_exp[k] / 2.0))
-            for k in range(n_peaks)
-        ])
+        self._sigma: np.ndarray = np.array(
+            [_cond_vec(n, 10.0) * (10.0 ** (cond_exp[k] / 2.0)) for k in range(n_peaks)]
+        )
 
     def _objective_function(
         self,
@@ -686,12 +707,13 @@ class _GallagherBase(BBOBBase):
         n = self.dimension
         x = self._x(configuration)
         tx = self.R @ x  # rotated input (peak locations are in this space)
-        peaks = np.array([
-            self._w[k] * np.exp(
-                -np.sum(((tx - self._y[k]) / self._sigma[k]) ** 2) / (2.0 * n)
-            )
-            for k in range(len(self._w))
-        ])
+        peaks = np.array(
+            [
+                self._w[k]
+                * np.exp(-np.sum(((tx - self._y[k]) / self._sigma[k]) ** 2) / (2.0 * n))
+                for k in range(len(self._w))
+            ]
+        )
         val = float(_t_osz(10.0 - float(np.max(peaks)))) ** 2 + _penalty(x)
         return {"y": float(val + self.fopt)}
 
@@ -787,7 +809,11 @@ class BBOBLunacekBiRastrigin(BBOBBase):
         sum2 = float(np.dot(x_hat - self._mu1, x_hat - self._mu1))
         sum3 = float(np.sum(np.cos(2.0 * np.pi * z)))
         pen = float(np.sum(np.maximum(0.0, np.abs(x) - 5.0) ** 2))
-        val = min(sum1, self._D_PARAM * n + self._s * sum2) + 10.0 * (n - sum3) + 1e4 * pen
+        val = (
+            min(sum1, self._D_PARAM * n + self._s * sum2)
+            + 10.0 * (n - sum3)
+            + 1e4 * pen
+        )
         return {"y": float(val + self.fopt)}
 
 
