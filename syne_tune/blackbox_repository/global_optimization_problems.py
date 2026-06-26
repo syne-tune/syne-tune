@@ -489,3 +489,7 @@ global_optimization_problem_collection["styblinski_tang_10d"] = StyblinskiTang(
 global_optimization_problem_collection["sphere_2d"] = Sphere(dimension=2)
 global_optimization_problem_collection["sphere_5d"] = Sphere(dimension=5)
 global_optimization_problem_collection["sphere_10d"] = Sphere(dimension=10)
+
+from syne_tune.blackbox_repository.bbob import bbob_problem_collection  # noqa: E402
+
+global_optimization_problem_collection.update(bbob_problem_collection)
