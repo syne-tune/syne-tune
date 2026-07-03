@@ -62,10 +62,9 @@ extra = [
     "botorch>=0.7.2",
     # moo
     "pymoo>=0.6.0",
-]
-fmbo = [
     "huggingface_hub",
-    "transformers",
+    "transformers",]
+vllm = [
     "vllm",
 ]
 
