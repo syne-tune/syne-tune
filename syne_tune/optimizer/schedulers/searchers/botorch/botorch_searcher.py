@@ -11,7 +11,7 @@ from syne_tune.optimizer.schedulers.searchers.utils import (
 )
 
 
-from torch import Tensor, random, randn_like, rand
+from torch import Tensor, random, rand
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.transforms import Warp
