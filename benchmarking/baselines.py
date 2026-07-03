@@ -32,7 +32,6 @@ class Methods:
     TPE = "TPE"
     REA = "REA"
     BOTorch = "BOTorch"
-    BOTorch_fix_noise = "BOTorch_fix_noise"
     CQR = "CQR"
     BOHB = "BOHB"
 
@@ -81,9 +80,7 @@ methods = {
         metric=method_arguments.metric,
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
-        searcher_kwargs={
-            "points_to_evaluate": method_arguments.points_to_evaluate,
-        },
+        searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
     Methods.REA: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
