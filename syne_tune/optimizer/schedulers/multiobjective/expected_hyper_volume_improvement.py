@@ -58,7 +58,6 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
     :param input_warping: Whether to apply input warping when fitting the GP.
         Defaults to ``True``
     :param double_precision: Whether to use double precision when fitting the GP.
-    :param noise_level: Standard deviation of Gaussian noise added to observations for numerical stability.
     :param num_raw_samples: Number of raw samples to use for initialization
         when optimizing the acquisition function. Defaults to 200
     :param num_restarts: Number of restarts to use when optimizing the
@@ -83,7 +82,6 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         max_num_observations: int | None = 200,
         input_warping: bool = False,
         double_precision: bool = True,
-        noise_level: float = 1e-8,
         num_raw_samples: int = 200,
         num_restarts: int = 20,
         mc_samples: int = 128,
@@ -106,7 +104,6 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         self.trial_observations = dict()
         self._hp_ranges = make_hyperparameter_ranges(config_space)
         self.double_precision = double_precision
-        self.noise_level = noise_level
         self.num_raw_samples = num_raw_samples
         self.num_restarts = num_restarts
         self.mc_samples = mc_samples
@@ -274,10 +271,9 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         models = []
         for i in range(Y_tensor.shape[-1]):
             train_y = Y_tensor[..., i : i + 1]
-            noise_y = torch.full_like(train_y, self.noise_level)
 
             models.append(
-                SingleTaskGP(X_tensor, train_y, noise_y, input_transform=warp_tf)
+                SingleTaskGP(X_tensor, train_y, input_transform=warp_tf)
             )
         model = ModelListGP(*models)
         return model
