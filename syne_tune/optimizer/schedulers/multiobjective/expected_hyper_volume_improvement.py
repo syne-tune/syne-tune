@@ -272,9 +272,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
         for i in range(Y_tensor.shape[-1]):
             train_y = Y_tensor[..., i : i + 1]
 
-            models.append(
-                SingleTaskGP(X_tensor, train_y, input_transform=warp_tf)
-            )
+            models.append(SingleTaskGP(X_tensor, train_y, input_transform=warp_tf))
         model = ModelListGP(*models)
         return model
 
