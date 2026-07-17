@@ -257,3 +257,87 @@ class Bore(SingleObjectiveBaseSearcher):
     ):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(metric)
+
+
+class LFBO(Bore):
+    """
+    Implements "A General Recipe for Likelihood-free Bayesian Optimization" (LFBO), which
+    generalizes BORE to directly target the Expected Improvement acquisition function via a
+    weighted classification loss (see Corollary 3.5):
+
+        | A General Recipe for Likelihood-Free Bayesian Optimization,
+        | Song, Jiaming and Yu, Lantao and Neiswanger, Willie and Ermon, Stefano
+        | Proceedings of the 39th International Conference on Machine Learning
+        | https://arxiv.org/abs/2206.13035
+
+    Every observation contributes a negative-labeled training example (weight 1); every
+    observation with ``y <= tau`` additionally contributes a positive-labeled example weighted by
+    the (normalized) improvement ``tau - y``. Fitting a classifier on this weighted dataset yields
+    a model whose predicted probability of the positive class is proportional to the Expected
+    Improvement acquisition function.
+
+    See :class:`Bore` for parameter documentation. Note ``classifier="mlp"`` is not supported,
+    since sklearn's ``MLPClassifier`` does not support sample weights.
+    """
+
+    def __init__(self, *args, classifier: str | None = "xgboost", **kwargs):
+        assert classifier != "mlp", (
+            "LFBO does not support classifier='mlp' since sklearn's MLPClassifier does not "
+            "support sample weights. Use 'xgboost', 'logreg', or 'rf' instead."
+        )
+        super().__init__(*args, classifier=classifier, **kwargs)
+
+    def _train_model(self, train_data: list, train_targets: list) -> bool:
+        start_time = time.time()
+
+        X = np.array(train_data)
+        y = np.array(train_targets)
+
+        tau = np.quantile(y, q=self.gamma)
+        z = np.less_equal(y, tau)
+        if np.sum(z) == y.shape[0]:
+            logging.warning(
+                "Assigned all samples to the same class. This can happen if all currently "
+                "observed configurations obtain the same value."
+                "Return a random configuration instead."
+            )
+            return False
+
+        # EI utility in minimization convention: u(y; tau) = max(tau - y, 0), normalized so the
+        # average weight among positive samples is 1 (Corollary 3.5 / Section 3.3 of the paper).
+        weights_pos = tau - y[z]
+        weight_sum = weights_pos.sum()
+        if weight_sum <= 0:
+            logging.warning(
+                "All samples below tau have the same value, so improvement weights are all "
+                "zero. Falling back to uniform weights for the positive class."
+            )
+            weights_pos = np.ones_like(weights_pos)
+        else:
+            weights_pos = weights_pos / weights_pos.mean()
+
+        # Every point contributes a negative example (weight 1); every "good" point additionally
+        # contributes a positive example weighted by improvement.
+        X_train = np.concatenate([X, X[z]], axis=0)
+        y_train = np.concatenate([np.zeros(len(X)), np.ones(np.sum(z))])
+        sample_weight = np.concatenate([np.ones(len(X)), weights_pos])
+
+        if self.calibrate:
+            self.model = CalibratedClassifierCV(self.model, cv=2)
+        self.model.fit(
+            X_train, np.array(y_train, dtype=np.int64), sample_weight=sample_weight
+        )
+
+        z_hat = self.model.predict(X)
+        if len(z_hat.shape) == 2:
+            z_hat = z_hat[:, 0]
+        accuracy = np.mean(z_hat == z)
+
+        train_time = time.time() - start_time
+        logging.debug(
+            f"[Model fit: "
+            f"accuracy={accuracy:.3f}] "
+            f"dataset size: {X.shape[0]}, "
+            f"train time : {train_time}"
+        )
+        return True
