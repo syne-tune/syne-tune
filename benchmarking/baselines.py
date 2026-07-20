@@ -8,6 +8,7 @@ from syne_tune.optimizer.schedulers.asha import AsynchronousSuccessiveHalving
 from syne_tune.optimizer.schedulers.single_objective_scheduler import (
     SingleObjectiveScheduler,
 )
+from syne_tune.optimizer.schedulers.searchers.bore.bore import LFBO
 
 
 @dataclass
@@ -28,6 +29,7 @@ class MethodArguments:
 class Methods:
     # single fidelity
     BORE = "BORE"
+    LFBO = "LFBO"
     RS = "RS"
     TPE = "TPE"
     REA = "REA"
@@ -57,6 +59,17 @@ methods = {
         do_minimize=method_arguments.mode == "min",
         random_seed=method_arguments.random_seed,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
+    ),
+    Methods.LFBO: lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher=LFBO(
+            config_space=method_arguments.config_space,
+            points_to_evaluate=method_arguments.points_to_evaluate,
+            random_seed=method_arguments.random_seed,
+        ),
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
     ),
     Methods.TPE: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
