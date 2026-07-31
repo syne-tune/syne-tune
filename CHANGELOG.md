@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.16.0"></a>
+## [v0.16.0] - 2026-07-31
+
+## New Features
+
+* Add synthetic global optimization problems to the blackbox-repository ([#1031](https://github.com/syne-tune/syne-tune/pull/1031))
+
+## Bug Fixes
+
+* Pass grace period ([#1025](https://github.com/syne-tune/syne-tune/pull/1025))
+* Add parameter and checks for multi-objective in searcher factory ([#1029](https://github.com/syne-tune/syne-tune/pull/1029))
+* Correctly pass do_minimize ([#1024](https://github.com/syne-tune/syne-tune/pull/1024))
+* Fix subprocesses ([#1022](https://github.com/syne-tune/syne-tune/pull/1022))
+* Cleanup benchmarks ([#1021](https://github.com/syne-tune/syne-tune/pull/1021))
+* Add pipeline fit state checks ([#1018](https://github.com/syne-tune/syne-tune/pull/1018))
+* Fix icml-xgboost and icml-deepar benchmark ([#1002](https://github.com/syne-tune/syne-tune/pull/1002))
+
+## Documentation Updates
+
+* Add a section to the readme explaining how to run a custom searcher ([#1028](https://github.com/syne-tune/syne-tune/pull/1028))
+
+## Maintenance
+
+* Remove smac ([#1020](https://github.com/syne-tune/syne-tune/pull/1020))
+* Remove yahpo ([#1016](https://github.com/syne-tune/syne-tune/pull/1016))
+* Support numpy2 ([#1015](https://github.com/syne-tune/syne-tune/pull/1015))
+* Remove test which times out and does not seem relevant ([#1019](https://github.com/syne-tune/syne-tune/pull/1019))
+
+
+### Contributors
+
+Thanks to all contributors:
+[@Kavlahkaff](https://github.com/Kavlahkaff), [@aaronkl](https://github.com/aaronkl), [@geoalgo](https://github.com/geoalgo)
+
+[v0.16.0]: https://github.com/syne-tune/syne-tune/compare/v0.15.0...v0.16.0
+
 <a name="v0.15.0"></a>
 ## [v0.15.0] - 2025-12-18
 
