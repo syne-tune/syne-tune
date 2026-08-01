@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 * Pass grace period ([#1025](https://github.com/syne-tune/syne-tune/pull/1025))
 * Add parameter and checks for multi-objective in searcher factory ([#1029](https://github.com/syne-tune/syne-tune/pull/1029))
 * Correctly pass do_minimize ([#1024](https://github.com/syne-tune/syne-tune/pull/1024))
-* Fix subprocesses ([#1022](https://github.com/syne-tune/syne-tune/pull/1022))
+* Fix subprocesses cleanup ([#1022](https://github.com/syne-tune/syne-tune/pull/1022))
 * Cleanup benchmarks ([#1021](https://github.com/syne-tune/syne-tune/pull/1021))
 * Add pipeline fit state checks ([#1018](https://github.com/syne-tune/syne-tune/pull/1018))
 * Fix icml-xgboost and icml-deepar benchmark ([#1002](https://github.com/syne-tune/syne-tune/pull/1002))
