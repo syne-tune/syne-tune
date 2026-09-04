@@ -15,7 +15,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -62,8 +62,13 @@ extra = [
     "botorch>=0.7.2",
     # moo
     "pymoo>=0.6.0",
-    "huggingface_hub",
-    "transformers",]
+    "transformers",
+]
+benchmarking = [
+    "slurmpilot",
+    "pyparfor",
+    "matplotlib",
+]
 vllm = [
     "vllm",
 ]

@@ -1,8 +1,1 @@
-  numpy>=1.26.0, <3.0.0
-  coolname
-  pandas
-  huggingface-hub
-  scikit-learn
-  dill
-  syne-tune[blackbox-repository]
-  syne-tune[gpsearchers]
+-e .[benchmarking,extra]

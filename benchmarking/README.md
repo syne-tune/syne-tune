@@ -8,7 +8,7 @@ This repository shows an example of how to run a full evaluation: launching tuni
 
 Setup an environment by doing
 ```bash
-pip install -r benchmarking/requirements.txt
+pip install -e .[benchmarking,extra]
 ```
 
 Then run
@@ -40,7 +40,6 @@ sp --download YOURJOBNAME
 
 Note the path where the data is downloaded, you can then plot results with: 
 ```bash
-pip install pyparfor
 python benchmarking/results_analysis/show_results.py --path "~/slurmpilot/jobs/synetune/bench-2025-02-20-16-00-38/results" 
 ```
 after adapting `--path` to where the slurmpilot data was downloaded.
