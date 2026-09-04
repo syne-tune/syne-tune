@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import cm
 
 rs_color = "black"
 gp_color = "tab:orange"
@@ -20,7 +20,7 @@ multifidelity_style2 = "dashdot"
 show_seeds = False
 marker_ours = "*"
 
-cmap = cm.get_cmap("viridis")
+cmap = mpl.colormaps["viridis"]
 method_styles = {}
 
 
@@ -51,15 +51,40 @@ plot_range = {
 }
 
 if __name__ == "__main__":
-    x = np.linspace(0, 1)
-    for i, (method, method_style) in enumerate(method_styles.items()):
+    method_styles = {
+        "Method A": {
+            "color": "tab:blue",
+            "linestyle": "solid",
+            "marker": "o",
+        },
+        "Method B": {
+            "color": "tab:orange",
+            "linestyle": "dashed",
+            "marker": "s",
+        },
+        "Method C": {
+            "color": "tab:green",
+            "linestyle": "dashdot",
+            "marker": "^",
+        },
+    }
+
+    x = np.linspace(0, 1, 100)
+
+    for i, (method, style) in enumerate(method_styles.items()):
         plt.plot(
             x,
             np.ones_like(x) * i,
             label=method,
-            color=method_style.color,
-            linestyle=method_style.linestyle,
-            marker=method_style.marker,
+            color=style["color"],
+            linestyle=style["linestyle"],
+            marker=style["marker"],
+            markevery=10,
         )
+
+    plt.xlabel("x")
+    plt.ylabel("Method")
+    plt.title("Method styles test")
     plt.legend()
+    plt.tight_layout()
     plt.show()
