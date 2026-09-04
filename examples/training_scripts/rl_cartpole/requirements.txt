@@ -1,6 +1,6 @@
 tensorboardX==2.5.1
 opencv-python
-ray[rllib]==2.9.1
+ray[rllib]==2.56.0
 dm-tree==0.1.8
 gymnasium==0.28.1
 tensorflow==2.12.1
