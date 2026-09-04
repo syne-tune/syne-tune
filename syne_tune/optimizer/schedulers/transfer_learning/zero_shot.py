@@ -64,6 +64,7 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
             random_seed=random_seed,
             do_minimize=do_minimize,
         )
+        self.random_state = np.random.RandomState(self.random_seed)
 
         if use_surrogates and len(transfer_learning_evaluations) <= 1:
             use_surrogates = False
@@ -109,7 +110,6 @@ class ZeroShotTransfer(TransferLearningMixin, SingleObjectiveScheduler):
         sign = 1 if self.do_minimize else -1
         self._scores = sign * pd.DataFrame(scores)
         self._ranks = self._update_ranks()
-        self.random_state = np.random.RandomState(self.random_seed)
 
     def _create_surrogate_transfer_learning_evaluations(
         self,
