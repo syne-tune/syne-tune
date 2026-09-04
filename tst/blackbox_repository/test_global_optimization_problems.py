@@ -2,6 +2,26 @@ import unittest
 import numpy as np
 
 from syne_tune.blackbox_repository import load_blackbox
+from syne_tune.blackbox_repository.bbob import (
+    BBOBSphere,
+    BBOBSeparableEllipsoidal,
+    BBOBRastrigin,
+    BBOBBuecheRastrigin,
+    BBOBAttractiveSector,
+    BBOBStepEllipsoidal,
+    BBOBRosenbrock,
+    BBOBEllipsoidalRotated,
+    BBOBDiscus,
+    BBOBBentCigar,
+    BBOBSharpRidge,
+    BBOBDifferentPowers,
+    BBOBRastriginRotated,
+    BBOBWeierstrass,
+    BBOBSchaffers,
+    BBOBSchaffersModerate,
+    BBOBKatsuura,
+    bbob_problem_collection,
+)
 
 
 class TestSyntheticFunctions(unittest.TestCase):
@@ -60,3 +80,91 @@ class TestSyntheticFunctions(unittest.TestCase):
         config = {"x0": 0.0, "x1": -1.0}
         result = goldstein_price(config)
         self.assertAlmostEqual(result["y"], 3.0, places=4)
+
+
+class TestBBOBAtOptimum(unittest.TestCase):
+    """
+    For most BBOB functions the transformed argument equals zero when x = xopt,
+    so f(xopt) = fopt exactly. This test class verifies that invariant for the
+    functions where it holds analytically.
+    """
+
+    def _check_at_xopt(self, cls, dimension=2, instance=1, places=8):
+        f = cls(dimension=dimension, instance=instance)
+        config = {f"x{i}": float(f.xopt[i]) for i in range(dimension)}
+        result = f(config)
+        self.assertAlmostEqual(result["y"], f.fopt, places=places)
+
+    def test_sphere(self):
+        self._check_at_xopt(BBOBSphere)
+
+    def test_sphere_5d(self):
+        self._check_at_xopt(BBOBSphere, dimension=5)
+
+    def test_separable_ellipsoidal(self):
+        self._check_at_xopt(BBOBSeparableEllipsoidal)
+
+    def test_rastrigin(self):
+        self._check_at_xopt(BBOBRastrigin)
+
+    def test_bueche_rastrigin(self):
+        self._check_at_xopt(BBOBBuecheRastrigin)
+
+    def test_attractive_sector(self):
+        self._check_at_xopt(BBOBAttractiveSector)
+
+    def test_step_ellipsoidal(self):
+        # The step function rounds z_hat to zero when x = xopt, so f(xopt) = fopt
+        self._check_at_xopt(BBOBStepEllipsoidal)
+
+    def test_rosenbrock(self):
+        # At xopt: z = 1, Rosenbrock(1,...,1) = 0
+        self._check_at_xopt(BBOBRosenbrock)
+
+    def test_ellipsoidal_rotated(self):
+        self._check_at_xopt(BBOBEllipsoidalRotated)
+
+    def test_discus(self):
+        self._check_at_xopt(BBOBDiscus)
+
+    def test_bent_cigar(self):
+        self._check_at_xopt(BBOBBentCigar)
+
+    def test_sharp_ridge(self):
+        self._check_at_xopt(BBOBSharpRidge)
+
+    def test_different_powers(self):
+        self._check_at_xopt(BBOBDifferentPowers)
+
+    def test_rastrigin_rotated(self):
+        self._check_at_xopt(BBOBRastriginRotated)
+
+    def test_weierstrass(self):
+        self._check_at_xopt(BBOBWeierstrass, places=6)
+
+    def test_schaffers(self):
+        self._check_at_xopt(BBOBSchaffers)
+
+    def test_schaffers_moderate(self):
+        self._check_at_xopt(BBOBSchaffersModerate)
+
+    def test_katsuura(self):
+        self._check_at_xopt(BBOBKatsuura)
+
+
+class TestBBOBSmoke(unittest.TestCase):
+    """Smoke tests: every registered BBOB entry can be loaded and evaluated."""
+
+    def test_load_and_call_all(self):
+        for name, bb in bbob_problem_collection.items():
+            with self.subTest(name=name):
+                loaded = load_blackbox(name)
+                # Evaluate at the lower bound of each dimension
+                config = {
+                    k: float(v.lower) for k, v in loaded.configuration_space.items()
+                }
+                result = loaded(config)
+                self.assertIn("y", result)
+                self.assertTrue(
+                    np.isfinite(result["y"]), f"{name} returned non-finite value"
+                )
