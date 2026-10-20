@@ -18,6 +18,14 @@ if __name__ == "__main__":
     parser.add_argument("--n_workers", type=int, required=False, default=1)
     parser.add_argument("--num_seeds", type=int, required=False, default=1)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--max_num_trials",
+        type=int,
+        required=False,
+        default=None,
+        help="If set, each run stops after this number of trials instead of using "
+        "the time and evaluation limits of the benchmark.",
+    )
 
     parser.add_argument("--cluster", type=str, required=True)
     parser.add_argument("--partition", type=str, required=True)
@@ -44,11 +52,15 @@ if __name__ == "__main__":
         Methods.TPE,
         Methods.BORE,
         Methods.CQR,
+        Methods.CQRTabICL,
+        Methods.QRTabICL,
+        Methods.CQRTabPFNv2_5,
+        Methods.CQRTabPFNv3,
+        Methods.CQRTabPFNv3_5,
+        Methods.QRTabPFNv2_5,
+        Methods.QRTabPFNv3,
+        Methods.QRTabPFNv3_5,
         Methods.BOTorch,
-        Methods.BOHB,
-        Methods.ASHA,
-        Methods.ASHACQR,
-        Methods.ASHABORE,
     ]
     print(f"{len(methods_selected)} methods selected: {methods_selected}")
 
@@ -69,6 +81,11 @@ if __name__ == "__main__":
                     # run all seeds in [0, seed-1]
                     "seed": num_seeds,
                     "run_all_seed": 1,
+                    **(
+                        {"max_num_trials": args.max_num_trials}
+                        if args.max_num_trials is not None
+                        else {}
+                    ),
                 }
             )
 
@@ -83,17 +100,19 @@ if __name__ == "__main__":
         entrypoint="benchmark_main.py",
         python_args=python_args,
         src_dir=str(Path(__file__).parent),
-        python_binary="python",
+        python_binary="/work/dlc2workfs3/salinasd-synetune/.venv/bin/python",
         python_libraries=[
             str(Path(__file__).parent.parent / "syne_tune"),
         ],
-        n_cpus=8,
-        mem=1024 * 8,
+        n_cpus=16,
+        mem=1024 * 64,
         max_runtime_minutes=max_runtime_minutes,
-        bash_setup_command="source ~/.bashrc; conda activate synetune",
+        bash_setup_command="source ~/.bashrc",
         env={
             # write tuner files in Slurmpilot folder corresponding to `jobname`
             "SYNETUNE_FOLDER": f"{slurmpilot_folder}/{jobname}",
+            "HF_HUB_OFFLINE": "1",
+            # "TABPFN_MODEL_CACHE_DIR": "/work/dlclarge2/salinasd-synetune/tabpfn-2.5"
         },
         n_concurrent_jobs=128,  # max number of jobs to run at the same time
     )

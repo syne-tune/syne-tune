@@ -26,6 +26,7 @@ def run(
     seeds,
     max_num_evaluations=None,
     n_workers: int = 4,
+    max_num_trials: int | None = None,
 ):
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
@@ -79,12 +80,20 @@ def run(
             )
         )
 
-        stop_criterion = StoppingCriterion(
-            max_wallclock_time=benchmark.max_wallclock_time,
-            max_num_evaluations=max_num_evaluations
-            if max_num_evaluations
-            else benchmark.max_num_evaluations,
-        )
+        if max_num_trials is not None:
+            # stops after a fixed number of trials regardless of the time and
+            # evaluation limits of the benchmark, the criterion stops once more
+            # than `max_num_trials_finished` trials are finished
+            stop_criterion = StoppingCriterion(
+                max_num_trials_finished=max_num_trials - 1
+            )
+        else:
+            stop_criterion = StoppingCriterion(
+                max_wallclock_time=benchmark.max_wallclock_time,
+                max_num_evaluations=max_num_evaluations
+                if max_num_evaluations
+                else benchmark.max_num_evaluations,
+            )
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
@@ -139,6 +148,14 @@ if __name__ == "__main__":
         help="a benchmark to run from benchmarks.py, run all by default.",
     )
     parser.add_argument(
+        "--max_num_trials",
+        type=int,
+        required=False,
+        default=None,
+        help="If set, stops after this number of trials instead of using the time and "
+        "evaluation limits of the benchmark.",
+    )
+    parser.add_argument(
         "--n_workers",
         help="number of workers to use when tuning.",
         type=int,
@@ -161,4 +178,5 @@ if __name__ == "__main__":
         benchmark_names=benchmark_names,
         seeds=seeds,
         n_workers=args.n_workers,
+        max_num_trials=args.max_num_trials,
     )

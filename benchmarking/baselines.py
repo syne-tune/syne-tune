@@ -33,12 +33,44 @@ class Methods:
     REA = "REA"
     BOTorch = "BOTorch"
     CQR = "CQR"
+    # quantile regression with in-context learning models, with (CQR) and
+    # without (QR) conformal calibration
+    CQRTabICL = "CQRTabICL"
+    QRTabICL = "QRTabICL"
+    # TabPFN with a fixed model version, v3 and v3.5 require tabpfn>=9
+    CQRTabPFNv2_5 = "CQRTabPFNv2.5"
+    CQRTabPFNv3 = "CQRTabPFNv3"
+    CQRTabPFNv3_5 = "CQRTabPFNv3.5"
+    QRTabPFNv2_5 = "QRTabPFNv2.5"
+    QRTabPFNv3 = "QRTabPFNv3"
+    QRTabPFNv3_5 = "QRTabPFNv3.5"
     BOHB = "BOHB"
 
     # multifidelity
     ASHA = "ASHA"
     ASHABORE = "ASHABORE"
     ASHACQR = "ASHACQR"
+
+
+def _cqr_icl(
+    model_type: str, min_samples_to_conformalize: int | None, **searcher_kwargs
+):
+    # CQR with an in-context learning model, conformal calibration is applied once
+    # `min_samples_to_conformalize` observations are available, None disables it
+    return lambda method_arguments: SingleObjectiveScheduler(
+        config_space=method_arguments.config_space,
+        searcher="cqr",
+        metric=method_arguments.metric,
+        do_minimize=method_arguments.mode == "min",
+        random_seed=method_arguments.random_seed,
+        searcher_kwargs={
+            "points_to_evaluate": method_arguments.points_to_evaluate,
+            "model_type": model_type,
+            "min_samples_to_conformalize": min_samples_to_conformalize,
+            "ncandidates": 200,
+            **searcher_kwargs,
+        },
+    )
 
 
 methods = {
@@ -74,6 +106,23 @@ methods = {
         random_seed=method_arguments.random_seed,
         searcher_kwargs={"points_to_evaluate": method_arguments.points_to_evaluate},
     ),
+    Methods.CQRTabICL: _cqr_icl("tabicl", min_samples_to_conformalize=32),
+    Methods.QRTabICL: _cqr_icl("tabicl", min_samples_to_conformalize=None),
+    **{
+        method: _cqr_icl(
+            "tabpfn",
+            min_samples_to_conformalize=min_samples_to_conformalize,
+            model_version=model_version,
+        )
+        for method, min_samples_to_conformalize, model_version in [
+            (Methods.CQRTabPFNv2_5, 32, "v2.5"),
+            (Methods.CQRTabPFNv3, 32, "v3"),
+            (Methods.CQRTabPFNv3_5, 32, "v3.5"),
+            (Methods.QRTabPFNv2_5, None, "v2.5"),
+            (Methods.QRTabPFNv3, None, "v3"),
+            (Methods.QRTabPFNv3_5, None, "v3.5"),
+        ]
+    },
     Methods.BOTorch: lambda method_arguments: SingleObjectiveScheduler(
         config_space=method_arguments.config_space,
         searcher="botorch",
@@ -141,7 +190,7 @@ if __name__ == "__main__":
         "fcnet-protein",
         "nas201-cifar10",
         "lcbench-Fashion-MNIST",
-        "tabrepo-RandomForest-2dplanes",
+        "tabrepo-RandomForest-Higgs",
         "hpob_5636_3492",
     ]
     for benchmark_name in benchmarks:

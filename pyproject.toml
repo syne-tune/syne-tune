@@ -69,6 +69,10 @@ benchmarking = [
     "pyparfor",
     "matplotlib",
 ]
+icl = [
+    "tabicl",
+    "tabpfn",
+]
 vllm = [
     "vllm; sys_platform != 'darwin'",
 ]
