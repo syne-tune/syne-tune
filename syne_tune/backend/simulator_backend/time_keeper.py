@@ -59,8 +59,10 @@ class SimulatedTimeKeeper(TimeKeeper):
         self._current_time = max(to_time, self._current_time)
 
     def mark_exit(self):
-        self._last_recent_exit = time.time()
+        # monotonic clock, the wall clock can go backwards when it is adjusted,
+        # which would advance the simulated time by a negative step
+        self._last_recent_exit = time.monotonic()
 
     def real_time_since_last_recent_exit(self) -> float:
         self._assert_has_started()
-        return time.time() - self._last_recent_exit
+        return time.monotonic() - self._last_recent_exit
