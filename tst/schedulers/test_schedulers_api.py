@@ -338,7 +338,7 @@ def _icl_model_params():
     return params
 
 
-#@pytest.mark.timeout(300)
+# @pytest.mark.timeout(300)
 @pytest.mark.skip("too slow")
 @pytest.mark.parametrize("model_type", _icl_model_params())
 @pytest.mark.parametrize("multi_fidelity", [False, True], ids=["CQR", "ASHACQR"])
