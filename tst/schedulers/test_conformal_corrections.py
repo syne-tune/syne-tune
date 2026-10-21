@@ -70,6 +70,7 @@ def test_conformalized_quantile_regressor(num_samples, conformalized):
         assert np.all(predictions.results_stacked == 0)
 
 
+@pytest.mark.timeout(10)
 def test_conformalized_gradient_boosting():
     random_state = np.random.RandomState(0)
     X = random_state.uniform(size=(100, 2))
