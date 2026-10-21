@@ -35,6 +35,7 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         min_samples_to_conformalize: int | None = 32,
         valid_fraction: float = 0.1,
         ncandidates: int = 2000,
+        allow_duplicates: bool = False,
         **surrogate_kwargs,
     ):
         """
@@ -57,6 +58,9 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
             Set to None to disable conformalization.
         :param valid_fraction: fraction of data to use for validation.
         :param ncandidates: number of candidates to sample when computing thompson sampling.
+        :param allow_duplicates: if False, configurations already suggested are not
+            suggested again, they are removed from the candidates scored by the
+            surrogate and from random samples.
         :param surrogate_kwargs: additional kwargs for the surrogate model
         """
         super(ConformalQuantileRegression, self).__init__(
@@ -81,6 +85,9 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         self.valid_fraction = valid_fraction
         self.random_state = np.random.RandomState(self.random_seed)
         self.ncandidates = ncandidates
+        self.allow_duplicates = allow_duplicates
+        # keys of the configurations suggested so far, see `_config_key`
+        self.suggested_configs = set()
 
     def suggest(self, **kwargs) -> dict[str, Any] | None:
         config = self._next_points_to_evaluate()
@@ -97,8 +104,40 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
                 config = self.surrogate_model.suggest()
             else:
                 logger.debug(f"sample at random")
-                config = self.sample_random()
+                config = self.sample_random_unseen()
+        if config is not None:
+            self.suggested_configs.add(self._config_key(config))
         return config
+
+    def _config_key(self, config: dict) -> tuple:
+        return tuple(config[k] for k in self.config_space if k in config)
+
+    def sample_random_unseen(self, num_tries: int = 100) -> dict:
+        config = self.sample_random()
+        if not self.allow_duplicates:
+            for _ in range(num_tries):
+                if self._config_key(config) not in self.suggested_configs:
+                    break
+                config = self.sample_random()
+            else:
+                logger.warning(
+                    f"could not sample a configuration not suggested yet in {num_tries} tries"
+                )
+        return config
+
+    def _sample_candidates(self) -> int | pd.DataFrame:
+        if self.allow_duplicates:
+            # sampled by the surrogate
+            return self.ncandidates
+        candidates = [
+            config
+            for config in (self.sample_random() for _ in range(self.ncandidates))
+            if self._config_key(config) not in self.suggested_configs
+        ]
+        if not candidates:
+            # small finite space where all candidates were already suggested
+            candidates = [self.sample_random_unseen()]
+        return self.configs_to_df(candidates)
 
     def should_update(self) -> bool:
         enough_observations = self.num_results() >= self.num_init_random_draws
@@ -136,7 +175,9 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
             valid_fraction=self.valid_fraction,
             **self.surrogate_kwargs,
         )
-        self.surrogate_model.fit(df_features=X, y=z, ncandidates=self.ncandidates)
+        self.surrogate_model.fit(
+            df_features=X, y=z, ncandidates=self._sample_candidates()
+        )
 
     def on_trial_complete(
         self,

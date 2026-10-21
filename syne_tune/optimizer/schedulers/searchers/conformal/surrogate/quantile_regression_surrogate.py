@@ -135,7 +135,7 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         quantileResults = self.predict(df_features)
 
         def sampler():
-            sampled_indexes = np.random.randint(
+            sampled_indexes = self.random_state.randint(
                 low=0,
                 high=quantileResults.nquantiles,
                 size=len(quantileResults.results_stacked),

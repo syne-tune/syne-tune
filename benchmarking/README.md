@@ -33,6 +33,10 @@ Then you can do:
 python benchmarking/launch_slurmpilot.py --cluster YOURCLUSTER --partition YOURPARTITION --num_seeds 3
 ```
 
+By default, the methods listed in `launch_slurmpilot.py` are run, you can select others with `--methods "CQR RS BOTorch"`.
+The Python binary, environment setup command, resources and additional environment variables of the jobs can be set with
+`--python_binary`, `--bash_setup_command`, `--n_cpus`, `--mem` (in GB) and `--env KEY=VALUE`, see `--help` for details.
+
 After your results are done, you can download your results with
 ```bash
 sp --download YOURJOBNAME
