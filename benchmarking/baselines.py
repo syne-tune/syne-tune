@@ -44,20 +44,6 @@ class Methods:
     QRTabPFNv2_5 = "QRTabPFNv2.5"
     QRTabPFNv3 = "QRTabPFNv3"
     QRTabPFNv3_5 = "QRTabPFNv3.5"
-    # same with 1000 candidates scored by the surrogate instead of 200
-    CQRTabPFNv2_5_1000 = "CQRTabPFNv2.5-1000"
-    CQRTabPFNv3_1000 = "CQRTabPFNv3-1000"
-    CQRTabPFNv3_5_1000 = "CQRTabPFNv3.5-1000"
-    QRTabPFNv2_5_1000 = "QRTabPFNv2.5-1000"
-    QRTabPFNv3_1000 = "QRTabPFNv3-1000"
-    QRTabPFNv3_5_1000 = "QRTabPFNv3.5-1000"
-    # same with 19 quantiles instead of 5
-    CQRTabPFNv2_5_q19 = "CQRTabPFNv2.5-q19"
-    CQRTabPFNv3_q19 = "CQRTabPFNv3-q19"
-    CQRTabPFNv3_5_q19 = "CQRTabPFNv3.5-q19"
-    QRTabPFNv2_5_q19 = "QRTabPFNv2.5-q19"
-    QRTabPFNv3_q19 = "QRTabPFNv3-q19"
-    QRTabPFNv3_5_q19 = "QRTabPFNv3.5-q19"
     BOHB = "BOHB"
 
     # multifidelity
@@ -140,18 +126,6 @@ methods = {
             (Methods.QRTabPFNv2_5, None, "v2.5", 200, 5),
             (Methods.QRTabPFNv3, None, "v3", 200, 5),
             (Methods.QRTabPFNv3_5, None, "v3.5", 200, 5),
-            (Methods.CQRTabPFNv2_5_1000, 32, "v2.5", 1000, 5),
-            (Methods.CQRTabPFNv3_1000, 32, "v3", 1000, 5),
-            (Methods.CQRTabPFNv3_5_1000, 32, "v3.5", 1000, 5),
-            (Methods.QRTabPFNv2_5_1000, None, "v2.5", 1000, 5),
-            (Methods.QRTabPFNv3_1000, None, "v3", 1000, 5),
-            (Methods.QRTabPFNv3_5_1000, None, "v3.5", 1000, 5),
-            (Methods.CQRTabPFNv2_5_q19, 32, "v2.5", 200, 19),
-            (Methods.CQRTabPFNv3_q19, 32, "v3", 200, 19),
-            (Methods.CQRTabPFNv3_5_q19, 32, "v3.5", 200, 19),
-            (Methods.QRTabPFNv2_5_q19, None, "v2.5", 200, 19),
-            (Methods.QRTabPFNv3_q19, None, "v3", 200, 19),
-            (Methods.QRTabPFNv3_5_q19, None, "v3.5", 200, 19),
         ]
     },
     Methods.BOTorch: lambda method_arguments: SingleObjectiveScheduler(
