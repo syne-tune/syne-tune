@@ -32,6 +32,10 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         update_frequency: int = 1,
         max_fit_samples: int = None,
         surrogate_cls: SurrogateModel = QuantileRegressionSurrogateModel,
+        min_samples_to_conformalize: int | None = 32,
+        valid_fraction: float = 0.1,
+        ncandidates: int = 2000,
+        allow_duplicates: bool = False,
         **surrogate_kwargs,
     ):
         """
@@ -50,6 +54,13 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         :param max_fit_samples: if the number of observation exceed this parameter, then `max_fit_samples` random samples
         are used to fit the model.
         :param surrogate_cls: SurrogateModel class to model the objective function
+        :param min_samples_to_conformalize: minimum samples before applying conformal calibration.
+            Set to None to disable conformalization.
+        :param valid_fraction: fraction of data to use for validation.
+        :param ncandidates: number of candidates to sample when computing thompson sampling.
+        :param allow_duplicates: if False, configurations already suggested are not
+            suggested again, they are removed from the candidates scored by the
+            surrogate and from random samples.
         :param surrogate_kwargs: additional kwargs for the surrogate model
         """
         super(ConformalQuantileRegression, self).__init__(
@@ -70,7 +81,13 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
         self.sampler = None
         self.max_fit_samples = max_fit_samples
         self.surrogate_cls = surrogate_cls
+        self.min_samples_to_conformalize = min_samples_to_conformalize
+        self.valid_fraction = valid_fraction
         self.random_state = np.random.RandomState(self.random_seed)
+        self.ncandidates = ncandidates
+        self.allow_duplicates = allow_duplicates
+        # keys of the configurations suggested so far, see `_config_key`
+        self.suggested_configs = set()
 
     def suggest(self, **kwargs) -> dict[str, Any] | None:
         config = self._next_points_to_evaluate()
@@ -87,8 +104,40 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
                 config = self.surrogate_model.suggest()
             else:
                 logger.debug(f"sample at random")
-                config = self.sample_random()
+                config = self.sample_random_unseen()
+        if config is not None:
+            self.suggested_configs.add(self._config_key(config))
         return config
+
+    def _config_key(self, config: dict) -> tuple:
+        return tuple(config[k] for k in self.config_space if k in config)
+
+    def sample_random_unseen(self, num_tries: int = 100) -> dict:
+        config = self.sample_random()
+        if not self.allow_duplicates:
+            for _ in range(num_tries):
+                if self._config_key(config) not in self.suggested_configs:
+                    break
+                config = self.sample_random()
+            else:
+                logger.warning(
+                    f"could not sample a configuration not suggested yet in {num_tries} tries"
+                )
+        return config
+
+    def _sample_candidates(self) -> int | pd.DataFrame:
+        if self.allow_duplicates:
+            # sampled by the surrogate
+            return self.ncandidates
+        candidates = [
+            config
+            for config in (self.sample_random() for _ in range(self.ncandidates))
+            if self._config_key(config) not in self.suggested_configs
+        ]
+        if not candidates:
+            # small finite space where all candidates were already suggested
+            candidates = [self.sample_random_unseen()]
+        return self.configs_to_df(candidates)
 
     def should_update(self) -> bool:
         enough_observations = self.num_results() >= self.num_init_random_draws
@@ -122,11 +171,13 @@ class ConformalQuantileRegression(SingleObjectiveBaseSearcher):
             max_fit_samples=self.max_fit_samples,
             random_state=self.random_state,
             mode="min",
-            min_samples_to_conformalize=32,
-            valid_fraction=0.1,
+            min_samples_to_conformalize=self.min_samples_to_conformalize,
+            valid_fraction=self.valid_fraction,
             **self.surrogate_kwargs,
         )
-        self.surrogate_model.fit(df_features=X, y=z)
+        self.surrogate_model.fit(
+            df_features=X, y=z, ncandidates=self._sample_candidates()
+        )
 
     def on_trial_complete(
         self,

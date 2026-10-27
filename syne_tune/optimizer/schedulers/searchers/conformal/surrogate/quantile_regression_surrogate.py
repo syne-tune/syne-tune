@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -9,9 +10,14 @@ from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_model import (
     QuantileRegressorPredictions,
     GradientBoostingQuantileRegressor,
+    TabPFNQuantileRegressor,
+    TabICLQuantileRegressor,
+    TABPFN_AVAILABLE,
+    TABICL_AVAILABLE,
 )
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
     SymmetricConformalizedGradientBoostingQuantileRegressor,
+    SymmetricConformalizedQuantileRegressor,
 )
 
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
@@ -29,10 +35,31 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         quantiles: int = 5,
         valid_fraction: float = 0.0,
         min_samples_to_conformalize: int = None,
+        model_type: Literal[
+            "gradient_boosting", "tabpfn", "tabicl"
+        ] = "gradient_boosting",
         **kwargs,
     ):
         """
-        :param min_samples_to_conformalize: if value is not None, conformalize once this number of samples are available
+        :param config_space: Configuration space for hyperparameters.
+        :param mode: Optimization mode, either "min" or "max".
+        :param random_state: Random state for reproducibility.
+        :param max_fit_samples: Maximum number of samples to use for fitting.
+        :param quantiles: Number of quantiles or list of quantile values.
+        :param valid_fraction: Fraction of data to use for validation.
+        :param min_samples_to_conformalize: If not None, conformalize once this
+            number of samples are available.
+        :param model_type: Type of quantile regression model to use:
+            - "gradient_boosting": Uses GradientBoostingQuantileRegressor (default).
+              Trains separate models for each quantile using sklearn's
+              GradientBoostingRegressor with quantile loss.
+            - "tabpfn": Uses TabPFNQuantileRegressor with TabPFN 2.5.
+              A foundation model for tabular data with native quantile support.
+              Requires `pip install tabpfn` and HuggingFace authentication.
+            - "tabicl": Uses TabICLQuantileRegressor with TabICL v2.
+              A foundation model for tabular data with native quantile support.
+              Requires `pip install tabicl`.
+        :param kwargs: Additional arguments passed to the quantile regressor.
         """
         super(QuantileRegressionSurrogateModel, self).__init__(
             config_space=config_space,
@@ -40,16 +67,49 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
             random_state=random_state,
             max_fit_samples=max_fit_samples,
         )
-        if min_samples_to_conformalize is not None:
-            quantile_regressor_cls = partial(
-                SymmetricConformalizedGradientBoostingQuantileRegressor,
-                min_samples_to_conformalize=min_samples_to_conformalize,
+
+        if model_type == "tabpfn":
+            if not TABPFN_AVAILABLE:
+                raise ImportError(
+                    "TabPFN is not installed. Please install it with: pip install tabpfn"
+                )
+            quantile_regressor = TabPFNQuantileRegressor(
+                quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
+            )
+        elif model_type == "tabicl":
+            if not TABICL_AVAILABLE:
+                raise ImportError(
+                    "TabICL is not installed. Please install it with: pip install tabicl"
+                )
+            quantile_regressor = TabICLQuantileRegressor(
+                quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
+            )
+        elif model_type == "gradient_boosting":
+            if min_samples_to_conformalize is not None:
+                quantile_regressor_cls = partial(
+                    SymmetricConformalizedGradientBoostingQuantileRegressor,
+                    min_samples_to_conformalize=min_samples_to_conformalize,
+                )
+            else:
+                quantile_regressor_cls = GradientBoostingQuantileRegressor
+            quantile_regressor = quantile_regressor_cls(
+                quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
             )
         else:
-            quantile_regressor_cls = GradientBoostingQuantileRegressor
-        quantile_regressor = quantile_regressor_cls(
-            quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
-        )
+            raise ValueError(
+                f"Unknown model_type: {model_type}. "
+                f"Supported types: 'gradient_boosting', 'tabpfn', 'tabicl'"
+            )
+        if (
+            model_type != "gradient_boosting"
+            and min_samples_to_conformalize is not None
+        ):
+            quantile_regressor = SymmetricConformalizedQuantileRegressor(
+                base_regressor=quantile_regressor,
+                valid_fraction=valid_fraction,
+                min_samples_to_conformalize=min_samples_to_conformalize,
+            )
+
         self.quantile_regressor = quantile_regressor
         self.model_pipeline = None
 
@@ -75,7 +135,7 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         quantileResults = self.predict(df_features)
 
         def sampler():
-            sampled_indexes = np.random.randint(
+            sampled_indexes = self.random_state.randint(
                 low=0,
                 high=quantileResults.nquantiles,
                 size=len(quantileResults.results_stacked),

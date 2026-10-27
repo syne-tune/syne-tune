@@ -241,7 +241,7 @@ class BOTorch(SingleObjectiveScheduler):
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
-                **searcher_kwargs
+                **searcher_kwargs,
             ),
             random_seed=random_seed,
         )
@@ -360,6 +360,33 @@ class ASHABORE(AsynchronousSuccessiveHalving):
         )
 
 
+def _cqr_searcher_kwargs(
+    model_type: str, conformalize: bool | None = None
+) -> dict[str, Any]:
+    # Foundation models (TabPFN, TabICL) predict quantiles directly, so conformal
+    # calibration is disabled by default. They are also slower to predict, so fewer
+    # candidates are scored.
+    if model_type == "gradient_boosting":
+        default_conformalize = True
+        ncandidates = 2000
+    elif model_type in ("tabpfn", "tabicl"):
+        default_conformalize = False
+        ncandidates = 200
+    else:
+        raise ValueError(
+            f"Unknown model_type: {model_type}. "
+            f"Supported types: 'gradient_boosting', 'tabpfn', 'tabicl'"
+        )
+    if conformalize is None:
+        conformalize = default_conformalize
+    min_samples_to_conformalize = 32 if conformalize else None
+    return {
+        "model_type": model_type,
+        "min_samples_to_conformalize": min_samples_to_conformalize,
+        "ncandidates": ncandidates,
+    }
+
+
 class ASHACQR(AsynchronousSuccessiveHalving):
     """
     Asynchronous Successive Halving (ASHA) which fits a CQR model on each rung level.
@@ -384,6 +411,13 @@ class ASHACQR(AsynchronousSuccessiveHalving):
         is simply a unit-less scalar. Defaults to 3
     :param brackets: Number of brackets. Each bracket has a different
         ``grace_period`` and number of rung levels. Defaults to 1
+    :param model_type: Type of quantile regression model to use:
+        - "gradient_boosting" (default): Uses GradientBoostingQuantileRegressor.
+        - "tabpfn": Uses TabPFN 2.5. Requires `pip install tabpfn`.
+        - "tabicl": Uses TabICL. Requires `pip install tabicl`.
+    :param conformalize: Whether to calibrate the predicted quantiles with split
+        conformal prediction once 32 observations are available. Defaults to True
+        for "gradient_boosting" and False for "tabpfn" and "tabicl".
     """
 
     def __init__(
@@ -398,6 +432,8 @@ class ASHACQR(AsynchronousSuccessiveHalving):
         points_to_evaluate: list[dict] | None = None,
         reduction_factor: float = 3,
         brackets: int = 1,
+        model_type: str = "gradient_boosting",
+        conformalize: bool | None = None,
     ):
         super(ASHACQR, self).__init__(
             config_space=config_space,
@@ -408,7 +444,10 @@ class ASHACQR(AsynchronousSuccessiveHalving):
             random_seed=random_seed,
             time_attr=time_attr,
             grace_period=grace_period,
-            searcher_kwargs={"points_to_evaluate": points_to_evaluate},
+            searcher_kwargs={
+                "points_to_evaluate": points_to_evaluate,
+                **_cqr_searcher_kwargs(model_type, conformalize),
+            },
             reduction_factor=reduction_factor,
             brackets=brackets,
         )
@@ -488,14 +527,23 @@ class CQR(SingleObjectiveScheduler):
         | Optimizing Hyperparameters with Conformal Quantile Regression.
         | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
         | ICML 2023.
-    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
-    predictions.
+    The method predicts quantile performance and calibrates predictions with conformal predictions.
 
     :param config_space: Configuration space for the evaluation function.
     :param metric: Name of the metric to optimize.
     :param do_minimize: Set to True if the objective function should be minimized.
     :param random_seed: Seed for initializing random number generators.
     :param points_to_evaluate: A set of initial configurations to be evaluated before starting the optimization.
+    :param model_type: Type of quantile regression model to use:
+        - "gradient_boosting" (default): Uses GradientBoostingQuantileRegressor with
+          conformal calibration.
+        - "tabpfn": Uses TabPFN 2.5, a foundation model for tabular data with native
+          quantile support. Requires `pip install tabpfn` and HuggingFace authentication.
+        - "tabicl": Uses TabICL, a foundation model for tabular data with native
+          quantile support. Requires `pip install tabicl`.
+    :param conformalize: Whether to calibrate the predicted quantiles with split
+        conformal prediction once 32 observations are available. Defaults to True
+        for "gradient_boosting" and False for "tabpfn" and "tabicl".
     """
 
     def __init__(
@@ -505,6 +553,8 @@ class CQR(SingleObjectiveScheduler):
         do_minimize: bool | None = True,
         random_seed: int | None = None,
         points_to_evaluate: list[dict] | None = None,
+        model_type: str = "gradient_boosting",
+        conformalize: bool | None = None,
     ):
         from syne_tune.optimizer.schedulers.searchers.conformal.conformal_quantile_regression_searcher import (
             ConformalQuantileRegression,
@@ -518,6 +568,7 @@ class CQR(SingleObjectiveScheduler):
                 config_space=config_space,
                 points_to_evaluate=points_to_evaluate,
                 random_seed=random_seed,
+                **_cqr_searcher_kwargs(model_type, conformalize),
             ),
             random_seed=random_seed,
         )
