@@ -176,3 +176,12 @@ def test_restrict_domain():
 )
 def test_ordinal_default(categories, is_nn):
     assert isinstance(ordinal(categories), OrdinalNearestNeighbor) == is_nn
+
+
+def test_categorical_float_warning(caplog):
+    with caplog.at_level("WARNING", logger="syne_tune.config_space"):
+        choice(["a", "b"])
+    assert "float type" not in caplog.text
+    with caplog.at_level("WARNING", logger="syne_tune.config_space"):
+        choice([0.1, 0.2])
+    assert "float type" in caplog.text
