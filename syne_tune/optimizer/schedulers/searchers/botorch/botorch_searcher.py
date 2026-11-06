@@ -219,15 +219,18 @@ class BoTorchSearcher(SingleObjectiveBaseSearcher):
             candidate = candidate.detach().numpy()[0]
             return self._config_from_ndarray(candidate)
 
-        except NotPSDError as _:
-            logging.warning("Chlolesky inversion failed, sampling randomly.")
+        except NotPSDError:
+            logger.warning("Cholesky inversion failed, sampling randomly.")
             return self._get_random_config()
-        except ModelFittingError as _:
-            logging.warning("Botorch was unable to fit the model, sampling randomly.")
+        except ModelFittingError:
+            logger.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
-        except:
+        except Exception:
             # BoTorch can raise different errors, easier to not try to catch them individually
-            logging.warning("Botorch was unable to fit the model, sampling randomly.")
+            logger.warning(
+                "Botorch failed to suggest a configuration, sampling randomly.",
+                exc_info=True,
+            )
             return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
