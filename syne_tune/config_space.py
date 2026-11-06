@@ -525,9 +525,9 @@ class Categorical(Domain):
         self.categories = list(categories)
         value_type = self.value_type
         assert all(
-            type(x) == value_type for x in self.categories
+            type(x) is value_type for x in self.categories
         ), f"All entries in categories = {self.categories} must have the same type"
-        if isinstance(self.value_type, float):
+        if value_type is float:
             logger.warning(
                 "The configuration space contains a categorical value with float type. "
                 "When performing remote execution, floats are converted to string which can cause rounding "
