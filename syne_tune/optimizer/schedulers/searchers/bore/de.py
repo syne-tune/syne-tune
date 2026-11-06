@@ -1,9 +1,43 @@
+from typing import Callable
+
 import numpy as np
+
+STRATEGIES = (
+    "rand1",
+    "best1",
+    "rand2",
+    "best2",
+    "currenttobest1",
+    "randtobest1",
+)
 
 
 class DifferentialevolutionOptimizer:
-    def __init__(self, f, lower, upper, fevals, strategy="best1", bin=1):
+    """
+    Differential evolution with binomial crossover, used by BORE to optimize
+    the acquisition function.
 
+    :param f: Function to minimize, maps a point of shape ``(dimensions,)``
+        to a scalar
+    :param lower: Lower bounds, shape ``(dimensions,)``
+    :param upper: Upper bounds, shape ``(dimensions,)``
+    :param fevals: Total budget of function evaluations
+    :param strategy: Mutation strategy, one of :const:`STRATEGIES`.
+        Defaults to "best1"
+    """
+
+    def __init__(
+        self,
+        f: Callable[[np.ndarray], float],
+        lower: np.ndarray,
+        upper: np.ndarray,
+        fevals: int,
+        strategy: str = "best1",
+    ):
+        if strategy not in STRATEGIES:
+            raise ValueError(
+                f"strategy = {strategy} not supported, must be one of {STRATEGIES}"
+            )
         self.f = f
 
         self.lower_bound = lower
@@ -18,10 +52,9 @@ class DifferentialevolutionOptimizer:
 
         self.de_pop = []
         self.fitness = []
-        self.fbest = np.float("inf")
+        self.fbest = np.inf
         self.idxbest = 1
         self.strategy = strategy
-        self.bin = bin
 
     def evolve(self, j):
         best_idv = self.de_pop[self.idxbest]
@@ -68,22 +101,11 @@ class DifferentialevolutionOptimizer:
             temp = r1 + self.mut * (best_idv - r1) + self.mut * (r2 - r3)
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
-        # perform crossover operation
-        if self.bin == 1:
-            cross_points = np.random.rand(self.dimensions) < self.crossp
-
-            if not np.any(cross_points):
-                cross_points[np.random.randint(0, self.dimensions)] = True
-            ui = np.where(cross_points, vi, current_idv)
-
-        else:
-            i = 0
-            ui = []
-            fill_point = np.random.randint(0, self.dimensions)
-            while i < self.dimensions and np.random.rand(0, 1) < self.crossp:
-                ui[fill_point] = vi[fill_point]
-                fill_point = (fill_point + 1) % self.dimensions
-                i += 1
+        # perform binomial crossover operation
+        cross_points = np.random.rand(self.dimensions) < self.crossp
+        if not np.any(cross_points):
+            cross_points[np.random.randint(0, self.dimensions)] = True
+        ui = np.where(cross_points, vi, current_idv)
 
         return ui
 
@@ -97,7 +119,6 @@ class DifferentialevolutionOptimizer:
         self.de_pop = self.lower_bound + rand_temp * diff
 
         # Step 2: population evaluation
-        best = None
         for j in range(self.popsize):
             ftemp = self.f(self.de_pop[j])
             self.fitness.append(ftemp)
@@ -105,7 +126,6 @@ class DifferentialevolutionOptimizer:
             if ftemp < self.fbest:
                 self.fbest = ftemp
                 self.idxbest = j
-                best = self.de_pop[j]
             traj.append(self.fbest)
 
         # Step 3: Start evolutionary search
@@ -121,8 +141,7 @@ class DifferentialevolutionOptimizer:
                     self.de_pop[j] = ui
                     if fit < self.fitness[self.idxbest]:
                         self.idxbest = j
-                        best = ui
 
                 traj.append(self.fitness[self.idxbest])
 
-        return best, traj
+        return self.de_pop[self.idxbest].copy(), traj
