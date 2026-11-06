@@ -116,6 +116,7 @@ class TrialScheduler:
             self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
+        self.random_state = np.random.RandomState(self.random_seed)
 
     def suggest(self) -> TrialSuggestion | None:
         """Returns a suggestion for a new trial, or one to be resumed

@@ -123,7 +123,7 @@ class Bore(SingleObjectiveBaseSearcher):
 
     def _get_random_config(self):
         return {
-            k: v.sample() if hasattr(v, "sample") else v
+            k: v.sample(random_state=self.random_state) if hasattr(v, "sample") else v
             for k, v in self.config_space.items()
         }
 
@@ -152,7 +152,11 @@ class Bore(SingleObjectiveBaseSearcher):
                     upper = bounds[:, 1]
 
                     de = DifferentialevolutionOptimizer(
-                        wrapper, lower, upper, self.feval_acq
+                        wrapper,
+                        lower,
+                        upper,
+                        self.feval_acq,
+                        random_state=self.random_state,
                     )
                     best, traj = de.run()
                     config = self._hp_ranges.from_ndarray(best)

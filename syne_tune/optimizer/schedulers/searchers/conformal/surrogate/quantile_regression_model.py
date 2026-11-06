@@ -71,6 +71,7 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
         quantiles: int | list[float] = 5,
         verbose: bool = False,
         valid_fraction: float = 0.0,
+        random_state: np.random.RandomState | None = None,
         **kwargs,
     ):
         super(GradientBoostingQuantileRegressor).__init__()
@@ -82,10 +83,11 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
         self.quantiles = quantiles
         self.verbose = verbose
         self.valid_fraction = valid_fraction
+        self.random_state = random_state
 
         self.quantile_regressors = {
             quantile: GradientBoostingRegressor(
-                loss="quantile", alpha=quantile, **kwargs
+                loss="quantile", alpha=quantile, random_state=random_state, **kwargs
             )
             for quantile in quantiles
         }
@@ -93,7 +95,10 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
     def fit(self, df_features: np.ndarray, y: np.array, **kwargs):
         if self.valid_fraction > 0.0:
             x_training, x_validation, y_training, y_validation = train_test_split(
-                df_features, np.ravel(y), test_size=self.valid_fraction
+                df_features,
+                np.ravel(y),
+                test_size=self.valid_fraction,
+                random_state=self.random_state,
             )
         else:
             x_training = df_features

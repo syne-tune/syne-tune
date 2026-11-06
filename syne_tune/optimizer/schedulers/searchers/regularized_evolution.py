@@ -47,7 +47,8 @@ def sample_random_config(
     config_space: dict[str, Any], rng: np.random.RandomState
 ) -> dict[str, Any]:
     return {
-        k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()
+        k: v.sample(random_state=rng) if hasattr(v, "sample") else v
+        for k, v in config_space.items()
     }
 
 

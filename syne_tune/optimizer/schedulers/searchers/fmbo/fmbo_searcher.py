@@ -291,7 +291,10 @@ class FMBOSearcher(SingleObjectiveBaseSearcher):
             configs, ys = self._sample_n_configs()
             if len(configs) == 0:
                 logging.warning("Sampling failed, return a random configuration!")
-                return {k: v.sample() for k, v in self.config_space.items()}
+                return {
+                    k: v.sample(random_state=self.random_state)
+                    for k, v in self.config_space.items()
+                }
             print(f"valid config: {len(configs)}/{self.n_sample_configurations}")
             return configs[np.argmin(ys)]
 

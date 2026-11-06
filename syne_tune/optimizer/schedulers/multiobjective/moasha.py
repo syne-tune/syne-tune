@@ -109,7 +109,7 @@ class MOASHA(TrialScheduler):
 
     def suggest(self) -> TrialSuggestion | None:
         config = {
-            k: v.sample() if hasattr(v, "sample") else v
+            k: v.sample(random_state=self.random_state) if hasattr(v, "sample") else v
             for k, v in self.config_space.items()
         }
         return TrialSuggestion.start_suggestion(config)
@@ -118,7 +118,7 @@ class MOASHA(TrialScheduler):
         sizes = np.array([len(b.rungs) for b in self.brackets])
         probs = np.e ** (sizes - sizes.max())
         normalized = probs / probs.sum()
-        idx = np.random.choice(len(self.brackets), p=normalized)
+        idx = self.random_state.choice(len(self.brackets), p=normalized)
         self.trial_info[trial.trial_id] = self.brackets[idx]
 
     def on_trial_result(self, trial: Trial, result: dict[str, Any]) -> str:

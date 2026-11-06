@@ -1,6 +1,8 @@
 import logging
 from typing import Any
 
+import numpy as np
+
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
     SingleObjectiveBaseSearcher,
@@ -9,9 +11,13 @@ from syne_tune.optimizer.schedulers.searchers.single_objective_searcher import (
 logger = logging.getLogger(__name__)
 
 
-def sample_random_config(config_space):
+def sample_random_config(
+    config_space: dict[str, Any],
+    random_state: np.random.RandomState | None = None,
+) -> dict[str, Any]:
     return {
-        k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()
+        k: v.sample(random_state=random_state) if hasattr(v, "sample") else v
+        for k, v in config_space.items()
     }
 
 
@@ -44,7 +50,7 @@ class RandomSearcher(SingleObjectiveBaseSearcher):
         """
         new_config = self._next_points_to_evaluate()
         if new_config is None:
-            new_config = sample_random_config(self.config_space)
+            new_config = sample_random_config(self.config_space, self.random_state)
         return new_config
 
 
@@ -73,5 +79,5 @@ class MultiObjectiveRandomSearcher(BaseSearcher):
         """
         new_config = self._next_points_to_evaluate()
         if new_config is None:
-            new_config = sample_random_config(self.config_space)
+            new_config = sample_random_config(self.config_space, self.random_state)
         return new_config

@@ -137,7 +137,7 @@ class AsynchronousSuccessiveHalving(TrialScheduler):
         sizes = np.array([len(b.rungs) for b in self.brackets])
         probs = np.e ** (sizes - sizes.max())
         normalized = probs / probs.sum()
-        idx = np.random.choice(len(self.brackets), p=normalized)
+        idx = self.random_state.choice(len(self.brackets), p=normalized)
         self.trial_info[trial.trial_id] = self.brackets[idx]
 
     def on_trial_error(self, trial: Trial):

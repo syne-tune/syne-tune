@@ -59,8 +59,8 @@ class SingleFidelityScheduler(TrialScheduler):
         self.metric_multiplier = 1 if self.do_minimize else -1
 
         if isinstance(searcher, str):
-            if searcher_kwargs is None:
-                searcher_kwargs = {}
+            searcher_kwargs = dict(searcher_kwargs or {})
+            searcher_kwargs.setdefault("random_seed", self.random_seed)
 
             self.searcher = searcher_factory(
                 searcher,

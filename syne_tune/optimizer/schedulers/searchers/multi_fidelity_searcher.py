@@ -81,7 +81,9 @@ class IndependentMultiFidelitySearcher(BaseSearcher):
         # in case we have not seen observations, we have no searcher and sample at random
         if len(self.searchers) == 0:
             return {
-                k: v.sample() if hasattr(v, "sample") else v
+                k: v.sample(random_state=self.random_state)
+                if hasattr(v, "sample")
+                else v
                 for k, v in self.config_space.items()
             }
 

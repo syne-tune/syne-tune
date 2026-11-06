@@ -33,6 +33,7 @@ class BaseSearcher:
             self.random_seed = np.random.randint(0, 2**31 - 1)
         else:
             self.random_seed = random_seed
+        self.random_state = np.random.RandomState(self.random_seed)
 
     def _next_points_to_evaluate(self) -> dict[str, Any] | None:
         """

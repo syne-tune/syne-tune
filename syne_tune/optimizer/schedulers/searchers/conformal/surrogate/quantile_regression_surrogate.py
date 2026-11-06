@@ -93,7 +93,10 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
             else:
                 quantile_regressor_cls = GradientBoostingQuantileRegressor
             quantile_regressor = quantile_regressor_cls(
-                quantiles=quantiles, valid_fraction=valid_fraction, **kwargs
+                quantiles=quantiles,
+                valid_fraction=valid_fraction,
+                random_state=random_state,
+                **kwargs,
             )
         else:
             raise ValueError(
@@ -108,6 +111,7 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
                 base_regressor=quantile_regressor,
                 valid_fraction=valid_fraction,
                 min_samples_to_conformalize=min_samples_to_conformalize,
+                random_state=random_state,
             )
 
         self.quantile_regressor = quantile_regressor

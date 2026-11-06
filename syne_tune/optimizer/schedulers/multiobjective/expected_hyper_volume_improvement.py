@@ -172,7 +172,7 @@ class ExpectedHyperVolumeImprovement(BaseSearcher):
 
     def _get_random_config(self):
         return {
-            k: v.sample() if hasattr(v, "sample") else v
+            k: v.sample(random_state=self.random_state) if hasattr(v, "sample") else v
             for k, v in self.config_space.items()
         }
 

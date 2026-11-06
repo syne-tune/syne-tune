@@ -24,6 +24,8 @@ class DifferentialevolutionOptimizer:
     :param fevals: Total budget of function evaluations
     :param strategy: Mutation strategy, one of :const:`STRATEGIES`.
         Defaults to "best1"
+    :param random_state: Random number generator. Defaults to the global
+        ``np.random`` state
     """
 
     def __init__(
@@ -33,6 +35,7 @@ class DifferentialevolutionOptimizer:
         upper: np.ndarray,
         fevals: int,
         strategy: str = "best1",
+        random_state: np.random.RandomState | None = None,
     ):
         if strategy not in STRATEGIES:
             raise ValueError(
@@ -55,6 +58,7 @@ class DifferentialevolutionOptimizer:
         self.fbest = np.inf
         self.idxbest = 1
         self.strategy = strategy
+        self.random_state = np.random if random_state is None else random_state
 
     def evolve(self, j):
         best_idv = self.de_pop[self.idxbest]
@@ -63,7 +67,7 @@ class DifferentialevolutionOptimizer:
         # perform mutation operation
         if self.strategy == "rand1":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2, r3 = self.de_pop[np.random.choice(idxs, 3, replace=False)]
+            r1, r2, r3 = self.de_pop[self.random_state.choice(idxs, 3, replace=False)]
 
             # Step 3.1: Perform mutation and checking
             temp = r1 + self.mut * (r2 - r3)
@@ -71,25 +75,29 @@ class DifferentialevolutionOptimizer:
 
         if self.strategy == "best1":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2 = self.de_pop[np.random.choice(idxs, 2, replace=False)]
+            r1, r2 = self.de_pop[self.random_state.choice(idxs, 2, replace=False)]
             temp = best_idv + self.mut * (r1 - r2)
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
         if self.strategy == "rand2":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2, r3, r4, r5 = self.de_pop[np.random.choice(idxs, 5, replace=False)]
+            r1, r2, r3, r4, r5 = self.de_pop[
+                self.random_state.choice(idxs, 5, replace=False)
+            ]
             temp = r1 + self.mut * (r1 - r2) + self.mut * (r3 - r4)
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
         if self.strategy == "best2":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2, r3, r4 = self.de_pop[np.random.choice(idxs, 4, replace=False)]
+            r1, r2, r3, r4 = self.de_pop[
+                self.random_state.choice(idxs, 4, replace=False)
+            ]
             temp = best_idv + self.mut * (r1 - r2) + self.mut * (r3 - r4)
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
         if self.strategy == "currenttobest1":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2 = self.de_pop[np.random.choice(idxs, 2, replace=False)]
+            r1, r2 = self.de_pop[self.random_state.choice(idxs, 2, replace=False)]
             temp = (
                 current_idv + self.mut * (best_idv - current_idv) + self.mut * (r1 - r2)
             )
@@ -97,14 +105,14 @@ class DifferentialevolutionOptimizer:
 
         if self.strategy == "randtobest1":
             idxs = [idx for idx in range(self.popsize) if idx != j]
-            r1, r2, r3 = self.de_pop[np.random.choice(idxs, 3, replace=False)]
+            r1, r2, r3 = self.de_pop[self.random_state.choice(idxs, 3, replace=False)]
             temp = r1 + self.mut * (best_idv - r1) + self.mut * (r2 - r3)
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
         # perform binomial crossover operation
-        cross_points = np.random.rand(self.dimensions) < self.crossp
+        cross_points = self.random_state.rand(self.dimensions) < self.crossp
         if not np.any(cross_points):
-            cross_points[np.random.randint(0, self.dimensions)] = True
+            cross_points[self.random_state.randint(0, self.dimensions)] = True
         ui = np.where(cross_points, vi, current_idv)
 
         return ui
@@ -114,7 +122,7 @@ class DifferentialevolutionOptimizer:
         traj = []
 
         # Step1: initialization
-        rand_temp = np.random.rand(self.popsize, self.dimensions)
+        rand_temp = self.random_state.rand(self.popsize, self.dimensions)
         diff = np.fabs(self.lower_bound - self.upper_bound)
         self.de_pop = self.lower_bound + rand_temp * diff
 

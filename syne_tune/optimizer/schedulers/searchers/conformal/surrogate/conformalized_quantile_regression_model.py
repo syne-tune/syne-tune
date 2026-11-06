@@ -48,7 +48,10 @@ class ConformalizedGradientBoostingQuantileRegressor(GradientBoostingQuantileReg
 
     def fit(self, df_features: np.ndarray, y: np.array, **kwargs):
         x_training, x_validation, y_training, y_validation = train_test_split(
-            df_features, y, test_size=self.valid_fraction
+            df_features,
+            y,
+            test_size=self.valid_fraction,
+            random_state=self.random_state,
         )
         for quantile in tqdm(
             self.quantile_regressors,

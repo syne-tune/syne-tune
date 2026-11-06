@@ -98,9 +98,11 @@ class SymmetricConformalizedQuantileRegressor(QuantileRegressor):
         base_regressor: QuantileRegressor,
         valid_fraction: float = 0.10,
         min_samples_to_conformalize: int = 32,
+        random_state: np.random.RandomState | None = None,
     ):
         assert valid_fraction > 0
         self.base_regressor = base_regressor
+        self.random_state = random_state
         self.quantiles = base_regressor.quantiles
         self.valid_fraction = valid_fraction
         self.min_samples_to_conformalize = min_samples_to_conformalize
@@ -112,7 +114,10 @@ class SymmetricConformalizedQuantileRegressor(QuantileRegressor):
             self.min_samples_to_conformalize == 0
         ):
             x_training, x_validation, y_training, y_validation = train_test_split(
-                df_features, y, test_size=self.valid_fraction
+                df_features,
+                y,
+                test_size=self.valid_fraction,
+                random_state=self.random_state,
             )
             self.base_regressor.fit(x_training, y_training, **kwargs)
             self.corrections = symmetric_conformal_corrections(
@@ -194,7 +199,10 @@ class SymmetricConformalizedGradientBoostingQuantileRegressor(
 
     def _fit_conformal(self, df_features: np.ndarray, y: np.array, **kwargs):
         x_training, x_validation, y_training, y_validation = train_test_split(
-            df_features, y, test_size=self.valid_fraction
+            df_features,
+            y,
+            test_size=self.valid_fraction,
+            random_state=self.random_state,
         )
         for quantile in tqdm(
             self.quantile_regressors,
